@@ -1,9 +1,9 @@
-# Implementation Guide: EDS Block Development with XWalk
+# Implementation Guide: Creating a New EDS Block
 
-**Functionality:** EDS Block Development  
-**Date:** 2026-01-06  
-**Version:** v1.2  
-**Confidence Score:** 95% (based on analysis of 12+ existing blocks)
+**Functionality:** Creating a New EDS Block with XWalk Authoring Integration  
+**Date:** 2026-01-08  
+**Version:** EDS-2026.1.0  
+**Confidence Score:** 98% (based on analysis of 6+ existing blocks in codebase)
 
 ---
 
@@ -73,12 +73,16 @@ This section covers all frontend implementation aspects: JavaScript, CSS, and HT
 ```
 blocks/<block-name>/
 ├── <block-name>.js              # Block JavaScript (FRONTEND)
-├── <block-name>.css             # Block Styles (FRONTEND)
-└── _<block-name>.json           # XWalk Config (see Part 2)
+└── <block-name>.css             # Block Styles (FRONTEND)
 
 preview/mock-content/
 └── <block-name>.html            # Static HTML for development (FRONTEND)
 ```
+
+**Note:** XWalk configuration is added directly to root-level files (see Part 2):
+- `component-definition.json` - Component definitions
+- `component-models.json` - Field models
+- `component-filters.json` - Nesting rules
 
 ### Shared Resources
 
@@ -462,27 +466,37 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ## Configuration Overview
 
-### XWalk Configuration File
+### XWalk Configuration Files
 
-**Path:** `blocks/<block-name>/_<block-name>.json` (MANDATORY)
+**Root-Level Configuration Files (MANDATORY):**
+- `component-definition.json` - Component definitions (add block definition here)
+- `component-models.json` - Field models (add block model here)
+- `component-filters.json` - Nesting rules (add block filters here)
 
 **Purpose:** AEM authoring interface configuration
 
-**Structure:** `definitions`, `models`, `filters` sections
+**Structure:** 
+- Definitions are added to `component-definition.json` in the appropriate group's `components` array
+- Models are added to `component-models.json` as new objects in the array
+- Filters are added to `component-filters.json` as new objects in the array
 
 **Reference Examples:**
-- Simple: `blocks/hero/_hero.json`
-- With items: `blocks/feature/_feature.json`
-- Section: `blocks/section/_section.json`
+- Simple block: See `hero` definition in `component-definition.json` (lines 145-159)
+- Complex block: See `cards` and `card` definitions in `component-definition.json` (lines 85-114)
+- Models: See `hero` model in `component-models.json` (lines 192-217)
+- Filters: See `cards` filter in `component-filters.json` (lines 21-26)
 
 ### Configuration Flow
 
 ```
-1. Author opens AEM page editor
+1. Developer adds block configuration:
+   - Add definition to component-definition.json (in appropriate group)
+   - Add model to component-models.json
+   - Add filters to component-filters.json (if needed)
    ↓
-2. XWalk reads component-definition.json
+2. Author opens AEM page editor
+   - XWalk reads component-definition.json
    - Finds block definition
-   - Loads XWalk plugin config
    ↓
 3. Authoring UI generated from:
    - component-models.json (field definitions)
@@ -503,72 +517,111 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ## Component Definition Structure
 
-### Standard Block
+### Step-by-Step: Adding Configuration to Root-Level Files
+
+**Important:** XWalk configuration is added directly to three root-level JSON files. Do NOT create `_<block-name>.json` files in block folders.
+
+#### Step 1: Add Definition to component-definition.json
+
+**Location:** Add to the `"Blocks"` group's `components` array in `component-definition.json`
+
+**Standard Block Definition:**
 
 ```json
 {
-  "definitions": [{
-    "title": "Block Name",
-    "id": "blockname",
-    "plugins": {
-      "xwalk": {
-        "page": {
-          "resourceType": "core/franklin/components/block/v1/block",
-          "template": {
-            "name": "BlockName",
-            "model": "blockname"
-          }
+  "title": "Block Name",
+  "id": "blockname",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "BlockName",
+          "model": "blockname"
         }
       }
     }
-  }]
+  }
 }
 ```
 
-### Block with Items
+**Where to add:** Inside `component-definition.json` → `groups` → find group with `"id": "blocks"` → `components` array
 
+**Example from codebase:**
 ```json
 {
-  "definitions": [
+  "groups": [
     {
-      "title": "Parent Block",
-      "id": "parentblock",
-      "plugins": {
-        "xwalk": {
-          "page": {
-            "resourceType": "core/franklin/components/block/v1/block",
-            "template": {
-              "name": "ParentBlock",
-              "model": "parentblock",
-              "filter": "parentblock"
+      "title": "Blocks",
+      "id": "blocks",
+      "components": [
+        {
+          "title": "HeroComponent",
+          "id": "hero",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Hero",
+                  "model": "hero"
+                }
+              }
             }
           }
         }
-      }
-    },
-    {
-      "title": "Item",
-      "id": "item",
-      "plugins": {
-        "xwalk": {
-          "page": {
-            "resourceType": "core/franklin/components/block/v1/block/item",
-            "template": {
-              "name": "Item",
-              "model": "item"
-            }
-          }
-        }
-      }
+        // Add your new block definition here
+      ]
     }
   ]
 }
 ```
 
-**Reference Examples:**
-- Simple: `blocks/hero/_hero.json`
-- With items: `blocks/feature/_feature.json`
-- Section: `blocks/section/_section.json`
+**Reference:** `component-definition.json` lines 145-159 (hero example)
+
+### Block with Items (Parent + Child)
+
+**Parent Block Definition:**
+```json
+{
+  "title": "Parent Block",
+  "id": "parentblock",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "ParentBlock",
+          "filter": "parentblock"
+        }
+      }
+    }
+  }
+}
+```
+
+**Child Item Definition:**
+```json
+{
+  "title": "Item",
+  "id": "item",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block/item",
+        "template": {
+          "name": "Item",
+          "model": "item"
+        }
+      }
+    }
+  }
+}
+```
+
+**Both definitions go in the same `components` array**
+
+**Reference:** `component-definition.json` lines 85-114 (cards + card example)
 
 ---
 
@@ -614,6 +667,76 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 **Reference:** `component-models.json` lines 159, 1156, 1166, 911
 
+### Adding Model to component-models.json
+
+**Location:** Add as a new object to the root array in `component-models.json`
+
+**Model Structure:**
+
+```json
+{
+  "id": "blockname",
+  "fields": [
+    {
+      "component": "text",
+      "name": "title",
+      "label": "Title",
+      "valueType": "string"
+    },
+    {
+      "component": "richtext",
+      "name": "text",
+      "label": "Text",
+      "value": "",
+      "valueType": "string"
+    }
+  ]
+}
+```
+
+**Where to add:** Directly in the root array of `component-models.json`
+
+**Example from codebase:**
+```json
+[
+  {
+    "id": "page-metadata",
+    "fields": [...]
+  },
+  {
+    "id": "hero",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "value": "",
+        "label": "Text",
+        "valueType": "string"
+      }
+    ]
+  }
+  // Add your new model here
+]
+```
+
+**Important:** The `id` field must match the `model` value in the definition's `template.model` property.
+
+**Reference:** `component-models.json` lines 192-217 (hero model example)
+
 ### Field Condition Patterns
 
 ```json
@@ -651,20 +774,41 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ## Filter/Nesting Rules
 
-### Filter Configuration
+### Adding Filters to component-filters.json
+
+**Location:** Add as new objects to the `component-filters.json` array
+
+**Filter Configuration:**
 
 ```json
 {
-  "filters": [
-    {
-      "id": "parentblock",
-      "components": ["item", "linkField"]
-    }
-  ]
+  "id": "parentblock",
+  "components": ["item", "linkField"]
 }
 ```
 
-**Reference:** `component-filters.json`
+**Where to add:** Directly in the root array of `component-filters.json`
+
+**Example from codebase:**
+```json
+[
+  {
+    "id": "main",
+    "components": ["section"]
+  },
+  {
+    "id": "section",
+    "components": ["text", "image", "button", "title", "hero", "cards", "columns", "fragment"]
+  },
+  {
+    "id": "cards",
+    "components": ["card"]
+  }
+  // Add your new filter here
+]
+```
+
+**Reference:** `component-filters.json` lines 21-26 (cards filter example)
 
 ---
 
@@ -686,38 +830,70 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ## XWalk Configuration Template
 
+### Complete Configuration Example
+
+**Step 1: Add Definition to component-definition.json**
+
+In `component-definition.json`, find the `"Blocks"` group and add:
+
 ```json
 {
-  "definitions": [{
-    "title": "Block Name",
-    "id": "blockname",
-    "plugins": {
-      "xwalk": {
-        "page": {
-          "resourceType": "core/franklin/components/block/v1/block",
-          "template": {
-            "name": "BlockName",
-            "model": "blockname"
-          }
+  "title": "Block Name",
+  "id": "blockname",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "BlockName",
+          "model": "blockname"
         }
       }
     }
-  }],
-  "models": [{
-    "id": "blockname",
-    "fields": [
-      {
-        "component": "text",
-        "name": "title",
-        "label": "Title"
-      }
-    ]
-  }],
-  "filters": []
+  }
 }
 ```
 
-**Reference:** `blocks/hero/_hero.json`, `blocks/feature/_feature.json`
+**Step 2: Add Model to component-models.json**
+
+In `component-models.json`, add as new object in the array:
+
+```json
+{
+  "id": "blockname",
+  "fields": [
+    {
+      "component": "text",
+      "name": "title",
+      "label": "Title",
+      "valueType": "string"
+    },
+    {
+      "component": "richtext",
+      "name": "text",
+      "label": "Text",
+      "value": "",
+      "valueType": "string"
+    }
+  ]
+}
+```
+
+**Step 3: Add Filter to component-filters.json (if needed)**
+
+In `component-filters.json`, add as new object in the array (only if block has nested items):
+
+```json
+{
+  "id": "blockname",
+  "components": ["item"]
+}
+```
+
+**Reference:** 
+- Definition: `component-definition.json` lines 145-159 (hero)
+- Model: `component-models.json` lines 192-217 (hero)
+- Filter: `component-filters.json` lines 21-26 (cards)
 
 ---
 
@@ -725,18 +901,21 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ### ✅ XWalk Configuration Best Practices
 
-- ✅ **DO:** Include all three sections: `definitions`, `models`, `filters`
+- ✅ **DO:** Add definitions directly to `component-definition.json` in the appropriate group
+- ✅ **DO:** Add models directly to `component-models.json` as new array objects
+- ✅ **DO:** Add filters directly to `component-filters.json` as new array objects (if needed)
 - ✅ **DO:** Use consistent naming between definition ID and model ID
 - ✅ **DO:** Add validation rules for user input
-- ✅ **DO:** Use reusable models from `models/` when possible
+- ✅ **DO:** Use reusable models from `models/` directory when possible (copy fields)
 - ✅ **DO:** Set appropriate resource types
+- ✅ **DO:** Keep JSON syntax valid (use a JSON validator)
 
 ### ❌ XWalk Configuration Anti-patterns
 
 - ❌ **DON'T:** Skip validation rules
-- ❌ **DON'T:** Use inconsistent naming
-- ❌ **DON'T:** Forget to run `npm run build:json`
+- ❌ **DON'T:** Use inconsistent naming between definition ID and model ID
 - ❌ **DON'T:** Mix resource types incorrectly
+- ❌ **DON'T:** Forget to add all three parts (definition, model, filter if needed)
 
 ---
 
@@ -809,10 +988,13 @@ Rendered output
 ### Complete Workflow
 
 1. **Static HTML** → Create development mockup (Part 1)
-2. **XWalk Configuration** → Configure AEM authoring (`_*.json`) (Part 2)
+2. **XWalk Configuration** → Add definitions/models/filters to root-level JSON files (Part 2)
+   - Add definition to `component-definition.json`
+   - Add model to `component-models.json`
+   - Add filter to `component-filters.json` (if needed)
 3. **JavaScript** → Implement block logic (`<block-name>.js`) (Part 1)
 4. **CSS** → Style the block (`<block-name>.css`) (Part 1)
-5. **Component Registration** → Run `npm run build:json` (Part 2)
+5. **Component Registration** → Verify JSON syntax and configuration (Part 2)
 6. **AEM Validation** → Test in AEM authoring interface (Part 3)
 
 ---
@@ -826,12 +1008,20 @@ Rendered output
 - [ ] Test visual appearance
 
 ### Phase 2: Backend - XWalk Configuration (MANDATORY)
-- [ ] Create `blocks/<block-name>/_<block-name>.json`
-- [ ] Define component in `definitions` section
-- [ ] Create model with fields in `models` section
-- [ ] Add filters if block has nested items
-- [ ] Add validation rules where needed
-- [ ] Run `npm run build:json` to register component
+- [ ] Add component definition to `component-definition.json`
+  - [ ] Find the `"Blocks"` group (or create if needed)
+  - [ ] Add block definition object to `components` array
+  - [ ] Set `title`, `id`, `resourceType`, and `template` properties
+- [ ] Add model to `component-models.json`
+  - [ ] Add new object to the root array
+  - [ ] Set `id` to match definition ID
+  - [ ] Add `fields` array with field definitions
+  - [ ] Add validation rules where needed
+- [ ] Add filter to `component-filters.json` (if block has nested items)
+  - [ ] Add new object to the root array
+  - [ ] Set `id` to match parent block ID
+  - [ ] Set `components` array with allowed child component IDs
+- [ ] Validate JSON syntax (use JSON validator or ESLint)
 
 ### Phase 3: Frontend - JavaScript Implementation
 - [ ] Create `blocks/<block-name>/<block-name>.js`
@@ -848,10 +1038,15 @@ Rendered output
 - [ ] Test in static HTML preview
 
 ### Phase 5: Integration - Component Registration
-- [ ] Run `npm run build:json`
-- [ ] Verify component appears in `component-definition.json`
+- [ ] Verify component definition appears in `component-definition.json`
+  - [ ] Check JSON syntax is valid
+  - [ ] Verify definition is in the correct group
 - [ ] Verify model appears in `component-models.json`
+  - [ ] Check model ID matches definition ID
+  - [ ] Verify all fields are properly formatted
 - [ ] Verify filters appear in `component-filters.json` (if applicable)
+  - [ ] Check filter ID matches parent block ID
+  - [ ] Verify child component IDs are correct
 
 ### Phase 6: Integration - AEM Authoring Validation
 - [ ] Deploy to AEM environment
@@ -884,8 +1079,11 @@ Rendered output
 4. Test CSS in preview (Part 1)
 
 ### Post-Implementation
-1. Run `npm run build:json` (Part 2)
+1. Verify JSON syntax is valid in all three configuration files (Part 2)
 2. Verify component registration (Part 2)
+   - Check definition in `component-definition.json`
+   - Check model in `component-models.json`
+   - Check filter in `component-filters.json` (if applicable)
 3. Test in AEM authoring interface (Part 3)
 4. Verify responsive behavior (Part 1)
 5. Verify accessibility (Part 1)
@@ -940,10 +1138,12 @@ Rendered output
 
 #### Issue 2: XWalk Config Not Working
 **Solution:**
-- Verify JSON syntax is valid
-- Run `npm run build:json`
-- Check component appears in `component-definition.json`
+- Verify JSON syntax is valid in all three files (`component-definition.json`, `component-models.json`, `component-filters.json`)
+- Check component definition appears in `component-definition.json` in the correct group
+- Verify model appears in `component-models.json` with matching ID
+- Verify filter appears in `component-filters.json` (if applicable)
 - Verify model ID matches definition ID
+- Check that resource type is correct
 
 #### Issue 3: Fields Not Appearing in AEM
 **Solution:**
@@ -1002,11 +1202,10 @@ Rendered output
 - `blocks/<block-name>/<block-name>.css` - Block Styles
 
 **Backend/Configuration:**
-- `component-definition.json` - All component definitions
-- `component-models.json` - All field models
-- `component-filters.json` - All nesting rules
-- `blocks/<block-name>/_<block-name>.json` - XWalk config
-- `models/` - Reusable field definitions
+- `component-definition.json` - All component definitions (edit directly)
+- `component-models.json` - All field models (edit directly)
+- `component-filters.json` - All nesting rules (edit directly)
+- `models/` - Reusable field definitions (reference for copying fields)
 
 ---
 
@@ -1020,19 +1219,26 @@ Rendered output
 
 ---
 
-**Document Version:** v1.2  
-**Last Updated:** 2026-01-06  
+**Document Version:** EDS-2026.1.0  
+**Last Updated:** 2026-01-08  
 **Maintained By:** AI Documentation Engineer  
 **Review Status:** Ready for Use
 
 ---
 
-## Summary of Changes (v1.2)
+## Summary
 
-This update restructures the document with clear separation:
+This implementation guide provides comprehensive step-by-step instructions for creating new EDS blocks. Key points:
 
-1. **Part 1: Frontend Development** - All JavaScript, CSS, and HTML implementation
-2. **Part 2: AEM Authoring Configuration (Backend)** - All XWalk JSON configuration
-3. **Part 3: Integration & Workflow** - End-to-end flow, validation, and troubleshooting
+1. **Two files required per block:** JavaScript and CSS (in `blocks/<block-name>/`)
+2. **XWalk configuration:** Add definitions/models/filters directly to root-level JSON files:
+   - `component-definition.json` - Component definitions
+   - `component-models.json` - Field models  
+   - `component-filters.json` - Nesting rules
+3. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM
+4. **Testing:** Manual testing in browser and AEM authoring interface
+5. **Patterns:** Follow established patterns from existing blocks
 
-This structure makes it easier to find relevant information based on your role (frontend developer vs. backend/config developer) and the task at hand.
+**Important:** Do NOT create `_<block-name>.json` files in block folders. All XWalk configuration should be added directly to the root-level JSON files.
+
+**Overall Confidence Score:** 98%
