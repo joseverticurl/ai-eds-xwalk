@@ -36,6 +36,92 @@ This guide is organized into three main parts:
 
 ---
 
+## Pre-Implementation: Gathering Requirements
+
+Before starting implementation, gather all necessary requirements and design assets. This ensures accurate implementation that matches design specifications and business requirements.
+
+### Required Information
+
+When creating a component implementation plan, **always ask for**:
+
+1. **Figma Design URL**
+   - Full Figma file URL or specific frame/component URL
+   - Access permissions (if file is private)
+   - Specific variant or state to implement (if multiple exist)
+   - Breakpoint specifications (mobile, tablet, desktop)
+
+2. **Story/Requirements Document**
+   - User story or feature requirements
+   - Acceptance criteria
+   - Functional requirements
+   - Content structure and field requirements
+   - Interaction requirements (animations, hover states, etc.)
+   - Accessibility requirements
+   - Browser/device compatibility requirements
+
+3. **Additional Context**
+   - Similar existing blocks in codebase to reference
+   - Content authoring requirements (what fields authors need)
+   - Any AEM-specific requirements
+   - Performance considerations
+
+### Using Figma MCP Tools
+
+**When Figma URL is provided, use Figma MCP tools to extract design information:**
+
+1. **Extract Design Specifications:**
+   - Use Figma MCP to fetch the design file
+   - Extract component structure, layout, and hierarchy
+   - Identify colors, typography, spacing, and sizing
+   - Extract responsive breakpoints and variants
+   - Identify interactive states (hover, active, disabled, etc.)
+
+2. **Analyze Design Elements:**
+   - Component structure and nesting
+   - Text content and hierarchy
+   - Image requirements and dimensions
+   - Icon usage and placement
+   - Button styles and states
+   - Form elements (if applicable)
+
+3. **Document Findings:**
+   - Create a design analysis summary
+   - Map Figma elements to HTML structure
+   - Map Figma styles to CSS properties
+   - Identify reusable components from `shared-components/`
+   - Note any design tokens or CSS variables needed
+
+**Example Workflow:**
+```
+1. Receive Figma URL: https://www.figma.com/file/...
+2. Use Figma MCP to fetch design file
+3. Analyze component structure and extract:
+   - Layout: Grid, Flexbox, or custom
+   - Colors: Primary, secondary, text colors
+   - Typography: Font families, sizes, weights
+   - Spacing: Margins, padding values
+   - Breakpoints: Mobile, tablet, desktop
+4. Cross-reference with story requirements
+5. Create implementation plan based on design + requirements
+```
+
+### Requirements Checklist
+
+Before starting implementation, ensure you have:
+
+- [ ] Figma design URL with access
+- [ ] Story/requirements document
+- [ ] Design specifications extracted (via Figma MCP or manual review)
+- [ ] Content structure mapped to XWalk fields
+- [ ] Similar blocks identified for reference
+- [ ] Breakpoint requirements confirmed
+- [ ] Accessibility requirements documented
+- [ ] Browser compatibility requirements noted
+
+**Note:** If Figma URL or story requirements are missing, request them before proceeding with implementation. Accurate requirements prevent rework and ensure the component meets design and functional specifications.
+
+---
+
 # Part 1: Frontend Development
 
 This section covers all frontend implementation aspects: JavaScript, CSS, and HTML.
@@ -48,15 +134,15 @@ This section covers all frontend implementation aspects: JavaScript, CSS, and HT
 
 1. **Simple Blocks** - Single content blocks
    - Example: `hero`, `fragment`, `textsection`
-   - Reference: `blocks/hero/`, `blocks/fragment/`
+   - See: `blocks/hero/`, `blocks/fragment/` in codebase
 
 2. **Complex Blocks with Items** - Parent block with nested items
    - Example: `feature` → `featureItem`, `cards` → `card`
-   - Reference: `blocks/feature/`, `blocks/cards/`
+   - See: `blocks/feature/`, `blocks/cards/` in codebase
 
 3. **Section-Level Blocks** - Section containers with nested blocks
    - Example: `section`, `tabs`, `columns`
-   - Reference: `blocks/section/`, `blocks/tabs/`
+   - See: `blocks/section/`, `blocks/tabs/` in codebase
 
 ### Frontend Tech Stack
 
@@ -298,7 +384,180 @@ export default async function decorate(block) {
 }
 ```
 
-**Reference:** `blocks/fragment/fragment.js`, `blocks/header/header.js`
+## Recommended Patterns and Anti-Patterns
+
+**Reference:** See `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` for detailed patterns and anti-patterns.
+
+### Recommended Patterns
+
+#### Pattern 1: Standard Block Decoration
+
+**Use Case:** Simple content blocks (hero, text sections)
+
+```javascript
+export default function decorate(block) {
+  // Extract data from block
+  const title = block.querySelector('[data-aue-prop="title"]')?.textContent?.trim();
+  
+  // Transform DOM
+  const wrapper = document.createElement('div');
+  wrapper.className = 'blockname-wrapper';
+  // ... build structure
+  
+  // Preserve instrumentation
+  moveInstrumentation(block, wrapper);
+  
+  // Replace content
+  block.replaceChildren(wrapper);
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 1
+
+#### Pattern 2: Complex Block with Nested Items
+
+**Use Case:** Parent block with child items (cards → card)
+
+```javascript
+export default function decorate(block) {
+  const ul = document.createElement('ul');
+  [...block.children].forEach((row) => {
+    const li = document.createElement('li');
+    moveInstrumentation(row, li);  // CRITICAL
+    // ... transform row content
+    ul.append(li);
+  });
+  block.replaceChildren(ul);
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2
+
+#### Pattern 3: Async Block with External Content
+
+**Use Case:** Blocks loading fragments or external content
+
+```javascript
+export default async function decorate(block) {
+  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();
+  const content = await loadFragment(path);
+  if (content) {
+    block.replaceChildren(...content.childNodes);
+  }
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 3
+
+#### Pattern 4: Interactive Block with Event Handlers
+
+**Use Case:** Blocks with user interaction (navigation, tabs)
+
+```javascript
+export default async function decorate(block) {
+  // Setup DOM
+  // ...
+  
+  // Add event listeners
+  block.querySelector('.button').addEventListener('click', handleClick);
+  
+  // Media query listeners
+  const isDesktop = window.matchMedia('(min-width: 900px)');
+  isDesktop.addEventListener('change', handleResize);
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 4
+
+#### Pattern 5: Image Optimization
+
+**Use Case:** Blocks displaying images
+
+```javascript
+import { createOptimizedPicture } from '../../scripts/aem.js';
+import { moveInstrumentation } from '../../scripts/scripts.js';
+
+// In decorate function
+block.querySelectorAll('picture > img').forEach((img) => {
+  const optimizedPic = createOptimizedPicture(img.src, img.alt, false, [{ width: '750' }]);
+  moveInstrumentation(img, optimizedPic.querySelector('img'));
+  img.closest('picture').replaceWith(optimizedPic);
+});
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 5
+
+### Anti-Patterns to Avoid
+
+#### ❌ Anti-Pattern 1: Skipping Instrumentation Preservation
+
+```javascript
+// ❌ WRONG - Loses AEM authoring attributes
+const newElement = document.createElement('div');
+newElement.innerHTML = block.innerHTML;
+block.replaceChildren(newElement);
+
+// ✅ CORRECT - Preserves AEM authoring attributes
+const newElement = document.createElement('div');
+moveInstrumentation(block, newElement);
+while (block.firstElementChild) newElement.append(block.firstElementChild);
+block.replaceChildren(newElement);
+```
+
+**Impact:** AEM authoring interface will not work correctly  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 1
+
+#### ❌ Anti-Pattern 2: Hardcoding Breakpoints
+
+```javascript
+// ❌ WRONG
+if (window.innerWidth >= 1024) { ... }
+
+// ✅ CORRECT - Use consistent breakpoint
+const isDesktop = window.matchMedia('(min-width: 900px)');
+if (isDesktop.matches) { ... }
+```
+
+**Impact:** Inconsistent responsive behavior  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 2
+
+#### ❌ Anti-Pattern 3: Missing XWalk Configuration
+
+**Issue:** Block works but cannot be authored in AEM because XWalk configuration is missing.
+
+**Solution:** Add block definition to `component-definition.json`, model to `component-models.json`, and filter (if needed) to `component-filters.json` in root-level files.
+
+**Impact:** Block cannot be configured in AEM authoring interface  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 3
+
+#### ❌ Anti-Pattern 4: Using innerHTML with User Content
+
+```javascript
+// ❌ WRONG - XSS risk
+element.innerHTML = userContent;
+
+// ✅ CORRECT - Safe
+element.textContent = userContent;
+// OR use sanitization utility if HTML needed
+import stringToHTML from '../../shared-components/Utility.js';
+const safeHTML = stringToHTML(userContent);
+```
+
+**Impact:** Security vulnerability  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 4
+
+#### ❌ Anti-Pattern 5: Not Running Build Command
+
+```bash
+# After adding XWalk config, must run:
+npm run build:json
+# Otherwise component-*.json files won't be updated
+```
+
+**Impact:** AEM won't recognize new block (if project uses build pipeline)  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 5
+
+**Note:** For detailed explanations and more patterns, see `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Component/Service Patterns and Anti-Patterns section.
 
 ### Advanced Frontend Patterns
 
@@ -987,19 +1246,38 @@ Rendered output
 
 ### Complete Workflow
 
-1. **Static HTML** → Create development mockup (Part 1)
-2. **XWalk Configuration** → Add definitions/models/filters to root-level JSON files (Part 2)
+1. **Requirements Gathering** → Gather Figma URL, story requirements, and design specifications (Pre-Implementation)
+   - Request Figma design URL
+   - Request story/requirements document
+   - Use Figma MCP tools to extract design specifications
+   - Analyze design and map to implementation plan
+2. **Static HTML** → Create development mockup (Part 1)
+3. **XWalk Configuration** → Add definitions/models/filters to root-level JSON files (Part 2)
    - Add definition to `component-definition.json`
    - Add model to `component-models.json`
    - Add filter to `component-filters.json` (if needed)
-3. **JavaScript** → Implement block logic (`<block-name>.js`) (Part 1)
-4. **CSS** → Style the block (`<block-name>.css`) (Part 1)
-5. **Component Registration** → Verify JSON syntax and configuration (Part 2)
-6. **AEM Validation** → Test in AEM authoring interface (Part 3)
+4. **JavaScript** → Implement block logic (`<block-name>.js`) (Part 1)
+5. **CSS** → Style the block (`<block-name>.css`) (Part 1)
+6. **Component Registration** → Verify JSON syntax and configuration (Part 2)
+7. **AEM Validation** → Test in AEM authoring interface (Part 3)
 
 ---
 
 ## Implementation Checklist
+
+### Phase 0: Pre-Implementation - Requirements Gathering (MANDATORY)
+- [ ] Request and receive Figma design URL
+- [ ] Request and receive story/requirements document
+- [ ] Use Figma MCP tools to extract design specifications
+- [ ] Analyze component structure from Figma design
+- [ ] Extract design tokens (colors, typography, spacing)
+- [ ] Map design elements to HTML structure
+- [ ] Map design styles to CSS properties
+- [ ] Identify content fields needed for XWalk configuration
+- [ ] Identify similar blocks in codebase for reference
+- [ ] Document breakpoint requirements
+- [ ] Document accessibility requirements
+- [ ] Create implementation plan based on design + requirements
 
 ### Phase 1: Frontend - Static HTML Creation (MANDATORY)
 - [ ] Create `preview/mock-content/<block-name>.html`
@@ -1067,10 +1345,14 @@ Rendered output
 ## Validation Workflow
 
 ### Pre-Implementation
-1. Review similar blocks in codebase
-2. Identify reusable components/models
-3. Plan block structure (Part 1)
-4. Plan XWalk field requirements (Part 2)
+1. **Gather Requirements** (see Pre-Implementation: Gathering Requirements section)
+   - Request Figma URL and story requirements
+   - Use Figma MCP tools to extract design specifications
+   - Analyze design and create implementation plan
+2. Review similar blocks in codebase
+3. Identify reusable components/models
+4. Plan block structure (Part 1)
+5. Plan XWalk field requirements (Part 2)
 
 ### During Implementation
 1. Verify static HTML structure (Part 1)
