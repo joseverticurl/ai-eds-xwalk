@@ -5,7 +5,7 @@
 **Version:** EDS-2026.1.0  
 **Confidence Score:** 95% (based on analysis of 6+ existing blocks, configuration files, and core scripts)
 
----
+----
 
 ## Executive Summary
 
