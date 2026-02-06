@@ -3,7 +3,7 @@
 **Generated:** 2026-01-08  
 **Guide:** eds-guide  
 **Version:** EDS-2026.1.0  
-**Confidence Score:** 95% (based on analysis of 6+ existing blocks, configuration files, and core scripts)
+**Confidence Score:** 95% (based on analysis of 6+ existing blocks, configuration files, and core scripts))
 
 ---
 
