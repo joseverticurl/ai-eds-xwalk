@@ -201,6 +201,36 @@
               }
             }
           }
+        },
+        {
+          "title": "You May Also Like",
+          "id": "youmayalsolike",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "YouMayAlsoLike",
+                  "filter": "youmayalsolike"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "You May Also Like Item",
+          "id": "youmayalsolikeitem",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "YouMayAlsoLikeItem",
+                  "model": "youmayalsolikeitem"
+                }
+              }
+            }
+          }
         }
       ]
     }

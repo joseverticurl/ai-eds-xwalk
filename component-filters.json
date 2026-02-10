@@ -17,7 +17,8 @@
       "columns",
       "fragment",
       "initiative-highlight",
-      "relatedarticles"
+      "relatedarticles",
+      "youmayalsolike"
     ]
   },
   {
@@ -44,5 +45,9 @@
   {
     "id": "relatedarticles",
     "components": ["relatedarticle"]
+  },
+  {
+    "id": "youmayalsolike",
+    "components": ["youmayalsolikeitem"]
   }
 ]
