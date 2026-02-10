@@ -16,7 +16,8 @@
       "cards",
       "columns",
       "fragment",
-      "initiative-highlight"
+      "initiative-highlight",
+      "relatedarticles"
     ]
   },
   {
@@ -39,5 +40,9 @@
       "button",
       "title"
     ]
+  },
+  {
+    "id": "relatedarticles",
+    "components": ["relatedarticle"]
   }
 ]
