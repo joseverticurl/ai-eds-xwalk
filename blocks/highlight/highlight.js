@@ -40,8 +40,17 @@ export default function decorate(block) {
   const ctaLinkCell = ctaRow?.children?.[0];
   const ctaTextCell = ctaRow?.children?.[1];
   const ctaTargetCell = ctaRow?.children?.[2];
-  const ctaLink = ctaLinkCell?.querySelector?.('a')?.getAttribute?.('href') || '';
-  const ctaText = ctaTextCell?.textContent?.trim() || '';
+  
+  // Extract CTA link - check for <a> tag in link cell (may be wrapped in <p>)
+  const ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');
+  const ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';
+  
+  // Extract CTA text - from text cell, or fallback to link text if text cell is empty
+  let ctaText = ctaTextCell?.textContent?.trim() || '';
+  if (!ctaText && ctaLinkElement) {
+    ctaText = ctaLinkElement.textContent?.trim() || '';
+  }
+  
   const ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';
   
   // Build the new structure
@@ -105,12 +114,13 @@ export default function decorate(block) {
     contentWrapper.appendChild(descriptionDiv);
   }
   
-  // CTA Button
-  if (ctaLink && ctaText) {
+  // CTA Button - render if we have a link (text is optional, will use link text as fallback)
+  if (ctaLink) {
     const ctaButton = document.createElement('a');
     ctaButton.classList.add('highlight__cta');
     ctaButton.href = ctaLink;
-    ctaButton.textContent = ctaText;
+    // Use provided text, or fallback to link text, or default to "Learn more"
+    ctaButton.textContent = ctaText || ctaLinkElement?.textContent?.trim() || 'Learn more';
     ctaButton.target = ctaTarget || '_self';
     if (ctaTarget === '_blank') {
       ctaButton.rel = 'noopener noreferrer';
