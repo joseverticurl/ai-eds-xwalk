@@ -151,7 +151,193 @@ This section covers all frontend implementation aspects: JavaScript and CSS. HTM
 
 ### Index-Based Implementation Standard
 
-All block HTML and JavaScript must use **index-based implementation**: elements are identified by their **position (index)** in the DOM (e.g. `block.children[0]`, `row.children[1]`). Do **not** use `data-*` attributes for structure or for selecting content. Document the structure contract (which index means which content) in the block’s code.
+All block HTML and JavaScript must use **index-based implementation**: elements are identified by their **position (index)** in the DOM (e.g. `block.children[0]`, `row.children[1]`). Do **not** use `data-*` attributes for structure or for selecting content. Document the structure contract (which index means which content) in the block's code.
+
+---
+
+## Understanding the Structure Contract: How CSS/JS Work Without Static HTML
+
+### The Core Question: How Can You Write CSS/JS Without Knowing HTML Structure?
+
+Since EDS blocks have **no static HTML** (HTML is generated at runtime by AEM), you might wonder: *How can you write CSS and JavaScript without knowing the actual HTML structure?*
+
+**Answer:** The structure is determined by the **XWalk model field order**, and CSS targets the **transformed structure** created by JavaScript, not the initial AEM-generated HTML.
+
+### How XWalk Model Determines HTML Structure
+
+**Critical:** The order of fields in your `component-models.json` directly determines the HTML structure that AEM generates at runtime.
+
+**Mapping Rule:**
+- Each field in the model → One row (`<div>`) in generated HTML
+- Field order in model → Row order in HTML (index 0, 1, 2...)
+- Field values → Cells within that row
+
+**Example:**
+
+```json
+// component-models.json
+{
+  "id": "hero",
+  "fields": [
+    {
+      "component": "reference",
+      "name": "image"
+    },      // → block.children[0] (first row)
+    {
+      "component": "text",
+      "name": "imageAlt"
+    },     // → block.children[0].children[1] (first row, second cell)
+    {
+      "component": "richtext",
+      "name": "text"
+    }      // → block.children[1] (second row)
+  ]
+}
+```
+
+**Generated HTML (at runtime by AEM):**
+
+```html
+<div class="hero">
+  <div>                    <!-- block.children[0] = image row -->
+    <div>image-url</div>   <!-- cell 0 = image value -->
+    <div>alt-text</div>    <!-- cell 1 = imageAlt value -->
+  </div>
+  <div>                    <!-- block.children[1] = text row -->
+    <div>Rich text...</div> <!-- cell 0 = text value -->
+  </div>
+</div>
+```
+
+**Key Point:** The field order in your XWalk model **is** the structure contract. You know the structure because you define it in the model.
+
+### CSS and JavaScript Development Strategy
+
+#### JavaScript (`decorate()` function) Workflow:
+
+1. **Receives** the AEM-generated HTML structure (based on XWalk model field order)
+2. **Extracts** data using index-based access (knowing the field order from the model)
+3. **Transforms** to the final desired structure
+4. **Adds CSS classes** to the transformed elements for styling
+
+**Example:**
+
+```javascript
+export default function decorate(block) {
+  // Structure contract: field[0] = image, field[1] = text
+  const imageRow = block.children[0];        // First field = image
+  const textRow = block.children[1];         // Second field = text
+  
+  const imageSrc = imageRow?.children?.[0]?.textContent?.trim();
+  const text = textRow?.children?.[0]?.textContent?.trim();
+  
+  // Transform to final structure
+  const container = document.createElement('div');
+  container.classList.add('hero-container');  // CSS class for styling
+  
+  if (imageSrc) {
+    const img = document.createElement('img');
+    img.src = imageSrc;
+    img.classList.add('hero-image');  // CSS class for styling
+    container.appendChild(img);
+  }
+  
+  if (text) {
+    const textDiv = document.createElement('div');
+    textDiv.classList.add('hero-text');  // CSS class for styling
+    textDiv.textContent = text;
+    container.appendChild(textDiv);
+  }
+  
+  block.innerHTML = '';
+  block.appendChild(container);
+}
+```
+
+#### CSS Development Strategy:
+
+**Critical:** CSS should style the **final transformed structure** (after `decorate()` runs), **not** the initial AEM-generated HTML.
+
+**Why:** The initial AEM HTML is just raw data in a predictable structure. JavaScript transforms it into the final presentation structure, and that's what CSS should target.
+
+**Example:**
+
+```css
+/* ✅ CORRECT: Style the transformed structure */
+.hero-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+}
+
+.hero-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+/* ❌ WRONG: Don't style the initial AEM structure */
+/* .hero > div > div { ... } */
+```
+
+### Complete Development Workflow
+
+```
+1. Plan Structure Contract
+   ↓
+   Define field order in XWalk model
+   Document: "field[0] = image, field[1] = text"
+   ↓
+2. AEM Generates HTML (Runtime)
+   ↓
+   HTML structure matches field order
+   block.children[0] = first field
+   block.children[1] = second field
+   ↓
+3. JavaScript Transforms
+   ↓
+   decorate(block) receives AEM HTML
+   Extracts data by index (knowing field order)
+   Transforms to final structure
+   Adds CSS classes
+   ↓
+4. CSS Styles Final Structure
+   ↓
+   Targets transformed elements
+   Uses classes added by JavaScript
+   Styles the final DOM, not initial HTML
+```
+
+### Development Process Checklist
+
+1. **Define XWalk Model:**
+   - [ ] Plan field order (this becomes your structure contract)
+   - [ ] Document which field = which index
+   - [ ] Add model to `component-models.json`
+
+2. **Write JavaScript:**
+   - [ ] Document structure contract in JSDoc
+   - [ ] Access elements by index based on field order
+   - [ ] Transform to final structure
+   - [ ] Add CSS classes to transformed elements
+
+3. **Write CSS:**
+   - [ ] Target the transformed structure (after `decorate()` runs)
+   - [ ] Use classes added by JavaScript
+   - [ ] Do NOT style the initial AEM-generated HTML structure
+
+### Key Takeaways
+
+- ✅ **You DO know the structure** - it's defined by your XWalk model field order
+- ✅ **JavaScript transforms** the AEM HTML to the final structure
+- ✅ **CSS targets** the transformed structure, not the initial HTML
+- ✅ **Field order = Structure contract** - document it clearly
+- ❌ **Don't style** the initial AEM-generated HTML directly
+- ❌ **Don't rely** on data attributes for structure (use index-based access)
 
 ---
 
@@ -614,6 +800,56 @@ Automatically added by `decorateBlock()`:
 
 **Reference:** `blocks/hero/hero.css`
 
+### Critical: CSS Targets Transformed Structure
+
+**Important:** CSS should style the **final transformed structure** created by JavaScript's `decorate()` function, **not** the initial AEM-generated HTML.
+
+**Why:**
+- Initial AEM HTML is raw data in a predictable structure (based on XWalk model field order)
+- JavaScript transforms this to the final presentation structure
+- CSS should target the transformed elements with classes added by JavaScript
+
+**Workflow:**
+```
+AEM generates HTML (from XWalk model)
+  ↓
+JavaScript decorate() transforms structure
+  ↓
+CSS styles the transformed structure
+```
+
+**Example:**
+
+```javascript
+// JavaScript: Transform and add CSS classes
+export default function decorate(block) {
+  const container = document.createElement('div');
+  container.classList.add('hero-container');  // ← CSS class for styling
+  
+  const image = document.createElement('img');
+  image.classList.add('hero-image');  // ← CSS class for styling
+  container.appendChild(image);
+  
+  block.replaceChildren(container);
+}
+```
+
+```css
+/* ✅ CORRECT: Style the transformed structure */
+.hero-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+}
+
+/* ❌ WRONG: Don't style initial AEM structure directly */
+/* .hero > div > div { ... } */
+```
+
 ### CSS Template
 
 ```css
@@ -750,6 +986,8 @@ Automatically added by `decorateBlock()`:
 
 ### ✅ CSS Best Practices
 
+- ✅ **DO:** Style the **transformed structure** (after JavaScript `decorate()` runs)
+- ✅ **DO:** Use classes added by JavaScript during transformation
 - ✅ **DO:** Use block-specific class names
 - ✅ **DO:** Follow responsive design patterns
 - ✅ **DO:** Use CSS variables for theming
@@ -757,6 +995,8 @@ Automatically added by `decorateBlock()`:
 
 ### ❌ CSS Anti-patterns
 
+- ❌ **DON'T:** Style the initial AEM-generated HTML structure directly
+- ❌ **DON'T:** Rely on the raw AEM HTML structure (it's just data, not presentation)
 - ❌ **DON'T:** Use overly specific selectors
 - ❌ **DON'T:** Hardcode colors/values
 - ❌ **DON'T:** Skip responsive breakpoints
@@ -981,6 +1221,18 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 ### Adding Model to component-models.json
 
 **Location:** Add as a new object to the root array in `component-models.json`
+
+**Critical: Field Order Determines HTML Structure**
+
+**Important:** The order of fields in the `fields` array directly determines the HTML structure that AEM generates at runtime. This order becomes your **structure contract** for JavaScript index-based access.
+
+- Field at index 0 → `block.children[0]` in generated HTML
+- Field at index 1 → `block.children[1]` in generated HTML
+- And so on...
+
+**Plan your field order carefully** - it must match the index-based access pattern in your JavaScript `decorate()` function. Document this structure contract in your JavaScript code.
+
+**Reference:** See "Understanding the Structure Contract" section in Part 1 for detailed explanation.
 
 **Model Structure:**
 

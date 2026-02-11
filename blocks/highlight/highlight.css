@@ -1,0 +1,131 @@
+/* Highlight Block */
+.highlight {
+  background: linear-gradient(180deg, #e8f4f8 0%, #e8f5e8 100%);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  padding: 32px 24px;
+}
+
+.highlight__container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.highlight__image-wrapper {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.highlight__image-wrapper picture,
+.highlight__image-wrapper img {
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+  object-fit: cover;
+  display: block;
+}
+
+.highlight__content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+}
+
+.highlight__title {
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.96px;
+  color: #000000;
+  margin: 0;
+}
+
+.highlight__description {
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #000000;
+  margin: 0;
+}
+
+.highlight__description p {
+  margin: 0 0 1em 0;
+}
+
+.highlight__description p:last-child {
+  margin-bottom: 0;
+}
+
+.highlight__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 20px 30px;
+  min-height: 64px;
+  width: 100%;
+  max-width: fit-content;
+  transition: opacity 0.2s ease;
+}
+
+.highlight__cta:hover {
+  opacity: 0.8;
+}
+
+.highlight__cta:focus {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+/* Desktop: Side-by-side layout */
+@media (width >= 900px) {
+  .highlight {
+    padding: 40px;
+  }
+
+  .highlight__container {
+    flex-direction: row;
+    align-items: center;
+    gap: 135px;
+  }
+
+  .highlight__image-wrapper {
+    flex: 0 0 auto;
+    width: 670px;
+    max-width: 48%;
+  }
+
+  .highlight__content {
+    flex: 1;
+    padding: 100px 0;
+    gap: 50px;
+    max-width: 440px;
+  }
+
+  .highlight__title {
+    font-size: 64px;
+    letter-spacing: -1.92px;
+  }
+
+  .highlight__description {
+    font-size: 18px;
+  }
+
+  .highlight__cta {
+    width: auto;
+  }
+}
