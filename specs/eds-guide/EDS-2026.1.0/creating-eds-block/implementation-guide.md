@@ -382,7 +382,7 @@ shared-components/               # Reusable frontend utilities
    ↓
 3. decorateBlock() - Marks block as 'initialized'
    - Adds 'block' class and block metadata
-   - Wraps text nodes
+   - Calls wrapTextNodes() - Wraps text content in <p> tags
    ↓
 4. loadBlock() - Async loading
    - Loads CSS: <block-name>.css
@@ -392,7 +392,12 @@ shared-components/               # Reusable frontend utilities
 5. Block Status: 'loaded'
 ```
 
-**Reference:** `scripts/aem.js` lines 777-826
+**Critical:** `wrapTextNodes()` runs BEFORE `decorate()` and wraps text content in `<p>` tags. Your extraction logic must account for this:
+- Links may be wrapped: `<div><p><a href="...">`
+- Text may be wrapped: `<div><p>Text content</p></div>`
+- Always check for both direct children and wrapped elements when extracting
+
+**Reference:** `scripts/aem.js` lines 777-826, `scripts/aem.js` lines 378-425 (wrapTextNodes function)
 
 ### Block Status Lifecycle
 
@@ -466,7 +471,71 @@ const altText = altCell?.textContent?.trim() || '';
 const value = element?.textContent?.trim() ?? 'default';
 ```
 
-**Best practice:** Use optional chaining (`?.`) and nullish coalescing (`??`) for index-based access. Document the index contract at the top of the block’s `decorate()` function.
+**Best practice:** Use optional chaining (`?.`) and nullish coalescing (`??`) for index-based access. Document the index contract at the top of the block's `decorate()` function.
+
+#### Robust Data Extraction with Fallbacks
+
+**Critical:** After `decorateBlock()` runs, `wrapTextNodes()` wraps text content in `<p>` tags. Always account for wrapped elements when extracting data.
+
+**Link Extraction with Fallbacks:**
+```javascript
+// ✅ CORRECT: Handle wrapped links and use .href as fallback
+const linkCell = row?.children?.[0];
+// Check for link in direct children OR wrapped in <p>
+const linkElement = linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a');
+// Use .href as fallback (resolves relative URLs)
+const linkUrl = linkElement?.getAttribute?.('href') || linkElement?.href || '';
+```
+
+**Text Extraction with Fallbacks:**
+```javascript
+// ✅ CORRECT: Extract text from cell or wrapped <p> tag
+const textCell = row?.children?.[0];
+// Try direct textContent first, then check for wrapped <p>
+let text = textCell?.textContent?.trim() || '';
+if (!text) {
+  text = textCell?.querySelector?.('p')?.textContent?.trim() || '';
+}
+```
+
+**CTA Extraction Pattern (with Multiple Fallbacks):**
+```javascript
+// CTA row: link cell, text cell, target cell
+const ctaRow = rows[3];
+const ctaLinkCell = ctaRow?.children?.[0];
+const ctaTextCell = ctaRow?.children?.[1];
+const ctaTargetCell = ctaRow?.children?.[2];
+
+// Extract link - handle wrapped elements and use .href fallback
+const ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');
+const ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';
+
+// Extract text - try text cell first, then fallback to link text (if not a URL)
+let ctaText = ctaTextCell?.textContent?.trim() || 
+              ctaTextCell?.querySelector?.('p')?.textContent?.trim() || '';
+if (!ctaText && ctaLinkElement) {
+  const linkText = ctaLinkElement.textContent?.trim() || '';
+  // Only use link text if it's not a URL (avoid using "/path/to/page" as button text)
+  ctaText = (linkText.startsWith('/') || linkText.includes('http')) ? '' : linkText;
+}
+
+const ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';
+
+// Render button if link exists (text is optional with fallbacks)
+if (ctaLink) {
+  const button = document.createElement('a');
+  button.href = ctaLink;
+  button.textContent = ctaText || 'Learn more';  // Final fallback
+  button.target = ctaTarget;
+  // ...
+}
+```
+
+**Why Fallbacks Matter:**
+- `wrapTextNodes()` wraps content in `<p>` tags before `decorate()` runs
+- `getAttribute('href')` may return empty string; `.href` resolves relative URLs
+- Text cells may be empty; link text can serve as fallback (but filter out URLs)
+- Always render if link exists; text can have multiple fallback levels
 
 ### Reusable Frontend Components
 
@@ -664,18 +733,79 @@ import { moveInstrumentation } from '../../scripts/scripts.js';
 
 // In decorate function: image in first row, first cell
 const imageRow = block.children[0];
-const pictureOrImg = imageRow?.children?.[0]?.querySelector?.('picture, img');
+const imageCell = imageRow?.children?.[0];
+const altCell = imageRow?.children?.[1];
+const altText = altCell?.textContent?.trim() || '';
+
+// Extract image source - handle wrapped elements
+const pictureOrImg = imageCell?.querySelector?.('picture, img');
 if (pictureOrImg) {
   const img = pictureOrImg.tagName === 'IMG' ? pictureOrImg : pictureOrImg.querySelector('img');
   if (img) {
-    const optimizedPic = createOptimizedPicture(img.src, img.alt, false, [{ width: '750' }]);
-    moveInstrumentation(img, optimizedPic.querySelector('img'));
-    img.closest('picture')?.replaceWith(optimizedPic) || img.replaceWith(optimizedPic);
+    const optimizedPic = createOptimizedPicture(
+      img.src, 
+      altText, 
+      false, 
+      [{ width: '750' }, { width: '1440' }]
+    );
+    moveInstrumentation(pictureOrImg, optimizedPic);
+    pictureOrImg.replaceWith(optimizedPic);
   }
 }
 ```
 
 **Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 5
+
+#### Pattern 6: CTA Button with Robust Extraction
+
+**Use Case:** Blocks with Call-to-Action buttons requiring link, text, and target fields.
+
+```javascript
+// CTA row: link cell (index 0), text cell (index 1), target cell (index 2)
+const ctaRow = rows[3];
+const ctaLinkCell = ctaRow?.children?.[0];
+const ctaTextCell = ctaRow?.children?.[1];
+const ctaTargetCell = ctaRow?.children?.[2];
+
+// Extract link - handle wrapped elements and use .href fallback
+const ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');
+const ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';
+
+// Extract text with multiple fallbacks
+let ctaText = ctaTextCell?.textContent?.trim() || 
+              ctaTextCell?.querySelector?.('p')?.textContent?.trim() || '';
+if (!ctaText && ctaLinkElement) {
+  const linkText = ctaLinkElement.textContent?.trim() || '';
+  // Only use link text if it's not a URL
+  ctaText = (linkText.startsWith('/') || linkText.includes('http')) ? '' : linkText;
+}
+
+const ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';
+
+// Render button if link exists (text has fallbacks)
+if (ctaLink) {
+  const ctaButton = document.createElement('a');
+  ctaButton.href = ctaLink;
+  ctaButton.textContent = ctaText || 'Learn more';  // Final fallback
+  ctaButton.target = ctaTarget;
+  if (ctaTarget === '_blank') {
+    ctaButton.rel = 'noopener noreferrer';
+  }
+  if (ctaLinkCell) {
+    moveInstrumentation(ctaLinkCell, ctaButton);
+  }
+  // Append to container...
+}
+```
+
+**Key Points:**
+- Always use `.href` as fallback for `getAttribute('href')` (resolves relative URLs)
+- Check for wrapped `<p>` tags when extracting text
+- Use link text as fallback only if it's not a URL
+- Render button if link exists; text is optional with fallbacks
+- Always use `moveInstrumentation()` when replacing elements
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 6
 
 ### Anti-Patterns to Avoid
 
@@ -746,6 +876,42 @@ npm run build:json
 
 **Impact:** AEM won't recognize new block (if project uses build pipeline)  
 **Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 5
+
+#### ❌ Anti-Pattern 6: Incomplete Link Extraction
+
+```javascript
+// ❌ WRONG - May fail if link is wrapped or getAttribute returns empty
+const link = linkCell?.querySelector?.('a')?.getAttribute?.('href') || '';
+if (link && text) {  // Too strict - requires both
+  // render button
+}
+
+// ✅ CORRECT - Handle wrapped elements and use .href fallback
+const linkElement = linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a');
+const link = linkElement?.getAttribute?.('href') || linkElement?.href || '';
+if (link) {  // Only require link, text has fallbacks
+  // render button with fallback text
+}
+```
+
+**Impact:** Buttons may not render if extraction fails or text is missing  
+**Reference:** See "Robust Data Extraction with Fallbacks" section above
+
+#### ❌ Anti-Pattern 7: Ignoring wrapTextNodes() Wrapping
+
+```javascript
+// ❌ WRONG - Assumes text is directly in cell
+const text = textCell?.textContent?.trim() || '';
+
+// ✅ CORRECT - Check for wrapped <p> tag
+let text = textCell?.textContent?.trim() || '';
+if (!text) {
+  text = textCell?.querySelector?.('p')?.textContent?.trim() || '';
+}
+```
+
+**Impact:** Text extraction may fail if content is wrapped in `<p>` tags by `wrapTextNodes()`  
+**Reference:** See "Robust Data Extraction with Fallbacks" section above
 
 **Note:** For detailed explanations and more patterns, see `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Component/Service Patterns and Anti-Patterns section.
 
@@ -894,6 +1060,42 @@ export default function decorate(block) {
 - Keep styles scoped to block to avoid conflicts
 
 **Reference:** `blocks/hero/hero.css`
+
+### Image Sizing and Aspect Ratios
+
+**When design specifies exact image dimensions or aspect ratios, use CSS `aspect-ratio` property:**
+
+```css
+/* ✅ CORRECT: Maintain aspect ratio from design specs */
+.image-wrapper {
+  aspect-ratio: 670 / 746;  /* From Figma design */
+  width: 670px;
+  max-width: 48%;
+}
+
+.image-wrapper img,
+.image-wrapper picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+/* ❌ WRONG: Using height: auto doesn't enforce aspect ratio */
+.image-wrapper {
+  width: 670px;
+}
+.image-wrapper img {
+  width: 100%;
+  height: auto;  /* May not match design aspect ratio */
+}
+```
+
+**Key Points:**
+- Use `aspect-ratio` CSS property when design specifies exact ratios (e.g., 670/746)
+- Set both `width` and `height: 100%` on image when using aspect-ratio on wrapper
+- Use `object-fit: cover` to maintain aspect ratio while filling container
+- Always verify image dimensions match Figma design specifications
 
 ---
 
@@ -1724,6 +1926,23 @@ Rendered output
 - Use optional chaining (`?.`) and nullish coalescing (`??`) for safe index access
 - Verify XWalk config field order matches expected JavaScript index-based access pattern
 - Ensure DOM structure order matches the structure contract documented in the block's JS
+
+#### Issue 9: Button Not Rendering
+**Solution:**
+- Check if link extraction handles wrapped elements: `linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a')`
+- Use `.href` as fallback: `linkElement?.getAttribute?.('href') || linkElement?.href || ''`
+- Don't require both link AND text - render button if link exists, use fallback text
+- Check if text extraction handles wrapped `<p>` tags from `wrapTextNodes()`
+- Verify text cell is not empty or extract from link text (but filter out URLs)
+- Reference: See "Pattern 6: CTA Button with Robust Extraction" above
+
+#### Issue 10: Image Size Not Matching Design
+**Solution:**
+- Use CSS `aspect-ratio` property when design specifies exact ratios
+- Set `aspect-ratio` on image wrapper, not just width
+- Use `object-fit: cover` to maintain aspect ratio while filling container
+- Verify dimensions match Figma design specifications
+- Reference: See "Image Sizing and Aspect Ratios" section above
 
 ### Backend/Configuration Issues
 
