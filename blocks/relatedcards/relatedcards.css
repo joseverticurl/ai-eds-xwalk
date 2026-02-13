@@ -1,0 +1,221 @@
+/* Related Cards Block - Container and Title */
+.related-cards {
+  /* Block container styles */
+}
+
+.related-cards__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 20px;
+  background-color: #f2f2f2;
+}
+
+.related-cards__title {
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 64px;
+  line-height: 1.2;
+  letter-spacing: -3px;
+  text-align: center;
+  color: #000000;
+  margin: 0;
+}
+
+.related-cards__items {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Related Card Item Styles */
+.related-card {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  /* Maintain aspect ratio - not fixed height */
+  aspect-ratio: 440 / 400; /* From design: 440px width, 400px height */
+}
+
+.related-card__image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.related-card__image-wrapper picture,
+.related-card__image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.related-card__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+}
+
+.related-card__content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+  min-height: 0;
+}
+
+.related-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 10px;
+  height: 24px;
+  background-color: #ffffff;
+  border-radius: 50px;
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #000000;
+  align-self: flex-start;
+}
+
+.related-card__title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.related-card__title-link {
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.2;
+  color: #ffffff;
+  text-decoration: none;
+  margin: 0;
+  white-space: pre-wrap;
+  transition: opacity 0.2s ease;
+}
+
+.related-card__title-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.related-card__title-link:focus {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.related-card__title {
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* "Read more" button - hidden on desktop, visible on mobile */
+.related-card__read-more {
+  display: none; /* Hidden by default (desktop) */
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'TCCC-UnityHeadline', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  width: fit-content;
+  transition: opacity 0.2s ease;
+}
+
+.related-card__read-more:hover {
+  opacity: 0.8;
+}
+
+.related-card__read-more:focus {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Responsive: Mobile */
+@media (width < 900px) {
+  .related-cards__container {
+    gap: 30px;
+    padding: 0 16px;
+  }
+  
+  .related-cards__title {
+    font-size: 32px;
+    letter-spacing: -1px;
+  }
+  
+  .related-cards__items {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .related-card {
+    max-width: 100%;
+    /* Maintain aspect ratio on mobile */
+    aspect-ratio: 440 / 400;
+  }
+  
+  .related-card__content {
+    padding: 20px;
+  }
+  
+  .related-card__title-link {
+    font-size: 20px;
+  }
+  
+  .related-card__title {
+    font-size: 20px;
+  }
+  
+  /* Show "Read more" button on mobile */
+  .related-card__read-more {
+    display: inline-flex;
+  }
+}
+
+/* Responsive: Tablet */
+@media (width >= 768px) and (width < 900px) {
+  .related-cards__title {
+    font-size: 48px;
+    letter-spacing: -2px;
+  }
+  
+  .related-cards__items {
+    gap: 16px;
+  }
+}

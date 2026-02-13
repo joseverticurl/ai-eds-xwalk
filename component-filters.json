@@ -18,6 +18,7 @@
       "fragment",
       "initiative-highlight",
       "relatedarticles",
+      "relatedcards",
       "youmayalsolike",
       "highlight",
       "tccchighlight"
@@ -47,6 +48,10 @@
   {
     "id": "relatedarticles",
     "components": ["relatedarticle"]
+  },
+  {
+    "id": "relatedcards",
+    "components": ["relatedcard"]
   },
   {
     "id": "youmayalsolike",

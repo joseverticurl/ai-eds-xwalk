@@ -358,6 +358,26 @@ blocks/<block-name>/
 - `component-models.json` - Field models
 - `component-filters.json` - Nesting rules
 
+### Critical: Parent-Child Blocks Use ONE Folder
+
+**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`, `relatedarticles` → `relatedarticle`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.
+
+**Pattern:**
+- **XWalk Config (Backend):** Parent block definition + Child block definition (two separate definitions in JSON)
+- **Frontend Files:** ONE folder `blocks/<parent-name>/` with ONE `decorate()` function that handles both parent and child items
+
+**Example:**
+- `blocks/cards/` - ONE folder
+  - `cards.js` - Handles parent container AND all child card items in one `decorate()` function
+  - `cards.css` - Styles for parent container AND all child card items
+- `blocks/relatedarticles/` - ONE folder
+  - `relatedarticles.js` - Handles section title (parent) AND all article items (children) in one `decorate()` function
+  - `relatedarticles.css` - Styles for section title AND all article items
+
+**Why:** The parent block's `decorate()` function receives all child items as `block.children`, so it processes everything in one place. There is no separate child block folder or files.
+
+**Reference:** `blocks/cards/cards.js`, `blocks/relatedarticles/relatedarticles.js`
+
 ### Shared Resources
 
 ```
@@ -672,20 +692,88 @@ export default function decorate(block) {
 
 **Use Case:** Parent block with child items (cards → card)
 
+**Important:** Even though XWalk has parent-child definitions, the frontend uses ONE folder with ONE JS file. The `decorate()` function processes both parent and child items.
+
 ```javascript
+/**
+ * Cards Block
+ * 
+ * Structure contract (index-based):
+ * - block.children[0+] = Card item rows (each row = one card item)
+ * 
+ * For each card item row:
+ * - row.children[0] = Image cell
+ * - row.children[1] = Text cell
+ * 
+ * @param {Element} block The block element
+ */
 export default function decorate(block) {
   const ul = document.createElement('ul');
   [...block.children].forEach((row) => {
     const li = document.createElement('li');
     moveInstrumentation(row, li);  // CRITICAL
-    // ... transform row content
+    // ... transform row content (child item)
     ul.append(li);
   });
   block.replaceChildren(ul);
 }
 ```
 
-**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2
+**Example with Parent Title + Child Items:**
+
+```javascript
+/**
+ * Related Articles Block
+ * 
+ * Structure contract (index-based):
+ * - block.children[0] = Section title row (parent)
+ * - block.children[1+] = Article item rows (children)
+ * 
+ * @param {Element} block The block element
+ */
+export default function decorate(block) {
+  const rows = [...block.children];
+  
+  // Process parent: section title (first row)
+  const titleRow = rows[0];
+  const title = titleRow?.children?.[0]?.textContent?.trim() || '';
+  
+  // Process children: article items (remaining rows)
+  const articleRows = rows.slice(1);
+  
+  // Build container with title
+  const container = document.createElement('div');
+  if (title) {
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    container.appendChild(heading);
+  }
+  
+  // Process all child items
+  const articlesWrapper = document.createElement('div');
+  articleRows.forEach((row) => {
+    // Transform each child item row
+    const card = document.createElement('a');
+    // ... extract data and build card structure
+    articlesWrapper.appendChild(card);
+  });
+  
+  container.appendChild(articlesWrapper);
+  block.replaceChildren(container);
+}
+```
+
+**Key Points:**
+- ONE folder: `blocks/<parent-name>/`
+- ONE JS file: `<parent-name>.js` with ONE `decorate()` function
+- ONE CSS file: `<parent-name>.css` with styles for parent and children
+- Parent and child items are processed in the same `decorate()` function
+- Child items are accessed via `block.children[1+]` (after parent row at index 0)
+
+**Reference:** 
+- `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2
+- `blocks/cards/cards.js` - Simple parent-child pattern
+- `blocks/relatedarticles/relatedarticles.js` - Parent title + child items pattern
 
 #### Pattern 3: Async Block with External Content
 
@@ -1809,18 +1897,20 @@ Rendered output
 - [ ] Ensure field order in model matches expected JavaScript index-based access pattern
 
 ### Phase 2: Frontend - JavaScript Implementation
-- [ ] Create `blocks/<block-name>/<block-name>.js`
+- [ ] Create `blocks/<block-name>/<block-name>.js` (ONE folder, ONE file, even for parent-child blocks)
 - [ ] Export default `decorate(block)` function
 - [ ] Document **structure contract** (index = meaning) in JSDoc
 - [ ] Import shared components as needed
 - [ ] Extract data using **index-based access only** (e.g. `block.children[0]`, `row.children[1]`)
+- [ ] **For parent-child blocks:** Process parent row (index 0) and child item rows (index 1+) in the same `decorate()` function
 - [ ] Transform to final HTML structure
 - [ ] Use `moveInstrumentation()` when replacing or moving elements
 - [ ] **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification
+- [ ] **NEVER** create separate child block folders or files (parent-child blocks use ONE folder)
 
 ### Phase 3: Frontend - CSS Styling
-- [ ] Create `blocks/<block-name>/<block-name>.css`
-- [ ] Style block structure
+- [ ] Create `blocks/<block-name>/<block-name>.css` (ONE file, even for parent-child blocks)
+- [ ] Style block structure (parent container and child items in same file)
 - [ ] Add responsive breakpoints
 - [ ] Test in AEM authoring mode
 
@@ -2029,7 +2119,7 @@ Rendered output
 ---
 
 **Document Version:** EDS-2026.1.0  
-**Last Updated:** 2026-01-08  
+**Last Updated:** 2026-02-13  
 **Maintained By:** AI Documentation Engineer  
 **Review Status:** Ready for Use
 
@@ -2040,15 +2130,20 @@ Rendered output
 This implementation guide provides comprehensive step-by-step instructions for creating new EDS blocks. Key points:
 
 1. **Two files required per block:** JavaScript and CSS (in `blocks/<block-name>/`)
+   - **CRITICAL:** Even for parent-child blocks, use ONE folder with ONE JS file and ONE CSS file
+   - Parent and child items are processed in the same `decorate()` function
+   - Example: `blocks/cards/` handles both parent container and all child card items
 2. **XWalk configuration:** Add definitions/models/filters directly to root-level JSON files:
-   - `component-definition.json` - Component definitions
-   - `component-models.json` - Field models  
+   - `component-definition.json` - Component definitions (parent + child definitions)
+   - `component-models.json` - Field models (parent + child models)
    - `component-filters.json` - Nesting rules
 3. **Index-based implementation:** Use index-based selection only; no data attributes for structure or selection. Document the structure contract in block JS.
 4. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM
 5. **Testing:** Manual testing in browser and AEM authoring interface
 6. **Patterns:** Follow established patterns from existing blocks
 
-**Important:** Do NOT create `_<block-name>.json` files in block folders. All XWalk configuration should be added directly to the root-level JSON files.
+**Important:** 
+- Do NOT create `_<block-name>.json` files in block folders. All XWalk configuration should be added directly to the root-level JSON files.
+- Do NOT create separate child block folders or files. Parent-child blocks use ONE folder with ONE JS/CSS file that processes everything.
 
 **Overall Confidence Score:** 98%
