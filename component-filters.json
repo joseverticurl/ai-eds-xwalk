@@ -22,7 +22,14 @@
       "youmayalsolike",
       "highlight",
       "tccchighlight",
-      "relcards"
+      "relcards",
+      "projectcards"
+    ]
+  },
+  {
+    "id": "projectcards",
+    "components": [
+      "projectcard"
     ]
   },
   {

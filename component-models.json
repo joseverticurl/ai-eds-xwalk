@@ -468,16 +468,137 @@
     ]
   },
   {
+    "id": "projectcards",
+    "fields": [
+      {
+        "component": "multiselect",
+        "name": "classes",
+        "value": "",
+        "label": "Style Classes",
+        "valueType": "string",
+        "options": [
+          {
+            "name": "Default",
+            "value": ""
+          },
+          {
+            "name": "Certifications",
+            "value": "certifications"
+          },
+          {
+            "name": "Grey Background",
+            "value": "grey-background"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Section Name",
+        "validation": {
+          "maxLength": 100,
+          "customErrorMsg": "Section Name cannot exceed 100 characters"
+        }
+      },
+      {
+        "component": "text",
+        "name": "heading",
+        "label": "Section Title",
+        "validation": {
+          "maxLength": 100,
+          "customErrorMsg": "Section Title cannot exceed 100 characters"
+        }
+      },
+      {
+        "component": "text",
+        "name": "description",
+        "value": "",
+        "label": "Section Description",
+        "valueType": "string",
+        "validation": {
+          "maxLength": 500,
+          "customErrorMsg": "Section Description cannot exceed 500 characters"
+        }
+      }
+    ]
+  },
+  {
+    "id": "projectcard",
+    "fields": [
+      {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "image",
+        "label": "Project Image",
+        "multi": false,
+        "validation": {
+          "rootPath": "/content/dam/ai-eds-xwalk"
+        }
+      },
+      {
+        "component": "text",
+        "name": "imageTitle",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "project",
+        "label": "Link",
+        "validation": {
+          "rootPath": "/content/ai-eds-xwalk"
+        }
+      },
+      {
+        "component": "text",
+        "name": "projectText",
+        "label": "Text"
+      },
+      {
+        "component": "text",
+        "name": "projectTitle",
+        "label": "Title",
+        "validation": {
+          "maxLength": 25,
+          "customErrorMsg": "Title cannot exceed 25 characters"
+        }
+      },
+      {
+        "component": "select",
+        "name": "projectTarget",
+        "label": "Target",
+        "options": [
+          {
+            "name": "Same Tab",
+            "value": "_self"
+          },
+          {
+            "name": "New Tab",
+            "value": "_blank"
+          }
+        ]
+      },
+      {
+        "component": "richtext",
+        "name": "location",
+        "label": "Location/Description",
+        "valueType": "string",
+        "validation": {
+          "maxLength": 500,
+          "customErrorMsg": "Location / Description cannot exceed 500 characters"
+        }
+      }
+    ]
+  },
+  {
     "id": "relcards",
     "fields": [
       {
         "component": "text",
         "name": "title",
-        "label": "Title",
-        "value": "",
-        "valueType": "string",
+        "label": "Section Name",
         "validation": {
-          "maxLength": 100
+          "maxLength": 100,
+          "customErrorMsg": "Section Name cannot exceed 100 characters"
         }
       }
     ]
