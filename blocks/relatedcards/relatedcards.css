@@ -173,35 +173,35 @@
     gap: 30px;
     padding: 0 16px;
   }
-  
+
   .related-cards__title {
     font-size: 32px;
     letter-spacing: -1px;
   }
-  
+
   .related-cards__items {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .related-card {
     max-width: 100%;
     /* Maintain aspect ratio on mobile */
     aspect-ratio: 440 / 400;
   }
-  
+
   .related-card__content {
     padding: 20px;
   }
-  
+
   .related-card__title-link {
     font-size: 20px;
   }
-  
+
   .related-card__title {
     font-size: 20px;
   }
-  
+
   /* Show "Read more" button on mobile */
   .related-card__read-more {
     display: inline-flex;
@@ -214,7 +214,7 @@
     font-size: 48px;
     letter-spacing: -2px;
   }
-  
+
   .related-cards__items {
     gap: 16px;
   }

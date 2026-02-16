@@ -5,16 +5,20 @@ import { moveInstrumentation } from '../../scripts/scripts.js';
  * Related Cards Block
  * 
  * Structure contract (index-based):
- * - block.children[0] = Section title row (title cell 0)
+ * - block.children[0] = Section title row (if title field is provided, optional)
+ *   OR first card row (if title is not provided)
  * - block.children[1+] = Related card item rows (each row = one item)
  * 
+ * Title row detection: If first row has an image cell (cells[0] contains picture/img), 
+ * it's a card row, not a title row.
+ * 
  * For each card item row:
- * - row.children[0] = Image cell
- * - row.children[1] = Alt text cell
- * - row.children[2] = Badge text cell
- * - row.children[3] = Title cell
- * - row.children[4] = Link URL cell
- * - row.children[5] = Link target cell
+ * - row.children[0] = Image cell (contains picture/img)
+ * - row.children[1] = Alt text cell (text content from imageAlt field)
+ * - row.children[2] = Badge text cell (text content)
+ * - row.children[3] = Title cell (text content)
+ * - row.children[4] = Link URL cell (contains anchor tag)
+ * - row.children[5] = Link target cell (text: "_self" or "_blank")
  * 
  * Interaction patterns:
  * - Desktop: Title is clickable (not entire card)
@@ -25,19 +29,32 @@ import { moveInstrumentation } from '../../scripts/scripts.js';
 export default function decorate(block) {
   const rows = [...block.children];
   
-  // Extract section title: first row, first cell
-  const titleRow = rows[0];
-  const titleElement = titleRow?.children?.[0];
-  const title = titleRow?.children?.[0]?.textContent?.trim() || '';
+  // Detect if first row is title or card
+  // If first row has an image cell (picture/img), it's a card row
+  const firstRow = rows[0];
+  const firstRowHasImage = firstRow?.children?.[0]?.querySelector?.('picture, img');
   
-  // Extract card items: remaining rows (index 1+)
-  const cardRows = rows.slice(1);
+  let titleRow = null;
+  let titleElement = null;
+  let title = '';
+  let cardRows = [];
+  
+  if (firstRowHasImage) {
+    // First row is a card (no title provided)
+    cardRows = rows;
+  } else {
+    // First row is title
+    titleRow = firstRow;
+    titleElement = titleRow?.children?.[0];
+    title = titleElement?.textContent?.trim() || '';
+    cardRows = rows.slice(1);
+  }
   
   // Build container structure
   const container = document.createElement('div');
   container.classList.add('related-cards__container');
   
-  // Add section title
+  // Add section title (if present)
   if (title && titleElement) {
     const heading = document.createElement('h2');
     heading.classList.add('related-cards__title');
@@ -64,10 +81,12 @@ export default function decorate(block) {
     
     // Extract image - handle wrapped elements
     const pictureOrImg = imageCell?.querySelector?.('picture, img');
-    const imageSrc = pictureOrImg?.tagName === 'IMG' 
+    const imageSrc = pictureOrImg?.tagName === 'IMG'
       ? pictureOrImg?.getAttribute?.('src') || pictureOrImg?.src
       : pictureOrImg?.querySelector?.('img')?.getAttribute?.('src') || pictureOrImg?.querySelector?.('img')?.src
       || imageCell?.querySelector?.('a')?.getAttribute?.('href') || imageCell?.querySelector?.('a')?.href || '';
+    
+    // Extract alt text from separate cell (cells[1])
     const imageAlt = altCell?.textContent?.trim() || '';
     
     // Extract badge text
