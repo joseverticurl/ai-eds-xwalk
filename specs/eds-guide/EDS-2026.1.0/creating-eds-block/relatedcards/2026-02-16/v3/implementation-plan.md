@@ -131,6 +131,8 @@ This implementation plan details the creation of a **Related Cards** block that 
      - [ ] Empty field behavior (missing cells vs empty cells)
      - [ ] Optional field behavior (parent title, etc.)
      - [ ] How alt text is handled (separate cell vs img attribute)
+     - [ ] **CRITICAL:** Verify if `imageAlt` field generates a separate cell or is only in `<img>` tag's `alt` attribute
+     - [ ] Document actual cell count per card row (expected: 5 cells, not 6 if imageAlt doesn't generate a cell)
 
 4. **Create Static HTML Files:**
    - [x] Create folder: `specs/eds-guide/EDS-2026.1.0/creating-eds-block/relatedcards/static-html/`
@@ -248,7 +250,14 @@ This implementation plan details the creation of a **Related Cards** block that 
 **CRITICAL - Field Order:**
 The order of fields in `component-models.json` determines the index-based structure contract:
 - Parent: title (index 0)
-- Child: image (0), imageAlt (1), badge (2), title (3), link (4), linkTarget (5)
+- Child: image (0), badge (1), title (2), link (3), linkTarget (4)
+
+**IMPORTANT - Alt Text Field:**
+- The `imageAlt` field in the model does NOT generate a separate cell in AEM HTML output
+- Alt text is stored in the `<img>` tag's `alt` attribute, not as a separate cell
+- JavaScript must extract alt text from: `imgElement?.getAttribute?.('alt') || ''`
+- Do NOT expect `cells[1]` to be alt text - it will be the badge field
+- Actual card row structure: 5 cells (image, badge, title, link, target) - NOT 6 cells
 
 **Reference:** Implementation guide Part 1: "XWalk Configuration - Component Models" and "Field Configuration - Order Matters"
 
@@ -314,7 +323,8 @@ The order of fields in `component-models.json` determines the index-based struct
 - [ ] `relatedcards` filter present
 - [ ] Field order matches structure contract:
   - [ ] Parent model: title at index 0
-  - [ ] Child model: image(0), imageAlt(1), badge(2), title(3), link(4), linkTarget(5)
+  - [ ] Child model: image(0), badge(1), title(2), link(3), linkTarget(4)
+  - [ ] **CRITICAL:** Verified that `imageAlt` field does NOT generate a separate cell (alt text is in `<img>` tag's `alt` attribute)
 
 **Testing Task:**
 - [ ] **HUMAN TEST:** Run `npm run build:json` (if project uses build pipeline) to verify JSON files compile without errors
@@ -337,13 +347,22 @@ The order of fields in `component-models.json` determines the index-based struct
 2. Create file: `blocks/relatedcards/relatedcards.js`
 3. Implement the `decorate()` function following index-based pattern
 
-**Structure Contract (to be validated with static HTML):**
+**Structure Contract (based on actual AEM output):**
 - `block.children[0]` = Section title row (if title field is provided, optional)
+  - **Detection:** If first row has image cell (picture/img), it's a card row, not title row
 - `block.children[1+]` = Related card item rows (each row = one item)
 
-**For each card item row (to be validated with static HTML):**
-- Field indices depend on actual AEM output (validate with static HTML)
-- Extract: image, alt text, badge, title, link URL, link target
+**For each card item row (actual AEM structure - 5 cells, NOT 6):**
+- `row.children[0]` = Image cell (contains picture/img)
+- `row.children[1]` = Badge text cell (NOT alt text - alt text is in img tag)
+- `row.children[2]` = Title cell
+- `row.children[3]` = Link URL cell (contains anchor tag)
+- `row.children[4]` = Link target cell (text: "_self" or "_blank")
+
+**CRITICAL - Alt Text Extraction:**
+- Alt text is NOT a separate cell - it's in the `<img>` tag's `alt` attribute
+- Extract using: `const imgElement = imageCell?.querySelector?.('img'); const imageAlt = imgElement?.getAttribute?.('alt') || '';`
+- Do NOT try to extract from `cells[1]` - that's the badge field
 
 **Key Requirements:**
 - ONE folder: `blocks/relatedcards/`
@@ -355,6 +374,8 @@ The order of fields in `component-models.json` determines the index-based struct
 - Use `moveInstrumentation()` when transforming DOM
 - Extract data using index-based access only (validated with static HTML)
 - Use `createOptimizedPicture()` for image optimization
+- **CRITICAL:** Extract alt text from `<img>` tag's `alt` attribute, NOT from a separate cell
+- **CRITICAL:** Field indices: badge=1, title=2, link=3, target=4 (NOT badge=2, title=3, etc.)
 
 **Reference:** 
 - `blocks/relatedarticles/relatedarticles.js` - Similar parent-child pattern (ONE folder, ONE JS)
@@ -437,28 +458,44 @@ The order of fields in `component-models.json` determines the index-based struct
 
 ---
 
-### Phase 7: Integration - Register Block in EDS
+### Phase 7: Integration - Block Auto-Loading (No Manual Registration)
 
-**Objective:** Register the `relatedcards` block in EDS so it loads on pages.
+**Objective:** Verify the `relatedcards` block loads automatically in EDS.
+
+**CRITICAL:** Blocks in EDS are auto-loaded based on class name. No manual registration is required.
+
+**How EDS Auto-Loads Blocks:**
+- EDS automatically detects blocks by class name (e.g., `relatedcards`)
+- When a block with class `relatedcards` is found, EDS automatically:
+  - Loads `blocks/relatedcards/relatedcards.css`
+  - Loads `blocks/relatedcards/relatedcards.js`
+  - Calls `decorate(block)` function
+- This happens automatically via `loadBlock()` function in `scripts/aem.js`
 
 **Steps:**
-1. Locate block registration file (typically `blocks/blocks.js` or similar)
-2. Import `relatedcards` block
-3. Register block with EDS
+1. Verify block files exist:
+   - `blocks/relatedcards/relatedcards.js` exists
+   - `blocks/relatedcards/relatedcards.css` exists
+2. Verify block class name matches folder name:
+   - Folder: `blocks/relatedcards/`
+   - Class: `relatedcards` (must match)
+   - File: `relatedcards.js` (must match)
 
-**Reference:** Implementation guide Part 1: "Integration - Register Block in EDS"
+**Reference:** `scripts/aem.js` - `loadBlock()` function (lines 574-605)
 
 **Validation:**
-- [ ] Block imported
-- [ ] Block registered
-- [ ] Block loads on pages
+- [ ] Block files exist in correct location
+- [ ] File names match block class name
+- [ ] `decorate(block)` is default export
+- [ ] No manual registration needed (auto-loaded)
 
 **Testing Task:**
-- [ ] **HUMAN TEST:** Verify block loads on pages
+- [ ] **HUMAN TEST:** Add block to AEM page with class `relatedcards`
+- [ ] **HUMAN TEST:** Verify block loads on pages automatically
 - [ ] **HUMAN TEST:** Verify block JavaScript executes
 - [ ] **HUMAN TEST:** Verify block CSS applies
 
-**Confidence:** 95% - Following established patterns.
+**Confidence:** 100% - Blocks are auto-loaded by EDS, no manual registration needed.
 
 ---
 
@@ -613,7 +650,7 @@ This implementation plan follows a test-driven development approach with mandato
 1. **Phase 0.5 (MANDATORY):** Create static HTML from actual AEM output for structure validation
 2. **Phases 1-4:** XWalk configuration (definition, models, filters, validation)
 3. **Phases 5-6:** Frontend implementation (JavaScript and CSS, ONE folder pattern)
-4. **Phase 7:** Integration (register block in EDS)
+4. **Phase 7:** Integration (verify block auto-loads - no manual registration needed)
 5. **Phases 8-12:** Testing and validation (AEM authoring, responsive, accessibility, performance, final validation)
 6. **Cleanup:** Delete temporary static HTML files
 

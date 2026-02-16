@@ -21,7 +21,8 @@
       "youmayalsolike",
       "highlight",
       "tccchighlight",
-      "projectcards"
+      "projectcards",
+      "relatedcards"
     ]
   },
   {
@@ -58,5 +59,9 @@
   {
     "id": "youmayalsolike",
     "components": ["youmayalsolikeitem"]
+  },
+  {
+    "id": "relatedcards",
+    "components": ["relatedcard"]
   }
 ]

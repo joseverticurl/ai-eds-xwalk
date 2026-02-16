@@ -292,6 +292,37 @@
               }
             }
           }
+        },
+        {
+          "title": "Related Cards",
+          "id": "relatedcards",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "RelatedCards",
+                  "model": "relatedcards",
+                  "filter": "relatedcards"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Related Card",
+          "id": "relatedcard",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "RelatedCard",
+                  "model": "relatedcard"
+                }
+              }
+            }
+          }
         }
       ]
     }

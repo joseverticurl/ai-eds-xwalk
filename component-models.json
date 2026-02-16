@@ -663,5 +663,74 @@
         ]
       }
     ]
+  },
+  {
+    "id": "relatedcards",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Section Title",
+        "value": "You may also like",
+        "valueType": "string",
+        "validation": {
+          "maxLength": 100
+        }
+      }
+    ]
+  },
+  {
+    "id": "relatedcard",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "badge",
+        "label": "Badge Text",
+        "value": "",
+        "validation": {
+          "maxLength": 50
+        }
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": "",
+        "validation": {
+          "maxLength": 200
+        }
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link URL"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "linkTarget",
+        "label": "Link Target",
+        "value": "_self",
+        "validation": {
+          "regExp": "^(|_self|_blank)$"
+        }
+      }
+    ]
   }
 ]
