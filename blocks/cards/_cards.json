@@ -33,6 +33,21 @@
   ],
   "models": [
     {
+    "id": "cards",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Section Title",
+        "value": "",
+        "valueType": "string",
+        "validation": {
+          "maxLength": 100
+        }
+      }
+    ]
+    },
+    {
       "id": "card",
       "fields": [
         {
