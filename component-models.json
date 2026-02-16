@@ -607,13 +607,65 @@
     "id": "relatedcards",
     "fields": [
       {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "image",
+        "label": "Project Image",
+        "multi": false,
+        "validation": {
+          "rootPath": "/content/dam/ai-eds-xwalk"
+        }
+      },
+      {
         "component": "text",
-        "name": "title",
-        "label": "Section Title",
-        "value": "",
+        "name": "imageTitle",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "project",
+        "label": "Link",
+        "validation": {
+          "rootPath": "/content/ai-eds-xwalk"
+        }
+      },
+      {
+        "component": "text",
+        "name": "projectText",
+        "label": "Text"
+      },
+      {
+        "component": "text",
+        "name": "projectTitle",
+        "label": "Title",
+        "validation": {
+          "maxLength": 25,
+          "customErrorMsg": "Title cannot exceed 25 characters"
+        }
+      },
+      {
+        "component": "select",
+        "name": "projectTarget",
+        "label": "Target",
+        "options": [
+          {
+            "name": "Same Tab",
+            "value": "_self"
+          },
+          {
+            "name": "New Tab",
+            "value": "_blank"
+          }
+        ]
+      },
+      {
+        "component": "richtext",
+        "name": "location",
+        "label": "Location/Description",
         "valueType": "string",
         "validation": {
-          "maxLength": 100
+          "maxLength": 500,
+          "customErrorMsg": "Location / Description cannot exceed 500 characters"
         }
       }
     ]
