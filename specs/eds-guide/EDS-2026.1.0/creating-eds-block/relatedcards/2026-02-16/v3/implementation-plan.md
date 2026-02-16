@@ -181,16 +181,38 @@ This implementation plan details the creation of a **Related Cards** block that 
 4. Add `relatedcard` child component definition
 
 **Component Definitions:**
-- **Parent:** `relatedcards` - Uses `block` resourceType with `RelatedCards` template and `relatedcards` filter
+- **Parent:** `relatedcards` - Uses `block` resourceType with `RelatedCards` template
+  - **CRITICAL:** Since parent has authoring fields (title), it MUST have BOTH:
+    - `model: "relatedcards"` - Enables authoring fields for parent block
+    - `filter: "relatedcards"` - Allows child `relatedcard` items to be nested
 - **Child:** `relatedcard` - Uses `block/item` resourceType with `RelatedCard` template and `relatedcard` model
 
-**Reference:** Implementation guide Part 1: "XWalk Configuration - Component Definition"
+**Template Configuration:**
+```json
+// Parent block (with authoring fields):
+"template": {
+  "name": "RelatedCards",
+  "model": "relatedcards",    // ✅ REQUIRED - enables parent authoring fields
+  "filter": "relatedcards"     // ✅ REQUIRED - allows child items
+}
+
+// Child block:
+"template": {
+  "name": "RelatedCard",
+  "model": "relatedcard"      // ✅ REQUIRED - defines child item fields
+}
+```
+
+**Reference:** Implementation guide Part 1: "XWalk Configuration - Component Definition" - "Block with Items (Parent + Child)"
 
 **Validation:**
 - [ ] Valid JSON syntax
 - [ ] Both components added to `"Blocks"` group
 - [ ] Parent uses `block` resourceType
 - [ ] Child uses `block/item` resourceType
+- [ ] **CRITICAL:** Parent template has BOTH `model` and `filter` (since parent has authoring fields)
+- [ ] Child template has `model`
+- [ ] `model` values match the `id` in `component-models.json`
 
 **Testing Task:**
 - [ ] **HUMAN TEST:** Run `npm run build:json` (if project uses build pipeline) to verify JSON files compile without errors

@@ -1572,7 +1572,21 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ### Block with Items (Parent + Child)
 
-**Parent Block Definition:**
+**CRITICAL: Parent Block Configuration**
+
+Parent blocks can have two configurations depending on whether they have authoring fields:
+
+1. **Parent Block WITHOUT Authoring Fields** (container only):
+   - Only needs `filter` to define which child components can be nested
+   - Example: `cards` block (no parent fields, only contains child `card` items)
+
+2. **Parent Block WITH Authoring Fields** (has configurable fields):
+   - **MUST have BOTH `model` AND `filter`**
+   - `model` enables authoring fields for the parent block
+   - `filter` defines which child components can be nested
+   - Example: `projectcards` block (has parent fields: classes, title, heading, description)
+
+**Parent Block Definition (WITH Authoring Fields):**
 ```json
 {
   "title": "Parent Block",
@@ -1583,7 +1597,27 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
         "resourceType": "core/franklin/components/block/v1/block",
         "template": {
           "name": "ParentBlock",
-          "filter": "parentblock"
+          "model": "parentblock",    // ✅ REQUIRED if parent has authoring fields
+          "filter": "parentblock"     // ✅ REQUIRED to allow child items
+        }
+      }
+    }
+  }
+}
+```
+
+**Parent Block Definition (WITHOUT Authoring Fields):**
+```json
+{
+  "title": "Parent Block",
+  "id": "parentblock",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "ParentBlock",
+          "filter": "parentblock"     // ✅ Only filter needed (no model)
         }
       }
     }
@@ -1602,7 +1636,7 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
         "resourceType": "core/franklin/components/block/v1/block/item",
         "template": {
           "name": "Item",
-          "model": "item"
+          "model": "item"             // ✅ REQUIRED for child items (defines fields)
         }
       }
     }
@@ -1612,7 +1646,16 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 **Both definitions go in the same `components` array**
 
-**Reference:** `component-definition.json` lines 85-114 (cards + card example)
+**Key Points:**
+- If parent block has fields in `component-models.json`, it **MUST** have `model` in template
+- If parent block has no fields, it only needs `filter` (no `model`)
+- Child items always need `model` (they always have fields)
+- The `model` value must match the `id` in `component-models.json`
+
+**Reference Examples:**
+- Parent with fields: `component-definition.json` lines 325-339 (`projectcards` - has both `model` and `filter`)
+- Parent without fields: `component-definition.json` lines 85-99 (`cards` - only has `filter`)
+- Child item: `component-definition.json` lines 100-114 (`card` - has `model`)
 
 ---
 
@@ -2329,6 +2372,37 @@ Rendered output
 - Check field component type is valid
 - Verify field names match expected format
 - Check AEM console for errors
+
+#### Issue 11: Parent Block Authoring Fields Not Appearing
+**Symptom:** Parent block appears in AEM authoring interface, but no authoring fields are shown (e.g., section title field is missing).
+
+**Root Cause:** Parent block template is missing `model` property. Parent blocks with authoring fields require BOTH `model` and `filter` in the template.
+
+**Solution:**
+- **CRITICAL:** If parent block has fields defined in `component-models.json`, the parent block template MUST include `model` property
+- Parent blocks with authoring fields need BOTH:
+  - `model: "parentblock"` - Enables authoring fields for parent block
+  - `filter: "parentblock"` - Allows child items to be nested
+- Parent blocks without authoring fields only need `filter` (no `model`)
+- Verify `model` value matches the `id` in `component-models.json`
+- **Reference:** See "Block with Items (Parent + Child)" section above for complete examples
+- **Working Example:** `component-definition.json` lines 325-339 (`projectcards` - has both `model` and `filter`)
+
+**Example Fix:**
+```json
+// ❌ WRONG (missing model):
+"template": {
+  "name": "RelatedCards",
+  "filter": "relatedcards"
+}
+
+// ✅ CORRECT (has both model and filter):
+"template": {
+  "name": "RelatedCards",
+  "model": "relatedcards",    // ✅ Required for parent authoring fields
+  "filter": "relatedcards"     // ✅ Required for child items
+}
+```
 
 ---
 
