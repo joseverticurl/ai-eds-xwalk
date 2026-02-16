@@ -31,19 +31,7 @@
       }
     }
   ],
-  "models": [
-    {
-    "id": "cards",
-    "fields": [
-      {
-        "component": "richtext",
-        "name": "text",
-        "value": "",
-        "label": "Text",
-        "valueType": "string"
-      }
-    ]
-    },
+  "models": [     
     {
       "id": "card",
       "fields": [

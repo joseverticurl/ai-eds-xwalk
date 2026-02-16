@@ -468,6 +468,21 @@
     ]
   },
   {
+    "id": "relcards",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Title",
+        "value": "",
+        "valueType": "string",
+        "validation": {
+          "maxLength": 100
+        }
+      }
+    ]
+  },
+  {
     "id": "relatedcards",
     "fields": [
       {
