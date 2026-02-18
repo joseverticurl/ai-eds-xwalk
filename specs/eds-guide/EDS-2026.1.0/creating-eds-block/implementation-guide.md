@@ -1431,6 +1431,30 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ---
 
+## CRITICAL: Direct File Update Only
+
+**You MUST edit the three root-level JSON files directly. Block-level JSON is FORBIDDEN.**
+
+| Required | Forbidden |
+|----------|-----------|
+| Edit `component-definition.json` directly | Do NOT create `blocks/<block-name>/_<block-name>.json` |
+| Edit `component-models.json` directly | Do NOT create any `_*.json` files in block folders |
+| Edit `component-filters.json` directly | Do NOT create block-level JSON and then move it to root |
+
+**Rule:** Add definitions, models, and filters only to the three root-level files (or their merge-source equivalents per Build Step Check below). Never create `blocks/<block-name>/_<block-name>.json` or any block-level configuration files.
+
+---
+
+## Build Step Check
+
+Before adding configuration, check `package.json` for a `build:json` (or similar) script:
+
+- **If root files are source of truth:** Edit `component-definition.json`, `component-models.json`, and `component-filters.json` directly.
+- **If the project uses merge-json-cli:** The build may merge from source files (e.g. `models/_component-definition.json`, `models/_component-models.json`, `models/_component-filters.json`) into the root files. In that case, edit the **merge source files** in `models/` so your changes persist after `npm run build:json`. The root files are build outputs and will be overwritten.
+- **Regardless of build setup:** Do NOT create `blocks/<block-name>/_<block-name>.json` or any block-level JSON. Configuration belongs only in the three root-level files or their merge sources.
+
+---
+
 ## Configuration Overview
 
 ### XWalk Configuration Files
@@ -1485,7 +1509,7 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ### Step-by-Step: Adding Configuration to Root-Level Files
 
-**Important:** XWalk configuration is added directly to three root-level JSON files. Do NOT create `_<block-name>.json` files in block folders.
+**CRITICAL:** Add configuration only to the three root-level JSON files (or their merge sources per Build Step Check). Do NOT create `blocks/<block-name>/_<block-name>.json` or any block-level `_*.json` files. Block-level JSON is forbidden.
 
 #### Step 1: Add Definition to component-definition.json
 
@@ -1948,6 +1972,7 @@ In `component-filters.json`, add as new object in the array (only if block has n
 
 ### ❌ XWalk Configuration Anti-patterns
 
+- ❌ **DON'T:** Create `blocks/<block-name>/_<block-name>.json` or any block-level JSON — add config only to root-level files (or merge sources)
 - ❌ **DON'T:** Skip validation rules
 - ❌ **DON'T:** Use inconsistent naming between definition ID and model ID
 - ❌ **DON'T:** Mix resource types incorrectly
@@ -2118,6 +2143,7 @@ Rendered output
 - [ ] Test visual appearance
 
 ### Phase 2: Backend - XWalk Configuration (MANDATORY)
+- [ ] **Edit root-level files (or merge sources) only** — do NOT create `blocks/<block-name>/_<block-name>.json`
 - [ ] Add component definition to `component-definition.json`
   - [ ] Find the `"Blocks"` group (or create if needed)
   - [ ] Add block definition object to `components` array
@@ -2149,6 +2175,7 @@ Rendered output
 - [ ] Transform to final HTML structure
 - [ ] Use `moveInstrumentation()` when replacing or moving elements
 - [ ] **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification
+- [ ] **NEVER** create `blocks/<block-name>/_<block-name>.json` or any block-level JSON (add config to root-level files only)
 - [ ] **NEVER** create separate child block folders or files (parent-child blocks use ONE folder)
 - [ ] **Test with user-provided HTML** to verify extraction logic works correctly
 
@@ -2427,8 +2454,8 @@ This implementation guide provides comprehensive step-by-step instructions for c
 6. **Testing:** Test with user-provided HTML first, then manual testing in browser and AEM authoring interface
 7. **Patterns:** Follow established patterns from existing blocks
 
-**Important:** 
-- Do NOT create `_<block-name>.json` files in block folders. All XWalk configuration should be added directly to the root-level JSON files.
+**CRITICAL:** 
+- Do NOT create `blocks/<block-name>/_<block-name>.json` or any block-level JSON. Add all XWalk configuration directly to the three root-level JSON files (or their merge sources).
 - Do NOT create separate child block folders or files. Parent-child blocks use ONE folder with ONE JS/CSS file that processes everything.
 - **MANDATORY:** Request user to provide semantic HTML from Universal Editor to validate structure contract before coding. Do NOT generate HTML.
 
