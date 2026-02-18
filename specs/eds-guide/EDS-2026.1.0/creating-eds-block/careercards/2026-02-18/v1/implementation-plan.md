@@ -6,7 +6,7 @@
 **Version:** v1  
 **Date:** 2026-02-18  
 
-**Status:** Phase 1 complete. **Waiting for user-provided semantic HTML** from Universal Editor before Phase 3 (JavaScript) and Phase 4 (CSS).
+**Status:** Phase 1–4 complete. Structure contract validated from [semantichtml.html](../../../../../requirements/semantichtml.html).
 
 ---
 
@@ -255,15 +255,15 @@ Implement the **CareerCards** block—a parent-child block displaying related co
 | 1 | 1.1 Create _careercards.json and update _section.json | ✅ |
 | 1 | 1.2 Run build:json, validate | ✅ |
 | 1 | 1.3 Human test – Backend | ⬜ |
-| 2 | 2.1 Obtain user-provided HTML | ⬜ |
-| 2 | 2.2 Document structure contract | ⬜ |
-| 3 | 3.1 Create careercards.js | ⬜ |
+| 2 | 2.1 Obtain user-provided HTML | ✅ |
+| 2 | 2.2 Document structure contract | ✅ |
+| 3 | 3.1 Create careercards.js | ✅ |
 | 3 | 3.2 Human test – JS | ⬜ |
-| 4 | 4.1 Desktop CSS | ⬜ |
-| 4 | 4.2 Responsive CSS | ⬜ |
+| 4 | 4.1 Desktop CSS | ✅ |
+| 4 | 4.2 Responsive CSS | ✅ |
 | 4 | 4.3 Human test – Visual | ⬜ |
-| 5 | 5.1–5.3 Accessibility and performance | ⬜ |
-| 6 | 6.1–6.2 Lint and E2E test | ⬜ |
+| 5 | 5.1–5.3 Accessibility and performance | ✅ |
+| 6 | 6.1–6.2 Lint and E2E test | ✅ (lint) / ⬜ (E2E) |
 
 ---
 
@@ -281,6 +281,16 @@ Implement the **CareerCards** block—a parent-child block displaying related co
 - `linkText` (text, default "Read more")
 
 **Note:** Field order must match user-provided HTML; adjust indices in Task 2.2 if needed.
+
+---
+
+## Structure Contract (Validated from semantichtml.html)
+
+**Actual Universal Editor output uses 4 cells per card (not 6):**
+- `row.children[0]` = image (picture; alt in img.alt)
+- `row.children[1]` = category
+- `row.children[2]` = title
+- `row.children[3]` = link (empty div or anchor; linkText = anchor textContent)
 
 ---
 
