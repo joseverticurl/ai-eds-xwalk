@@ -161,6 +161,70 @@
     ]
   },
   {
+    "id": "careercards",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "heading",
+        "label": "Section Heading",
+        "value": "You may also like"
+      }
+    ]
+  },
+  {
+    "id": "careercard",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "category",
+        "label": "Category",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "linkText",
+        "label": "Link Text",
+        "value": "Read more"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "linkTarget",
+        "label": "Target",
+        "value": "_self"
+      }
+    ]
+  },
+  {
     "id": "columns",
     "fields": [
       {

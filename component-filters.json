@@ -14,6 +14,7 @@
       "title",
       "hero",
       "cards",
+      "careercards",
       "columns",
       "fragment"
     ]
@@ -22,6 +23,12 @@
     "id": "cards",
     "components": [
       "card"
+    ]
+  },
+  {
+    "id": "careercards",
+    "components": [
+      "careercard"
     ]
   },
   {
