@@ -1,4 +1,141 @@
-/* Related Articles Block - placeholder styles */
+/* Related Articles Block - styles the transformed structure from relatedarticles.js */
+
 .relatedarticles {
-  /* Full styles to be added after user provides semantic HTML from Universal Editor */
+  padding: 24px 16px;
+}
+
+.relatedarticles-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.relatedarticles-title {
+  margin: 0 0 24px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-color, #000);
+}
+
+.relatedarticles-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.relatedarticles-card {
+  display: block;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.relatedarticles-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.relatedarticles-card:focus {
+  outline: 2px solid var(--link-color, #1473e6);
+  outline-offset: 2px;
+}
+
+.relatedarticles-card-image {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.relatedarticles-card-image img,
+.relatedarticles-card-image picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.relatedarticles-card:hover .relatedarticles-card-image img {
+  transform: scale(1.05);
+}
+
+.relatedarticles-card-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 50%);
+  color: #fff;
+}
+
+.relatedarticles-card-tag {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 4px 12px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 999px;
+}
+
+.relatedarticles-card-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* Read more CTA - visible on mobile, hidden on desktop */
+.relatedarticles-card-cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 4px;
+  min-height: 44px;
+}
+
+.relatedarticles-card-cta svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+/* Desktop: 3-column, hide CTA */
+@media (width >= 900px) {
+  .relatedarticles {
+    padding: 40px 32px;
+  }
+
+  .relatedarticles-title {
+    font-size: 2.25rem;
+    margin-bottom: 32px;
+  }
+
+  .relatedarticles-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .relatedarticles-card-cta {
+    display: none;
+  }
+
+  .relatedarticles-card-title {
+    font-size: 1.125rem;
+  }
+
+  .relatedarticles-card-overlay {
+    padding: 24px 20px;
+  }
 }

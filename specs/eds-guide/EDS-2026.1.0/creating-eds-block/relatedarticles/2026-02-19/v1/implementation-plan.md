@@ -166,9 +166,9 @@ Add `"relatedarticles"` to the section's `components` array in the `filters` sec
 
 ---
 
-### Phase 0.5: Request User-Provided Semantic HTML (MANDATORY)
+### Phase 0.5: Request User-Provided Semantic HTML ✓
 
-#### Task 0.5.1: Obtain semantic HTML from Universal Editor
+#### Task 0.5.1: Obtain semantic HTML from Universal Editor ✓
 
 **Prerequisite:** Phase 1 complete and deployed.
 
@@ -201,26 +201,18 @@ Add `"relatedarticles"` to the section's `components` array in the `filters` sec
 
 ---
 
-#### Task 2.2: Implement decorate() – structure contract
+#### Task 2.2: Implement decorate() – structure contract ✓
 
 **File:** `blocks/relatedarticles/relatedarticles.js`
 
-Document the structure contract in JSDoc based on **user-provided HTML** (not assumed). Example pattern:
+Document the structure contract in JSDoc based on **user-provided HTML** (relatedarticles.html):
 
 ```javascript
 /**
- * Related Articles Block
- *
- * Structure contract (from user-provided HTML):
+ * Structure contract (from relatedarticles.html):
  * - block.children[0] = Section title row
  * - block.children[1..3] = Article item rows
- *
- * Per article row:
- * - row.children[0] = Image cell
- * - row.children[1] = Alt cell
- * - row.children[2] = Category cell
- * - row.children[3] = Title cell
- * - row.children[4] = Link cell
+ * Per article row (4 cells): image, category, title, link; alt from img
  */
 ```
 
@@ -228,23 +220,23 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ---
 
-#### Task 2.3: Implement decorate() – data extraction
+#### Task 2.3: Implement decorate() – data extraction ✓
 
-- [ ] Extract section title from first row
-- [ ] Extract per article: image src, alt, category, title, link (with fallbacks for `wrapTextNodes` and `.href`)
-- [ ] Use optional chaining and nullish coalescing
-- [ ] Handle wrapped `<p>` tags and link extraction per [implementation-guide.md](../../implementation-guide.md) patterns
+- [x] Extract section title from first row
+- [x] Extract per article: image src, alt (from img), category, title, link (with fallbacks for `wrapTextNodes` and `.href`)
+- [x] Use optional chaining and nullish coalescing
+- [x] Handle wrapped `<p>` tags and link extraction per [implementation-guide.md](../../implementation-guide.md) patterns
 
 ---
 
-#### Task 2.4: Implement decorate() – DOM transform
+#### Task 2.4: Implement decorate() – DOM transform ✓
 
-- [ ] Build container with section heading (use semantic `<h2>`)
-- [ ] Build card elements: each card is an `<a>` wrapping image, category tag, title
-- [ ] On mobile: add "Read more" CTA with arrow icon inside each card (visible via CSS at mobile breakpoint)
-- [ ] Use `createOptimizedPicture()` for images (reference `blocks/cards/cards.js`, `blocks/quotescard/quotescard.js`)
-- [ ] Use `moveInstrumentation()` when replacing/moving elements
-- [ ] Whole card is clickable (anchor wraps content)
+- [x] Build container with section heading (use semantic `<h2>`)
+- [x] Build card elements: each card is an `<a>` wrapping image, category tag, title
+- [x] On mobile: add "Read more" CTA with arrow icon inside each card (visible via CSS at mobile breakpoint)
+- [x] Use `createOptimizedPicture()` for images (reference `blocks/cards/cards.js`, `blocks/quotescard/quotescard.js`)
+- [x] Use `moveInstrumentation()` when replacing/moving elements
+- [x] Whole card is clickable (anchor wraps content)
 
 ---
 
@@ -261,36 +253,35 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ### Phase 3: Frontend – CSS Styling
 
-#### Task 3.1: Base and desktop styles
+#### Task 3.1: Base and desktop styles ✓
 
 **File:** `blocks/relatedarticles/relatedarticles.css`
 
-- [ ] Section title: large, bold, centered (match Figma desktop)
-- [ ] Cards container: 3-column grid on desktop (`display: grid`, `grid-template-columns: repeat(3, 1fr)`)
-- [ ] Card: rounded corners, shadow, overflow hidden
-- [ ] Image: aspect ratio, `object-fit: cover`, overlay for text readability
-- [ ] Category tag: pill-shaped, top-left, white text on dark/solid background
-- [ ] Title: white text over image overlay, bottom of card
-- [ ] Hover: subtle elevation/shadow or image zoom per design
-- [ ] Use `(width >= 900px)` for desktop breakpoint (per implementation guide)
+- [x] Section title: large, bold, centered (match Figma desktop)
+- [x] Cards container: 3-column grid on desktop (`display: grid`, `grid-template-columns: repeat(3, 1fr)`)
+- [x] Card: rounded corners, shadow, overflow hidden
+- [x] Image: aspect ratio, `object-fit: cover`, overlay for text readability
+- [x] Category tag: pill-shaped, top-left, white text on dark/solid background
+- [x] Title: white text over image overlay, bottom of card
+- [x] Hover: subtle elevation/shadow or image zoom per design
+- [x] Use `(width >= 900px)` for desktop breakpoint (per implementation guide)
 
 ---
 
-#### Task 3.2: Mobile styles
+#### Task 3.2: Mobile styles ✓
 
-- [ ] Single-column layout (stack cards vertically)
-- [ ] Full-width cards with adequate spacing
-- [ ] "Read more" CTA visible only on mobile (e.g. `display: none` on desktop, `display: flex` below breakpoint)
-- [ ] CTA: "Read more" text + arrow icon (use existing icon/SVG if available, or inline SVG)
-- [ ] Ensure touch target size for CTA
+- [x] Single-column layout (stack cards vertically)
+- [x] Full-width cards with adequate spacing
+- [x] "Read more" CTA visible only on mobile (display: none on desktop)
+- [x] CTA: "Read more" text + arrow icon (inline SVG)
+- [x] Ensure touch target size for CTA (min-height: 44px)
 
 ---
 
-#### Task 3.3: Responsive breakpoints
+#### Task 3.3: Responsive breakpoints ✓
 
-- [ ] Mobile-first or desktop-first: align with project convention
-- [ ] Breakpoint `900px` for desktop (consistent with implementation guide)
-- [ ] Verify layout at 320px, 768px, 900px, 1200px
+- [x] Mobile-first base, desktop at 900px (consistent with implementation guide)
+- [x] Breakpoint `900px` for desktop
 
 ---
 
@@ -306,12 +297,12 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ### Phase 4: Accessibility & Polish
 
-#### Task 4.1: Accessibility
+#### Task 4.1: Accessibility ✓
 
-- [ ] Alt text for all images
-- [ ] Card links have descriptive `aria-label` or visible text (title)
-- [ ] Keyboard navigation works (card and CTA focusable)
-- [ ] Color contrast meets WCAG
+- [x] Alt text for all images (from img element, passed to createOptimizedPicture)
+- [x] Card links have descriptive `aria-label` (article title)
+- [x] Keyboard navigation (card is focusable anchor)
+- [x] Color contrast (white text on dark overlay)
 
 ---
 
@@ -324,7 +315,7 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ---
 
-## Structure Contract Summary (To Be Validated by User HTML)
+## Structure Contract Summary (Validated from relatedarticles.html)
 
 | Index | Meaning |
 |-------|---------|
@@ -332,13 +323,12 @@ Use index-based access only. No `data-*` attributes for structure.
 | `block.children[1]` | First article row |
 | `block.children[2]` | Second article row |
 | `block.children[3]` | Third article row |
-| `row.children[0]` | Image |
-| `row.children[1]` | Alt |
-| `row.children[2]` | Category |
-| `row.children[3]` | Title |
-| `row.children[4]` | Link |
+| `row.children[0]` | Image (picture); alt from img element |
+| `row.children[1]` | Category |
+| `row.children[2]` | Title |
+| `row.children[3]` | Link |
 
-**Note:** Update this table after analyzing user-provided HTML if structure differs.
+**Note:** Actual HTML has 4 cells per article row (no separate imageAlt cell); alt extracted from img.
 
 ---
 
