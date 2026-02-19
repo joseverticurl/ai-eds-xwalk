@@ -16,7 +16,8 @@
       "cards",
       "columns",
       "fragment",
-      "quotescard"
+      "quotescard",
+      "relatedarticles"
     ]
   },
   {
@@ -44,6 +45,12 @@
     "id": "quotescard",
     "components": [
       "quotecard"
+    ]
+  },
+  {
+    "id": "relatedarticles",
+    "components": [
+      "relatedarticle"
     ]
   }
 ]
