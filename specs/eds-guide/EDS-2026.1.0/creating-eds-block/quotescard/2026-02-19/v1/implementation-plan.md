@@ -20,17 +20,20 @@ Implement the **quotescard** block: a parent-child EDS block with scroll-driven 
 
 ## Structure Contract (Index-Based)
 
+**Verified from [quotescard.html](quotescard.html) (user-provided HTML):**
+
 **Parent block (quotescard):**
-- `block.children[0]` = CTA row (link, text, target)
-- `block.children[1+]` = Quote card item rows
+- `block.children[0]` = CTA link row (cell 0: `<a>`)
+- `block.children[1]` = CTA text row (cell 0: text)
+- `block.children[2]` = CTA target row (cell 0: _self|_blank)
+- `block.children[3+]` = Quote card item rows
 
 **Per quote card row:**
-- `row.children[0]` = Image cell (reference)
-- `row.children[1]` = Image alt cell
-- `row.children[2]` = Quote text cell (richtext)
-- `row.children[3]` = Author name cell
-- `row.children[4]` = Author title cell
-- `row.children[5]` = Author location cell
+- `row.children[0]` = Image cell (picture/img; alt from img.alt)
+- `row.children[1]` = Quote text cell
+- `row.children[2]` = Author name cell
+- `row.children[3]` = Author title cell
+- `row.children[4]` = Author location cell
 
 ---
 
@@ -144,46 +147,46 @@ Implement the **quotescard** block: a parent-child EDS block with scroll-driven 
 ## Phase 2: User-Provided Semantic HTML (MANDATORY)
 
 ### Task 2.1: Obtain Authoring HTML
-- [ ] **Human:** Provide the semantic HTML output from Universal Editor for the configured quotescard block
+- [x] **Human:** Provide the semantic HTML output from Universal Editor for the configured quotescard block (see [quotescard.html](quotescard.html))
 - [ ] Include block root element: `<div class="quotescard">...</div>`
 - [ ] Include at least 2 quote card items
 - [ ] Include CTA row (with and without optional target if applicable)
 
 ### Task 2.2: Document Structure Contract
-- [ ] Analyze user-provided HTML to confirm field indices (rows and cells)
-- [ ] Document: which row index = CTA, which rows = quote cards
-- [ ] Document: per-row cell order (image, alt, quote, authorName, authorTitle, authorLocation)
-- [ ] Document: empty-field behavior (missing cells vs empty cells)
-- [ ] Update structure contract in this plan if indices differ
+- [x] Analyze user-provided HTML to confirm field indices (rows and cells)
+- [x] Document: which row index = CTA, which rows = quote cards
+- [x] Document: per-row cell order (image, quote, authorName, authorTitle, authorLocation — no separate alt cell)
+- [x] Document: empty-field behavior (verified from HTML)
+- [x] Update structure contract in this plan (see above)
 
 ---
 
 ## Phase 3: Frontend — JavaScript
 
 ### Task 3.1: Create Block JavaScript File
-- [ ] Create `blocks/quotescard/quotescard.js`
+- [x] Create `blocks/quotescard/quotescard.js`
 - [ ] Add JSDoc with structure contract (based on user-provided HTML)
 - [ ] Import: `createOptimizedPicture`, `moveInstrumentation`, `loadBlock` utilities as needed
 - [ ] Export default `decorate(block)` function
 
 ### Task 3.2: Implement Index-Based Data Extraction
-- [ ] Extract CTA row (block.children[0]): link, text, target using robust extraction (see [implementation guide](../../implementation-guide.md) Pattern 6)
-- [ ] Extract quote card rows (block.children[1+]): image, imageAlt, quote, authorName, authorTitle, authorLocation per row
-- [ ] Handle `wrapTextNodes()`: check for wrapped `<p>` and `querySelector('p a')` when extracting links/text
-- [ ] Use optional chaining and nullish coalescing for safe access
+- [x] Extract CTA rows (block.children[0,1,2]): link, text, target using robust extraction (see [implementation guide](../../implementation-guide.md) Pattern 6)
+- [x] Extract quote card rows (block.children[3+]): image, quote, authorName, authorTitle, authorLocation per row
+- [x] Handle `wrapTextNodes()`: check for wrapped `<p>` and `querySelector('p a')` when extracting links/text
+- [x] Use optional chaining and nullish coalescing for safe access
 
 ### Task 3.3: Implement DOM Transformation
-- [ ] Build desktop layout: left column (image + CTA), right column (quote cards)
-- [ ] Build mobile layout: top image, stacked quote cards, CTA
-- [ ] Use `moveInstrumentation()` when replacing/moving elements
-- [ ] Add CSS classes: `quotescard-wrapper`, `quotescard-image`, `quotescard-cta`, `quotescard-cards`, `quotescard-card`, etc.
-- [ ] Optimize images with `createOptimizedPicture()` for breakpoints (e.g. 750, 1440)
+- [x] Build desktop layout: left column (image + CTA), right column (quote cards)
+- [x] Build mobile layout: top image, stacked quote cards, CTA
+- [x] Use `moveInstrumentation()` when replacing/moving elements
+- [x] Add CSS classes: `quotescard-wrapper`, `quotescard-image-container`, `quotescard-cta`, `quotescard-cards`, `quotescard-card`, etc.
+- [x] Optimize images with `createOptimizedPicture()` for breakpoints (750, 1440)
 
 ### Task 3.4: Implement Scroll-Driven Image Update
-- [ ] Use `IntersectionObserver` to detect which quote card is in view
-- [ ] Update displayed image when a new card intersects viewport
-- [ ] Use breakpoint 900px (`window.matchMedia('(min-width: 900px)')`) to adapt behavior if needed
-- [ ] Debounce or throttle observer callbacks if performance is a concern
+- [x] Use `IntersectionObserver` to detect which quote card is in view
+- [x] Update displayed image when a new card intersects viewport
+- [x] Use breakpoint 900px (`window.matchMedia('(min-width: 900px)')`) to adapt behavior if needed
+- [x] Debounce or throttle observer callbacks if performance is a concern
 
 ### Task 3.5: HUMAN TEST — JavaScript
 - [ ] **Human:** Load a page with the quotescard block
@@ -196,25 +199,25 @@ Implement the **quotescard** block: a parent-child EDS block with scroll-driven 
 ## Phase 4: Frontend — CSS
 
 ### Task 4.1: Create Block CSS File
-- [ ] Create `blocks/quotescard/quotescard.css`
-- [ ] Style the **transformed structure** (classes added by JavaScript), not raw AEM HTML
+- [x] Create `blocks/quotescard/quotescard.css`
+- [x] Style the **transformed structure** (classes added by JavaScript), not raw AEM HTML
 
 ### Task 4.2: Desktop Layout
-- [ ] Two-column layout: image + CTA on left, quote cards on right
-- [ ] Image: rounded corners, aspect ratio from design (Figma: portrait/square)
-- [ ] CTA button: black background, white text, rounded (per Figma)
-- [ ] Quote cards: white background, rounded corners, separation between cards
-- [ ] Typography: quote (bold, large), author name/title/location (smaller)
+- [x] Two-column layout: image + CTA on left, quote cards on right
+- [x] Image: rounded corners, aspect ratio from design (Figma: portrait/square)
+- [x] CTA button: black background, white text, rounded (per Figma)
+- [x] Quote cards: white background, rounded corners, separation between cards
+- [x] Typography: quote (bold, large), author name/title/location (smaller)
 
 ### Task 4.3: Mobile Layout
-- [ ] Single column: image top, quote cards stacked below, CTA
-- [ ] Breakpoint: `@media (width < 900px)` or equivalent
-- [ ] Image and text scale for smaller screens
+- [x] Single column: image top, quote cards stacked below, CTA
+- [x] Breakpoint: `@media (width >= 900px)` for desktop
+- [x] Image and text scale for smaller screens
 
 ### Task 4.4: Responsive and Design Tokens
-- [ ] Use CSS variables where applicable
-- [ ] Match Figma colors (orange gradient background, black CTA)
-- [ ] Ensure accessibility: contrast, focus states
+- [x] Use CSS variables where applicable
+- [x] Match Figma colors (orange gradient background, black CTA)
+- [x] Ensure accessibility: contrast, focus states
 
 ### Task 4.5: HUMAN TEST — CSS
 - [ ] **Human:** Verify desktop layout matches Figma
@@ -246,11 +249,11 @@ Implement the **quotescard** block: a parent-child EDS block with scroll-driven 
 
 ## Phase 6: Final Checklist
 
-- [ ] XWalk config in `blocks/quotescard/_quotescard.json`
-- [ ] Section filter includes `quotescard`
-- [ ] `blocks/quotescard/quotescard.js` with index-based extraction and scroll-driven image
-- [ ] `blocks/quotescard/quotescard.css` with desktop and mobile layouts
-- [ ] User-provided HTML used to validate structure contract
+- [x] XWalk config in `blocks/quotescard/_quotescard.json`
+- [x] Section filter includes `quotescard`
+- [x] `blocks/quotescard/quotescard.js` with index-based extraction and scroll-driven image
+- [x] `blocks/quotescard/quotescard.css` with desktop and mobile layouts
+- [x] User-provided HTML used to validate structure contract
 - [ ] `moveInstrumentation()` used when transforming DOM
 - [ ] No block-level JSON in wrong locations (follow project convention: `blocks/*/_*.json`)
 - [ ] All human test tasks completed
