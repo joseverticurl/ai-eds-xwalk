@@ -216,6 +216,68 @@
     ]
   },
   {
+    "id": "ourcompanycarousel",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "sectionTitle",
+        "label": "Section Title",
+        "value": "Meet the people leading the way"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaText",
+        "label": "CTA Text",
+        "value": "Meet all our leaders"
+      }
+    ]
+  },
+  {
+    "id": "ourcompanycarouselitem",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "name",
+        "label": "Name",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link"
+      }
+    ]
+  },
+  {
     "id": "quotescard",
     "fields": [
       {

@@ -17,7 +17,8 @@
       "columns",
       "fragment",
       "quotescard",
-      "relatedarticles"
+      "relatedarticles",
+      "ourcompanycarousel"
     ]
   },
   {
@@ -39,6 +40,12 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "ourcompanycarousel",
+    "components": [
+      "ourcompanycarouselitem"
     ]
   },
   {
