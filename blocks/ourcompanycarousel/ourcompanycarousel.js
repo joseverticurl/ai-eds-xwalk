@@ -170,10 +170,14 @@ export default function decorate(block) {
     const nameText = extractText(nameCell) ?? '';
     const link = extractLink(linkCell) || '#';
 
+    const nameTitleParts = nameText ? nameText.split(/\n/).map((s) => s.trim()).filter(Boolean) : [];
+    const namePart = nameTitleParts[0] || '';
+    const titlePart = nameTitleParts[1] || '';
+
     const card = document.createElement('a');
     card.href = link;
     card.classList.add('ourcompanycarousel-card');
-    card.setAttribute('aria-label', nameText ? `View profile of ${nameText}` : 'View profile');
+    card.setAttribute('aria-label', namePart ? `View profile of ${namePart}` : 'View profile');
     if (linkCell) moveInstrumentation(linkCell, card);
 
     const imageWrapper = document.createElement('div');
@@ -188,22 +192,31 @@ export default function decorate(block) {
       imageWrapper.appendChild(optimizedPic);
     }
 
-    const contentOverlay = document.createElement('div');
-    contentOverlay.classList.add('ourcompanycarousel-card-content');
-    if (nameText) {
-      const nameEl = document.createElement('span');
+    const contentArea = document.createElement('div');
+    contentArea.classList.add('ourcompanycarousel-card-content');
+    const textBlock = document.createElement('div');
+    textBlock.classList.add('ourcompanycarousel-card-text');
+    if (namePart) {
+      const nameEl = document.createElement('div');
       nameEl.classList.add('ourcompanycarousel-card-name');
-      nameEl.textContent = nameText;
-      contentOverlay.appendChild(nameEl);
+      nameEl.textContent = namePart;
+      textBlock.appendChild(nameEl);
     }
+    if (titlePart) {
+      const titleEl = document.createElement('div');
+      titleEl.classList.add('ourcompanycarousel-card-title');
+      titleEl.textContent = titlePart;
+      textBlock.appendChild(titleEl);
+    }
+    contentArea.appendChild(textBlock);
     const ctaBtn = document.createElement('span');
     ctaBtn.classList.add('ourcompanycarousel-card-cta');
     ctaBtn.innerHTML = ARROW_ICON_SVG;
     ctaBtn.setAttribute('aria-hidden', 'true');
-    contentOverlay.appendChild(ctaBtn);
+    contentArea.appendChild(ctaBtn);
 
     card.appendChild(imageWrapper);
-    card.appendChild(contentOverlay);
+    card.appendChild(contentArea);
     track.appendChild(card);
     cards.push(card);
   });
