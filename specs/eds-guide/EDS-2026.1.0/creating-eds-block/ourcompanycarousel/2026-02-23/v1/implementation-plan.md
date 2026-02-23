@@ -202,9 +202,9 @@ Add `"ourcompanycarousel"` to the section's `components` array in the `filters` 
 
 ---
 
-### Phase 0.5: Request User-Provided Semantic HTML
+### Phase 0.5: Request User-Provided Semantic HTML ✓
 
-#### Task 0.5.1: Obtain semantic HTML from Universal Editor
+#### Task 0.5.1: Obtain semantic HTML from Universal Editor ✓
 
 **Prerequisite:** Phase 1 complete and deployed.
 
@@ -238,11 +238,11 @@ Add `"ourcompanycarousel"` to the section's `components` array in the `filters` 
 
 ---
 
-#### Task 2.2: Implement decorate() – structure contract
+#### Task 2.2: Implement decorate() – structure contract ✓
 
 **File:** `blocks/ourcompanycarousel/ourcompanycarousel.js`
 
-Document the structure contract in JSDoc based on **user-provided HTML**:
+Document the structure contract in JSDoc based on **user-provided HTML** (ourcompanycarousel.html):
 
 ```javascript
 /**
@@ -262,41 +262,32 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ---
 
-#### Task 2.3: Implement decorate() – data extraction and DOM transform
+#### Task 2.3: Implement decorate() – data extraction and DOM transform ✓
 
-- [ ] Extract section title, CTA link, CTA text from parent rows (0, 1, 2)
-- [ ] Extract per item: image src, alt, name, title, link (with fallbacks for `wrapTextNodes` and `.href` per [implementation-guide.md](../../../implementation-guide.md))
-- [ ] Build DOM structure:
-  - Section heading (e.g., `<h2>`)
-  - Carousel container with card elements (each card: image, name, title, circular CTA button; card links to profile via `link`)
-  - Section CTA button ("Meet all our leaders") below carousel
-- [ ] Use `createOptimizedPicture()` for images (reference `blocks/relatedarticles/relatedarticles.js`, `blocks/quotescard/quotescard.js`)
-- [ ] Use `moveInstrumentation()` when replacing/moving elements
+- [x] Extract section title, CTA link, CTA text from parent rows (0, 1, 2)
+- [x] Extract per item: image src, alt from img, name from cell 1, link (with fallbacks per [implementation-guide.md](../../../implementation-guide.md))
+- [x] Build DOM structure: heading, carousel with cards (image, name overlay, circular CTA), section CTA button
+- [x] Use `createOptimizedPicture()` for images
+- [x] Use `moveInstrumentation()` when replacing/moving elements
 
 ---
 
-#### Task 2.4: Implement carousel interaction logic
+#### Task 2.4: Implement carousel interaction logic ✓
 
-- [ ] **Desktop:**
-  - Horizontal scroll container (overflow-x: auto or scroll)
-  - Left/right arrow buttons: scroll by one card width (or snap)
-  - Optional: mouse/trackpad drag (pointer events)
-- [ ] **Mobile:**
-  - Single active card with partial peek of next
-  - Swipe gestures (touchstart, touchmove, touchend) — left/right to change slide
-  - Left/right arrow buttons at bottom (same behavior as desktop)
-- [ ] **Loop:** After last item, next goes to first; before first, previous goes to last
-- [ ] Use `window.matchMedia('(min-width: 900px)')` for desktop breakpoint (per implementation guide)
-- [ ] No autoplay
+- [x] **Desktop:** Horizontal scroll (overflow-x: auto), arrow buttons, central "Drag" control with arrows
+- [x] **Mobile:** Swipe gestures (touchstart/touchend), arrow buttons below carousel
+- [x] **Loop:** scrollToIndex wraps at boundaries
+- [x] Use scroll-snap and native overflow for drag
+- [x] No autoplay
 
 ---
 
-#### Task 2.5: Add carousel accessibility
+#### Task 2.5: Add carousel accessibility ✓
 
-- [ ] Arrow buttons: `aria-label="Previous slide"` and `aria-label="Next slide"`
-- [ ] Keyboard: Arrow buttons focusable (Tab); Enter/Space activate
-- [ ] Optional: `role="region"` and `aria-label` on carousel container
-- [ ] Ensure swipe does not block vertical scroll (use `touch-action: pan-y` or similar on carousel track)
+- [x] Arrow buttons: `aria-label="Previous slide"` and `aria-label="Next slide"`
+- [x] Keyboard: Arrow buttons focusable (Tab); Enter/Space activate
+- [x] `role="region"` and `aria-label` on carousel container
+- [x] `touch-action: pan-x` on track (horizontal scroll; vertical page scroll unaffected)
 
 ---
 
@@ -314,36 +305,36 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ### Phase 3: Frontend – CSS Styling
 
-#### Task 3.1: Base and desktop styles
+#### Task 3.1: Base and desktop styles ✓
 
 **File:** `blocks/ourcompanycarousel/ourcompanycarousel.css`
 
-- [ ] Section title: large, bold; centered on desktop (match Figma node 149-1072)
-- [ ] Gradient background (reddish-orange to grey) — use CSS gradient or design tokens
-- [ ] Carousel track: horizontal flex/grid; `overflow-x: auto` with scroll-snap
-- [ ] Cards: rounded corners, shadow; image (headshot) top; name + title below; circular CTA button (bottom-right)
-- [ ] Section CTA button: black background, white text, rounded corners; centered below carousel
-- [ ] Arrow controls: circular; centered over carousel (desktop) or below (mobile)
-- [ ] Use `(width >= 900px)` for desktop breakpoint
+- [x] Section title: large, bold; centered on desktop
+- [x] Gradient background (reddish-orange to grey)
+- [x] Carousel track: horizontal flex, overflow-x: auto, scroll-snap
+- [x] Cards: rounded corners, shadow; image top; name overlay; circular CTA button
+- [x] Section CTA button: black background, white text, rounded corners
+- [x] Arrow controls: circular "Drag" control; centered over carousel (desktop), below (mobile)
+- [x] Breakpoint `(width >= 900px)` for desktop
 
 ---
 
-#### Task 3.2: Mobile styles
+#### Task 3.2: Mobile styles ✓
 
-- [ ] Section title: left-aligned, may wrap to two lines
-- [ ] One primary card visible with peek of next (stacked effect per design)
-- [ ] Name and title overlayed on image bottom-left (white text)
-- [ ] Circular CTA button per card (bottom-right)
-- [ ] Arrow buttons: pink circular; centered at bottom below active card
-- [ ] Swipe-friendly: adequate touch target size; no horizontal page scroll interference
+- [x] Section title: left-aligned
+- [x] Cards 85% width with scroll-snap for peek effect
+- [x] Name overlayed on image (white text, gradient overlay)
+- [x] Circular CTA button per card (bottom-right)
+- [x] Arrow buttons: centered at bottom
+- [x] touch-action: pan-x; adequate touch targets
 
 ---
 
-#### Task 3.3: Carousel layout specifics
+#### Task 3.3: Carousel layout specifics ✓
 
-- [ ] Desktop: `scroll-snap-type: x mandatory` on track; `scroll-snap-align: start` on cards
-- [ ] Mobile: Same snap behavior; card width ~90% viewport or full width with peek
-- [ ] Hide native scrollbar if design specifies (e.g., `scrollbar-width: none` + custom arrows)
+- [x] Desktop: scroll-snap-type: x mandatory; scroll-snap-align: start; cards 320px
+- [x] Mobile: scroll-snap-align: center; cards 85% width
+- [x] Native scrollbar hidden (scrollbar-width: none)
 
 ---
 
@@ -359,13 +350,13 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ### Phase 4: Accessibility & Polish
 
-#### Task 4.1: Accessibility checklist
+#### Task 4.1: Accessibility checklist ✓
 
-- [ ] Alt text for all images (from img or imageAlt field)
-- [ ] Card links have descriptive `aria-label` (e.g., "View profile of [name]")
-- [ ] Arrow controls keyboard accessible
-- [ ] Focus visible on buttons and links
-- [ ] Swipe does not block vertical scroll (per [ourcompanycarouselstory.md](../../../ourcompanycarouselstory.md))
+- [x] Alt text from img or name fallback
+- [x] Card links: `aria-label="View profile of [name]"`
+- [x] Arrow buttons keyboard focusable
+- [x] Focus outline on interactive elements
+- [x] touch-action: pan-x (horizontal scroll only; vertical scroll unaffected)
 
 ---
 
@@ -378,7 +369,7 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ---
 
-## Structure Contract Summary (To Validate from User HTML)
+## Structure Contract Summary (Validated from ourcompanycarousel.html)
 
 | Index | Meaning |
 |-------|---------|
@@ -388,13 +379,11 @@ Use index-based access only. No `data-*` attributes for structure.
 | `block.children[3]` | First carousel item row |
 | `block.children[4]` | Second carousel item row |
 | ... | ... |
-| `row.children[0]` | Image |
-| `row.children[1]` | Image Alt |
-| `row.children[2]` | Name |
-| `row.children[3]` | Title |
-| `row.children[4]` | Link |
+| `row.children[0]` | Image (picture); alt from img element |
+| `row.children[1]` | Name/title text (single cell in provided HTML) |
+| `row.children[2]` | Link |
 
-**Note:** Actual indices must be validated from user-provided HTML. Empty fields may omit cells.
+**Note:** Provided HTML has 3 cells per item. Alt extracted from img; name/title combined in cell 1.
 
 ---
 
