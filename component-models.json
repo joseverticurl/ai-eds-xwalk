@@ -242,14 +242,14 @@
       {
         "component": "reference",
         "valueType": "string",
-        "name": "media",
+        "name": "image",
         "label": "Media",
         "multi": false
       },
       {
         "component": "text",
         "valueType": "string",
-        "name": "mediaAlt",
+        "name": "imageAlt",
         "label": "Alt",
         "value": ""
       },
