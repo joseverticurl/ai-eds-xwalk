@@ -5,7 +5,7 @@
 **Date:** 2026-02-25  
 **Version:** v1  
 
-**Phase 1 Status:** ✅ Complete (Backend) | **Phase 2:** ⏳ Awaiting user-provided HTML | **Phase 3:** ⏳ Pending
+**Phase 1 Status:** ✅ Complete (Backend) | **Phase 2:** ✅ Complete (Structure documented) | **Phase 3:** ✅ Complete (Frontend)
 
 ---
 
@@ -135,40 +135,20 @@ Implement a new EDS block **textwithimage** that displays centered text content 
 
 ### Phase 2: User Provides Semantic HTML (Step 2)
 
-#### Task 2.1: Request user-provided HTML
+#### Task 2.1: Request user-provided HTML ✅
 
-**Action:** Ask the user to:
-
-1. Author the **textwithimage** block in Adobe Universal Editor with sample content
-2. Configure all fields: tag, title, description, media (image or video), mediaAlt, mediaType
-3. Provide two variants:
-   - With `mediaType` = "image"
-   - With `mediaType` = "video"
-4. Copy the generated HTML (view source or DevTools)
-5. Paste the HTML here
-
-**Template prompt:**
-```
-Please provide the semantic HTML for the textwithimage block:
-
-1. Author the block in Adobe Universal Editor with sample content
-2. Configure all fields (tag, title, description, media, mediaAlt, mediaType)
-3. Provide HTML for both variants: mediaType=image and mediaType=video
-4. Copy the generated HTML (view page source or DevTools)
-5. Paste the HTML here
-
-Include the block's root element (e.g., <div class="block textwithimage">...</div>) and its full structure.
-```
+**Action:** User provided HTML from `specs/eds-guide/EDS-2026.1.0/creating-eds-block/textwithimage/textwithimage.html`
 
 ---
 
-#### Task 2.2: Document structure contract from user-provided HTML
+#### Task 2.2: Document structure contract from user-provided HTML ✅
 
-**Actions:**
-1. Analyze the user-provided HTML
-2. Document: which rows map to which fields, empty-field behavior, optional field handling
-3. Update the structure contract in this plan if needed
-4. Confirm field indices match the XWalk model
+**Documented structure (from user HTML):**
+- `block.children[0]` = tag row
+- `block.children[1]` = title row
+- `block.children[2]` = description row (richtext, preserve innerHTML)
+- `block.children[3]` = media row (cell 0: link/img with URL; cell 1: optional mediaAlt)
+- `block.children[4]` = mediaType row ("image" | "video")
 
 ---
 
@@ -182,9 +162,9 @@ Include the block's root element (e.g., <div class="block textwithimage">...</di
 
 ### Phase 3: Frontend (Step 3)
 
-#### Task 3.1: Create block JavaScript
+#### Task 3.1: Create block JavaScript ✅
 
-**File:** `blocks/text-with-image/text-with-image.js`
+**File:** `blocks/textwithimage/textwithimage.js`
 
 **Actions:**
 1. Implement `decorate(block)` with index-based extraction per structure contract
@@ -214,9 +194,9 @@ Include the block's root element (e.g., <div class="block textwithimage">...</di
 
 ---
 
-#### Task 3.2: Create block CSS
+#### Task 3.2: Create block CSS ✅
 
-**File:** `blocks/text-with-image/text-with-image.css`
+**File:** `blocks/textwithimage/textwithimage.css`
 
 **Actions:**
 1. Style the transformed structure (not the initial AEM HTML)
@@ -234,9 +214,9 @@ Include the block's root element (e.g., <div class="block textwithimage">...</di
 
 ---
 
-#### Task 3.3: Register block in block loader
+#### Task 3.3: Register block in block loader ✅
 
-**Action:** Verify the block is auto-discovered. The project uses `decorateBlocks()` which scans `div.section > div > div`; blocks are loaded by `loadBlock()` when the block has a matching class. Ensure the block class is `textwithimage` (matches definition id).
+**Action:** Block auto-discovered via `loadBlock()` — block class `textwithimage` loads `blocks/textwithimage/textwithimage.js` and `.css`. No registration needed.
 
 **Reference:** `scripts/aem.js` — `decorateBlock()` adds block class from metadata.
 
@@ -297,8 +277,8 @@ Include the block's root element (e.g., <div class="block textwithimage">...</di
 | File | Action | Status |
 |------|--------|--------|
 | `blocks/textwithimage/_textwithimage.json` | Create | ✅ Done |
-| `blocks/textwithimage/textwithimage.js` | Create | ⏳ Pending (Phase 3, after user HTML) |
-| `blocks/textwithimage/textwithimage.css` | Create | ⏳ Pending (Phase 3, after user HTML) |
+| `blocks/textwithimage/textwithimage.js` | Create | ✅ Done |
+| `blocks/textwithimage/textwithimage.css` | Create | ✅ Done |
 | `models/_section.json` | Update (add textwithimage to section filter) | ✅ Done |
 
 ---
