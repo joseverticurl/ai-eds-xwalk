@@ -16,7 +16,9 @@
       "cards",
       "columns",
       "fragment",
-      "featurecardscarousel"
+      "featurecardscarousel",
+      "socialpromo",
+      "textwithimage"
     ]
   },
   {
@@ -44,6 +46,12 @@
     "id": "featurecardscarousel",
     "components": [
       "featurecardscarouselitem"
+    ]
+  },
+  {
+    "id": "socialpromo",
+    "components": [
+      "socialpromo-card"
     ]
   }
 ]
