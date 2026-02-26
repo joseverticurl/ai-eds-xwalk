@@ -16,6 +16,7 @@
       "cards",
       "columns",
       "fragment",
+      "socialpromo",
       "textwithimage"
     ]
   },
@@ -38,6 +39,12 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "socialpromo",
+    "components": [
+      "socialpromo-card"
     ]
   }
 ]
