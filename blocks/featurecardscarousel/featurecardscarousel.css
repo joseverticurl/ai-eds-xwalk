@@ -1,7 +1,11 @@
 /* Feature Cards Carousel - Base */
+/* Bibigo design tokens: ivory-500 #fffbe3, ivory-900 #734f2f, orange-400 #f97334, deep-green #004122 */
 .featurecardscarousel-wrapper {
-  background-color: #fffbe3;
-  padding: 36px 20px;
+  padding: 24px 20px;
+  position: relative;
+  background-color: #fffbe3; /* bibigo-ivory 500 */
+  display: block;
+  overflow-x: hidden;
 }
 
 .featurecardscarousel-title-section {
@@ -27,9 +31,21 @@
 
 .featurecardscarousel-subheading {
   font-size: 16px;
-  color: #003017;
+  color: #003017; /* bibigo-deep-green 700 */
   line-height: 1.5;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-subheading {
+    margin-bottom: 20px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-subheading {
+    margin-bottom: 24px;
+  }
 }
 
 .featurecardscarousel-ctas {
@@ -81,31 +97,81 @@
   margin: 0 auto;
   border-radius: 24px;
   overflow: hidden;
+  margin-top: 16px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-carousel-section {
+    margin-top: 28px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-carousel-section {
+    margin-top: 32px;
+  }
 }
 
 .featurecardscarousel-center-image {
   position: relative;
   width: 100%;
-  aspect-ratio: 1120 / 640;
+  aspect-ratio: 350 / 617;
   background: #000;
 }
 
-/* Indicators over center image (desktop) */
+@media (width >= 680px) {
+  .featurecardscarousel-center-image {
+    aspect-ratio: 680 / 751;
+  }
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-center-image {
+    aspect-ratio: 7 / 4;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-center-image {
+    aspect-ratio: 2 / 1;
+  }
+}
+
+/* Indicators over center image - progress bars positioning */
 .featurecardscarousel-center-image .featurecardscarousel-pagination {
   position: absolute;
   left: 50%;
-  bottom: 140px;
+  bottom: 246px;
   transform: translateX(-50%);
   margin-top: 0;
   z-index: 2;
+  justify-content: center;
+  width: 100%;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-center-image .featurecardscarousel-pagination {
+    bottom: 295px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-center-image .featurecardscarousel-pagination {
+    bottom: 347px;
+  }
 }
 
 .featurecardscarousel-center-image::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.8) 100%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 46.13%, #000 100%);
+  border-radius: 24px;
   pointer-events: none;
+  z-index: 1;
 }
 
 .featurecardscarousel-center-image img {
@@ -125,16 +191,88 @@
 
 .featurecardscarousel-card {
   cursor: pointer;
-  height: auto;
+  height: 205px;
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card {
+    height: 221px;
+  }
+}
+
+.featurecardscarousel-card:hover {
+  height: 221px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card:hover {
+    height: 264px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card:hover {
+    height: 279px;
+  }
+}
+
+.featurecardscarousel-card.swiper-slide-active {
+  height: 221px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card.swiper-slide-active {
+    height: 264px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card.swiper-slide-active {
+    height: 279px;
+  }
 }
 
 .featurecardscarousel-card-inner {
-  background-color: #734f2f;
   border: 1px solid #f5ead5;
   padding: 24px;
   border-radius: 24px 24px 0 0;
   min-height: 180px;
   transition: transform 0.2s, max-width 0.2s;
+}
+
+/* Card colors per Bibigo design - nth-child(1-4) */
+.featurecardscarousel-card:nth-child(1) .featurecardscarousel-card-inner {
+  background-color: #734f2f; /* bibigo-ivory 900 */
+  color: #fffefc;
+}
+
+.featurecardscarousel-card:nth-child(2) .featurecardscarousel-card-inner {
+  background-color: #fde047; /* color-yellow 300 */
+  color: #ea580c; /* bibigo-orange 600 */
+}
+
+.featurecardscarousel-card:nth-child(2) .featurecardscarousel-card-description {
+  color: #ea580c;
+}
+
+.featurecardscarousel-card:nth-child(3) .featurecardscarousel-card-inner {
+  background-color: #f97334; /* bibigo-orange 400 */
+  color: #fffefc;
+}
+
+.featurecardscarousel-card:nth-child(4) .featurecardscarousel-card-inner {
+  background-color: #004122; /* bibigo-deep-green 500 */
+  color: #fffefc;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card:nth-child(1) .featurecardscarousel-card-inner {
+    border-bottom-left-radius: 24px;
+  }
+
+  .featurecardscarousel-card:nth-child(4) .featurecardscarousel-card-inner {
+    border-bottom-right-radius: 24px;
+  }
 }
 
 .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
@@ -144,11 +282,26 @@
 }
 
 .featurecardscarousel-card-logo {
-  width: 83px;
-  height: 83px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   overflow: hidden;
   margin-bottom: 24px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card-logo {
+    width: 83px;
+    height: 83px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card-logo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 32px;
+  }
 }
 
 .featurecardscarousel-card-logo img,
@@ -161,22 +314,34 @@
 .featurecardscarousel-card-title {
   font-size: 20px;
   font-weight: 800;
-  color: #fffefc;
-  margin: 0 0 8px;
+  color: inherit;
+  margin: 0 0 12px;
   line-height: 1.25;
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card-title {
+    margin-bottom: 10px;
+  }
 }
 
 .featurecardscarousel-card-description {
   font-size: 16px;
-  color: white;
+  color: inherit;
   line-height: 1.5;
   margin: 0;
+  display: none;
+}
+
+.featurecardscarousel-card:hover .featurecardscarousel-card-description,
+.featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-description {
+  display: block;
 }
 
 /* Progress indicators: track (darker) + fill (animates over lag time) */
 .featurecardscarousel-pagination {
   display: flex;
-  gap: 16px;
+  gap: 0;
   justify-content: center;
   align-items: center;
 }
@@ -190,6 +355,8 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 .featurecardscarousel-bullet-track {
@@ -271,10 +438,6 @@
     font-size: 14px;
   }
 
-  .featurecardscarousel-center-image {
-    aspect-ratio: 350 / 617;
-  }
-
   .featurecardscarousel-center-image img {
     border-radius: 20px;
   }
@@ -301,18 +464,8 @@
     max-width: none;
   }
 
-  .featurecardscarousel-card-logo {
-    width: 64px;
-    height: 64px;
-  }
-
   .featurecardscarousel-carousel-section {
     border-radius: 20px;
-  }
-
-  /* Indicators over center image for mobile */
-  .featurecardscarousel-center-image .featurecardscarousel-pagination {
-    bottom: 130px;
   }
 }
 
