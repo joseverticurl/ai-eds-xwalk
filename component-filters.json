@@ -15,7 +15,11 @@
       "hero",
       "cards",
       "columns",
-      "fragment"
+      "fragment",
+      "textwithimagegif",
+      "featurecardscarousel",
+      "socialpromo",
+      "textwithimage"
     ]
   },
   {
@@ -37,6 +41,18 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "featurecardscarousel",
+    "components": [
+      "featurecardscarouselitem"
+    ]
+  },
+  {
+    "id": "socialpromo",
+    "components": [
+      "socialpromo-card"
     ]
   }
 ]

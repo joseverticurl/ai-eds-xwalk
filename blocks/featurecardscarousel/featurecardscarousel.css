@@ -1,0 +1,542 @@
+/* Feature Cards Carousel - Base */
+/* Bibigo design tokens: ivory-500 #fffbe3, ivory-900 #734f2f, orange-400 #f97334, deep-green #004122 */
+.featurecardscarousel-wrapper {
+  padding: 24px 20px;
+  position: relative;
+  background-color: #fffbe3; /* bibigo-ivory 500 */
+  display: block;
+  overflow-x: hidden;
+}
+
+.featurecardscarousel-title-section {
+  text-align: center;
+  max-width: 1110px;
+  margin: 0 auto 24px;
+}
+
+.featurecardscarousel-tag {
+  font-size: 16px;
+  font-weight: 600;
+  color: #289200;
+  margin: 0 0 8px;
+}
+
+.featurecardscarousel-heading {
+  font-size: 32px;
+  font-weight: 600;
+  color: #004122;
+  margin: 0 0 12px;
+  line-height: 1;
+}
+
+.featurecardscarousel-subheading {
+  font-size: 16px;
+  color: #003017; /* bibigo-deep-green 700 */
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-subheading {
+    margin-bottom: 20px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-subheading {
+    margin-bottom: 24px;
+  }
+}
+
+.featurecardscarousel-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.featurecardscarousel-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.64px;
+  text-decoration: none;
+  border-radius: 16px;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.featurecardscarousel-cta--primary {
+  background-color: #004122;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  color: white;
+}
+
+.featurecardscarousel-cta--primary:hover {
+  background-color: #003017;
+}
+
+.featurecardscarousel-cta--secondary {
+  background: transparent;
+  border: 1px solid #004122;
+  color: #004122;
+}
+
+.featurecardscarousel-cta--secondary:hover {
+  border-color: #003017;
+  color: #003017;
+}
+
+/* Carousel section */
+.featurecardscarousel-carousel-section {
+  position: relative;
+  max-width: 1120px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-carousel-section {
+    margin-top: 28px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-carousel-section {
+    margin-top: 32px;
+  }
+}
+
+/* Desktop: image carousel + fixed cards | Mobile: cards swiper */
+.featurecardscarousel-desktop {
+  display: none;
+}
+
+.featurecardscarousel-mobile {
+  display: block;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-desktop {
+    display: block;
+  }
+
+  .featurecardscarousel-mobile {
+    display: none;
+  }
+}
+
+.featurecardscarousel-center-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 350 / 617;
+  background: #000;
+  overflow: hidden;
+}
+
+@media (width >= 680px) {
+  .featurecardscarousel-center-image {
+    aspect-ratio: 680 / 751;
+  }
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-center-image {
+    aspect-ratio: 7 / 4;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-center-image {
+    aspect-ratio: 2 / 1;
+  }
+}
+
+/* Override Swiper default pagination positioning */
+.featurecardscarousel-wrapper .swiper-horizontal > .swiper-pagination-bullets,
+.featurecardscarousel-wrapper .swiper-pagination-bullets.swiper-pagination-horizontal,
+.featurecardscarousel-wrapper .swiper-pagination-custom,
+.featurecardscarousel-wrapper .swiper-pagination-fraction {
+  bottom: var(--swiper-pagination-bottom, 8px);
+  top: 65px !important;
+  left: 50% !important;
+  width: 100%;
+  transform: translateX(-50%);
+  z-index: 2;
+  justify-content: center;
+}
+
+.featurecardscarousel-center-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 46.13%, #000 100%);
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.featurecardscarousel-center-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+/* Desktop: image swiper (only image moves) */
+.featurecardscarousel-image-swiper {
+  position: absolute;
+  inset: 0;
+}
+
+.featurecardscarousel-image-swiper .swiper-slide {
+  height: 100%;
+}
+
+.featurecardscarousel-image-swiper .swiper-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+/* Desktop: fixed cards row (selectors, no swiper) */
+.featurecardscarousel-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+  margin-top: -120px;
+  padding: 0 80px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-cards-row {
+    padding: 0;
+  }
+}
+
+.featurecardscarousel-cards-row .featurecardscarousel-card {
+  flex: 1 1 auto;
+  max-width: 280px;
+  min-width: 200px;
+}
+
+/* Cards swiper (mobile) */
+.featurecardscarousel-swiper {
+  position: relative;
+  margin-top: -120px;
+  padding: 0 80px 24px;
+  z-index: 1;
+}
+
+.featurecardscarousel-card {
+  cursor: pointer;
+  height: 205px;
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card {
+    height: 221px;
+  }
+}
+
+.featurecardscarousel-card:hover {
+  height: 221px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card:hover {
+    height: 264px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card:hover {
+    height: 279px;
+  }
+}
+
+.featurecardscarousel-card.swiper-slide-active,
+.featurecardscarousel-card--selected {
+  height: 221px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card.swiper-slide-active,
+  .featurecardscarousel-card--selected {
+    height: 264px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card.swiper-slide-active,
+  .featurecardscarousel-card--selected {
+    height: 279px;
+  }
+}
+
+.featurecardscarousel-card-inner {
+  border: 1px solid #f5ead5;
+  padding: 24px;
+  border-radius: 24px 24px 0 0;
+  min-height: 180px;
+  transition: transform 0.2s, max-width 0.2s;
+}
+
+/* Card colors per Bibigo design - nth-child(1-4) */
+.featurecardscarousel-card:nth-child(1) .featurecardscarousel-card-inner {
+  background-color: #734f2f; /* bibigo-ivory 900 */
+  color: #fffefc;
+}
+
+.featurecardscarousel-card:nth-child(2) .featurecardscarousel-card-inner {
+  background-color: #fde047; /* color-yellow 300 */
+  color: #ea580c; /* bibigo-orange 600 */
+}
+
+.featurecardscarousel-card:nth-child(2) .featurecardscarousel-card-description {
+  color: #ea580c;
+}
+
+.featurecardscarousel-card:nth-child(3) .featurecardscarousel-card-inner {
+  background-color: #f97334; /* bibigo-orange 400 */
+  color: #fffefc;
+}
+
+.featurecardscarousel-card:nth-child(4) .featurecardscarousel-card-inner {
+  background-color: #004122; /* bibigo-deep-green 500 */
+  color: #fffefc;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card:nth-child(1) .featurecardscarousel-card-inner {
+    border-bottom-left-radius: 24px;
+  }
+
+  .featurecardscarousel-card:nth-child(4) .featurecardscarousel-card-inner {
+    border-bottom-right-radius: 24px;
+  }
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
+  .featurecardscarousel-card:hover .featurecardscarousel-card-inner,
+  .featurecardscarousel-card--selected .featurecardscarousel-card-inner,
+  .featurecardscarousel-cards-row .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
+    transform: scale(1.02);
+    max-width: 560px;
+  }
+}
+
+.featurecardscarousel-card-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-card-logo {
+    width: 83px;
+    height: 83px;
+  }
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card-logo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 32px;
+  }
+}
+
+.featurecardscarousel-card-logo img,
+.featurecardscarousel-card-logo picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.featurecardscarousel-card-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: inherit;
+  margin: 0 0 12px;
+  line-height: 1.25;
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-card-title {
+    margin-bottom: 10px;
+  }
+}
+
+.featurecardscarousel-card-description {
+  font-size: 16px;
+  color: inherit;
+  line-height: 1.5;
+  margin: 0;
+  display: none;
+}
+
+.featurecardscarousel-card:hover .featurecardscarousel-card-description,
+.featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-description,
+.featurecardscarousel-card--selected .featurecardscarousel-card-description {
+  display: block;
+}
+
+/* Progress indicators: track (darker) + fill (animates over lag time) */
+.featurecardscarousel-pagination {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.featurecardscarousel-progress-bullet {
+  width: 56px;
+  height: 6px;
+  border-radius: 24px;
+  background: transparent;
+  opacity: 1;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.featurecardscarousel-bullet-track {
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0.3;
+  border-radius: 24px;
+}
+
+.featurecardscarousel-bullet-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: white;
+  border-radius: 24px 0 0 24px;
+  pointer-events: none;
+}
+
+.featurecardscarousel-bullet-fill--active {
+  animation: featurecardscarousel-bullet-progress var(--bullet-duration, 4s) linear forwards;
+}
+
+@keyframes featurecardscarousel-bullet-progress {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Tablet: cards expand to full space */
+@media (width >= 680px) and (width < 900px) {
+  .featurecardscarousel-wrapper {
+    padding: 28px 44px;
+  }
+
+  .featurecardscarousel-swiper {
+    margin-top: -150px;
+    padding: 0 44px 24px;
+  }
+
+  .featurecardscarousel-card-inner {
+    min-height: 200px;
+  }
+}
+
+/* Mobile: cards expand and occupy full space per Figma */
+@media (width < 680px) {
+  .featurecardscarousel-wrapper {
+    padding: 24px 20px;
+  }
+
+  .featurecardscarousel-heading {
+    font-size: 28px;
+  }
+
+  .featurecardscarousel-tag,
+  .featurecardscarousel-subheading {
+    font-size: 14px;
+  }
+
+  .featurecardscarousel-ctas {
+    flex-direction: column;
+  }
+
+  .featurecardscarousel-cta {
+    width: 100%;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .featurecardscarousel-center-image img {
+    border-radius: 20px;
+  }
+
+  .featurecardscarousel-swiper {
+    margin-top: -100px;
+    padding: 0 0 16px;
+  }
+
+  .featurecardscarousel-card-inner {
+    padding: 24px;
+    min-height: 160px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .featurecardscarousel-carousel-section {
+    border-radius: 20px;
+  }
+}
+
+/* Desktop: less than 4 cards - expand to fill */
+@media (width >= 900px) {
+  .featurecardscarousel-swiper .swiper-wrapper {
+    justify-content: center;
+  }
+
+  .featurecardscarousel-swiper .swiper-slide {
+    flex: 1 1 auto;
+    max-width: 280px;
+  }
+}
+
+/* Mobile/Tablet: cards 100% expanded */
+@media (width < 900px) {
+  .featurecardscarousel-swiper .swiper-slide {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .featurecardscarousel-card-inner {
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+
+  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
+  .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
+    max-width: none;
+    transform: none;
+  }
+}
