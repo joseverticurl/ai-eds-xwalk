@@ -110,11 +110,11 @@
 
 ---
 
-### Phase 3: Frontend — JavaScript (Step 3a)
+### Phase 3: Frontend — JavaScript (Step 3a) ✅
 
 | # | Task | Details |
 |---|------|---------|
-| 3.1 | Create `textwithimagegif.js` | Implement `decorate(block)` using index-based access per structure contract |
+| 3.1 | ✅ Create `textwithimagegif.js` | Implement `decorate(block)` using index-based access per structure contract |
 | 3.2 | Structure transformation | Build DOM: wrapper → image container (with badge overlay) | content container (title, description, tags-or-cta) |
 | 3.3 | GIF loop limit | For `<img>` with GIF src, add logic to stop after 3 loops (or use `loop` attribute with JS to detect and stop) |
 | 3.4 | Background animation | Add rotating background element; CSS animation 360° in 10–15 sec |
@@ -123,11 +123,11 @@
 
 ---
 
-### Phase 4: Frontend — CSS (Step 3b)
+### Phase 4: Frontend — CSS (Step 3b) ✅
 
 | # | Task | Details |
 |---|------|---------|
-| 4.1 | Create `textwithimagegif.css` | Base styles: background (#fffbe3), container layout |
+| 4.1 | ✅ Create `textwithimagegif.css` | Base styles: background (#fffbe3), container layout |
 | 4.2 | Desktop (≥1280px) | Image left, content right; image -5deg rotation; speech bubble overlay; tags inline |
 | 4.3 | Tablet (768px–1279px) | Similar layout; reduced font sizes; tags wrap |
 | 4.4 | Mobile (&lt;768px) | Stack: image on top, content below; tags wrap to 2 rows |

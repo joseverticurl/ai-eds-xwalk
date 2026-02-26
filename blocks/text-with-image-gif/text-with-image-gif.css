@@ -1,0 +1,215 @@
+/* Text with Image/GIF block - supports both class names (text-with-image-gif, textwithimagegif) */
+.text-with-image-gif,
+.textwithimagegif {
+  position: relative;
+  background-color: #fffbe3;
+  overflow: hidden;
+  padding: 24px 20px;
+}
+
+.text-with-image-gif-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Rotating background */
+.text-with-image-gif-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.text-with-image-gif-bg picture,
+.text-with-image-gif-bg img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 500px;
+  height: auto;
+  animation: text-with-image-gif-rotate 12s linear infinite;
+}
+
+@keyframes text-with-image-gif-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Content layout */
+.text-with-image-gif-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.text-with-image-gif-image-section {
+  flex-shrink: 0;
+}
+
+.text-with-image-gif-image {
+  position: relative;
+  display: inline-block;
+  transform: rotate(-5deg);
+}
+
+.text-with-image-gif-image picture,
+.text-with-image-gif-image img {
+  display: block;
+  width: 100%;
+  max-width: 378px;
+  border-radius: 16px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.text-with-image-gif-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  padding: 8px 12px;
+  background-color: #004122;
+  color: #fffbe3;
+  font-family: var(--font-family-heading, 'Malik', sans-serif);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.25;
+  border-radius: 8px;
+  transform: rotate(-5deg);
+}
+
+.text-with-image-gif-text-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.text-with-image-gif-title {
+  margin: 0;
+  font-family: var(--font-family-heading, 'Malik', sans-serif);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1;
+  color: #004122;
+  text-transform: capitalize;
+}
+
+.text-with-image-gif-description {
+  font-family: var(--font-family-body, 'Averta Std', sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #003017;
+}
+
+.text-with-image-gif-description p {
+  margin: 0 0 0.5em;
+}
+
+.text-with-image-gif-description p:last-child {
+  margin-bottom: 0;
+}
+
+.text-with-image-gif-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.text-with-image-gif-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-family: var(--font-family-body, 'Averta Std', sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.5;
+  border-radius: 8px;
+}
+
+.text-with-image-gif-tag:nth-child(1) {
+  background-color: #f8dc83;
+  color: #f85001;
+  transform: rotate(-2deg);
+}
+
+.text-with-image-gif-tag:nth-child(2) {
+  background-color: #f97334;
+  color: #fffbe3;
+  transform: rotate(2deg);
+}
+
+.text-with-image-gif-tag:nth-child(3) {
+  background-color: white;
+  color: #004122;
+  transform: rotate(-2deg);
+}
+
+.text-with-image-gif-cta {
+  align-self: flex-start;
+}
+
+/* Tablet: 768px - 1279px */
+@media (min-width: 768px) {
+  .text-with-image-gif {
+    padding: 32px 44px;
+  }
+
+  .text-with-image-gif-inner {
+    gap: 16px;
+  }
+
+  .text-with-image-gif-content {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .text-with-image-gif-image picture,
+  .text-with-image-gif-image img {
+    max-width: 312px;
+    border-radius: 12px;
+  }
+
+  .text-with-image-gif-title {
+    font-size: 28px;
+  }
+
+  .text-with-image-gif-description {
+    font-size: 14px;
+  }
+}
+
+/* Desktop: 1280px+ */
+@media (min-width: 1280px) {
+  .text-with-image-gif {
+    padding: 48px 24px;
+  }
+
+  .text-with-image-gif-content {
+    gap: 24px;
+  }
+
+  .text-with-image-gif-image picture,
+  .text-with-image-gif-image img {
+    max-width: 378px;
+    border-radius: 16px;
+  }
+
+  .text-with-image-gif-title {
+    font-size: 48px;
+  }
+
+  .text-with-image-gif-description {
+    font-size: 16px;
+  }
+
+  .text-with-image-gif-tag {
+    font-size: 16px;
+  }
+}
