@@ -51,6 +51,10 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 
 **Checklist at a glance:** Prerequisites → Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend) → Validation
 
+**Key documentation:**
+- [Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) (Experience League)
+- [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions) (AEM.live)
+
 ---
 
 ## Document Structure
@@ -72,6 +76,7 @@ This guide is organized into three parts:
 - [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
 
 **Part 1: Process Flow (3 Steps)**
+- [AI Governance Rules (Process)](#ai-governance-rules-process)
 - [The 3-Step Process](#the-3-step-process)
 - [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html)
 - [End-to-End Flow](#end-to-end-flow)
@@ -82,9 +87,17 @@ This guide is organized into three parts:
 - [Next Steps](#next-steps)
 
 **Part 2: Backend Code Generation**
+- [AI Governance Rules (Backend)](#ai-governance-rules-backend)
 - [Configuration Overview](#configuration-overview)
 - [Component Definition](#component-definition-structure)
 - [Field Configuration](#field-configuration)
+  - [Field Definition Basics](#field-definition-basics)
+  - [Field Component Types](#field-component-types)
+  - [Validation Patterns](#validation-patterns)
+  - [Multi-Fields and Composite Multi-Fields](#multi-fields-and-composite-multi-fields)
+- [AEM Rendering Mechanics](#aem-rendering-mechanics)
+- [Block Structure Variants](#block-structure-variants)
+- [Resource Types](#resource-types)
 - [Filter/Nesting Rules](#filternesting-rules)
 
 **Part 3: Frontend Code Generation**
@@ -157,7 +170,23 @@ When creating a component implementation plan, **always ask for**:
    - Button styles and states
    - Form elements (if applicable)
 
-3. **Document Findings:**
+3. **Fetch SVG Icons from Figma:**
+   - Use Figma MCP (`get_design_context` or `get_screenshot`) to extract icon nodes from the design
+   - For each icon in the design, obtain the node ID and fetch the SVG markup
+   - Save icons as `.svg` files in `icons/` (e.g., `icons/icon-name.svg`) for use with `decorateIcon()` / `decorateIcons()`
+   - Use inline SVG format with proper attributes:
+
+   ```html
+   <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="none">
+     <rect width="72" height="72" rx="36" fill="#FFFBE3"/>
+     <path d="M47.2791 32.2804C49.9793 33.7603 50.0649 37.6084 47.4331 39.2069L33.5817 47.62C30.9499 49.2185 27.5746 47.3686 27.5062 44.2902L27.1459 28.0879C27.0774 25.0095 30.3671 23.0113 33.0674 24.4913L47.2791 32.2804Z" fill="#F85001"/>
+   </svg>
+   ```
+
+   - Ensure each SVG has: `xmlns`, `width`, `height`, `viewBox`, and `fill` (or `fill="none"` with fills on child elements)
+   - Preserve design colors and paths from Figma; avoid altering the exported markup
+
+4. **Document Findings:**
    - Create a design analysis summary
    - Map Figma elements to HTML structure
    - Map Figma styles to CSS properties
@@ -174,6 +203,7 @@ When creating a component implementation plan, **always ask for**:
    - Typography: Font families, sizes, weights
    - Spacing: Margins, padding values
    - Breakpoints: Mobile, tablet, desktop
+   - Icons: Fetch SVG markup from Figma for each icon node; save as icons/<name>.svg
 4. Cross-reference with story requirements
 5. Create implementation plan based on design + requirements
 ```
@@ -299,14 +329,23 @@ Include the block's root element (e.g., <div class="blockname">...</div>) and it
 
 # Part 1: Process Flow (3 Steps)
 
-This part describes the 3-step development process, validation, and end-to-end workflow.
+**Purpose:** This part enforces deterministic AI-driven block generation by formalizing the structure contract between XWalk model configuration and runtime DOM output. The strict Backend → User HTML → Frontend sequence prevents structural hallucination and DOM mismatch.
+
+## AI Governance Rules (Process)
+
+Rules for Cursor AI when generating EDS blocks:
+
+- **Never generate HTML** — Wait for user-provided HTML from Universal Editor; Cursor output can differ from AEM output
+- **Follow sequence strictly** — Backend first, then user provides HTML, then frontend
+- **Document structure contract** — After receiving user HTML, document field indices and empty/optional field behavior before coding
+- **Index-based only** — No `data-*` attributes for structure or selection; use position-based access
 
 ## The 3-Step Process
 
 | Step | Action | Details |
 |------|--------|---------|
 | **Step 1** | Backend | Add block-level JSON, run `npm run build:json`. See [Part 2: Backend Code Generation](#part-2-backend-code-generation). |
-| **Step 2** | User Provides Semantic HTML | User authors block in Universal Editor and provides the generated HTML. **Do NOT generate HTML** — Cursor output can differ from Universal Editor. See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) below. |
+| **Step 2** | User Provides Semantic HTML | User authors block in Universal Editor and provides the generated HTML. Cursor must not generate HTML ([AI Governance Rules](#ai-governance-rules-process)). Details: [Step 2](#step-2-user-provides-semantic-html) below. |
 | **Step 3** | Frontend | Generate JavaScript and CSS based on user-provided HTML. See [Part 3: Frontend Code Generation](#part-3-frontend-code-generation). |
 
 **Prerequisites:** [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning.
@@ -319,7 +358,7 @@ This part describes the 3-step development process, validation, and end-to-end w
 
 **Prerequisites:** [Part 2: Backend Code Generation](#part-2-backend-code-generation) must be complete and deployed to Universal Editor.
 
-**Objective:** Obtain the actual HTML structure from Adobe Universal Editor. Do NOT generate HTML — user-provided HTML ensures correct DOM structure.
+**Objective:** Obtain the actual HTML structure from Adobe Universal Editor. See [AI Governance Rules (Process)](#ai-governance-rules-process).
 
 **Steps:**
 1. **Prerequisite:** Backend configuration is complete and deployed to AEM/Universal Editor
@@ -385,32 +424,44 @@ Rendered output
 
 # Part 2: Backend Code Generation
 
+**Purpose:** Part 2 enforces deterministic block configuration by defining the structure contract between XWalk model configuration and runtime DOM output. Field order in the model directly determines HTML structure; plan it carefully.
+
 This section covers XWalk JSON configuration for AEM authoring interface integration. **Do this first (Step 1).**
 
-**Prerequisites:** [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning.
+## AI Governance Rules (Backend)
+
+Rules for Cursor AI when generating backend configuration:
+
+- **Block-level JSON only** — Add config to `blocks/<block-name>/_<block-name>.json`; never edit `component-definition.json`, `component-models.json`, or `component-filters.json` directly
+- **Run build after changes** — Execute `npm run build:json` to merge block configs into root files
+- **Plan field order** — Field order = structure contract; field at index N → `block.children[N]` in generated HTML
+- **Use EDS resource types only** — No custom AEM components; use `core/franklin/components/block/v1/block` and related types
+- **Validate with user HTML** — After configuring the model, obtain user-provided HTML from Universal Editor to verify structure before frontend work
+
+**Prerequisites:**
+- [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning
+- [Getting Started – Universal Editor Developer Tutorial](https://www.aem.live/developer/universal-editor-blocks), [Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks), and [Block Collection](https://aem.live/developer/block-collection) — essential for understanding content modeling
 
 ---
 
 ## CRITICAL: Use Block-Level JSON Files
 
-**You MUST create block-level JSON files. The build command merges them into the three root-level files.**
+See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Summary:
 
 | Required | Forbidden |
 |----------|-----------|
-| Create `blocks/<block-name>/_<block-name>.json` | Do NOT edit `component-definition.json`, `component-models.json`, `component-filters.json` directly |
-| Run `npm run build:json` (or equivalent) after adding/updating block config | Do NOT manually copy block config into root files |
-
-**Rule:** Add definitions, models, and filters to block-level JSON files in `blocks/<block-name>/`. Run the build command to update the three root-level files (`component-definition.json`, `component-models.json`, `component-filters.json`).
+| Create `blocks/<block-name>/_<block-name>.json` | Edit root files directly |
+| Run `npm run build:json` after config changes | Manually copy config into root files |
 
 ---
 
 ## Build Step Check
 
-**Workflow:** Create block-level JSON files → Run build command → Root files are updated.
+**Workflow:** Create block-level JSON → Run build → Root files updated. See [AI Governance Rules (Backend)](#ai-governance-rules-backend).
 
-1. **Create block-level config:** Add `blocks/<block-name>/_<block-name>.json` (or equivalent per project convention) with definition, model, and filter for your block.
-2. **Run build:** Execute `npm run build:json` (or the project's equivalent script) to merge block configs into the root files.
-3. **Verify:** The root files `component-definition.json`, `component-models.json`, and `component-filters.json` are build outputs — they get overwritten by the build. Do not edit them directly.
+1. Add `blocks/<block-name>/_<block-name>.json` with definition, model, and filter
+2. Run `npm run build:json`
+3. Verify root files are updated (they are build outputs; do not edit directly)
 
 ---
 
@@ -418,20 +469,7 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 ### XWalk Configuration Files
 
-**Block-Level Configuration (SOURCE OF TRUTH):**
-- `blocks/<block-name>/_<block-name>.json` - Block definition, model, and filter (edit this file)
-- After `npm run build:json`, the build merges block configs into the root files
-
-**Root-Level Files (BUILD OUTPUT — do not edit directly):**
-- `component-definition.json` - Component definitions (generated by build)
-- `component-models.json` - Field models (generated by build)
-- `component-filters.json` - Nesting rules (generated by build)
-
-**Purpose:** AEM authoring interface configuration
-
-**Structure:** 
-- Add definition, model, and filter to your block's `_<block-name>.json` file
-- Run `npm run build:json` to update the three root files
+**Edit:** `blocks/<block-name>/_<block-name>.json` (definition, model, filter). **Build output (do not edit):** `component-definition.json`, `component-models.json`, `component-filters.json`. See [AI Governance Rules (Backend)](#ai-governance-rules-backend).
 
 **Reference Examples:**
 - Simple block: See `hero` definition in `component-definition.json` (lines 145-159)
@@ -464,13 +502,30 @@ This section covers XWalk JSON configuration for AEM authoring interface integra
 
 **Reference:** `component-definition.json`, `component-models.json`, `component-filters.json`
 
+### Default Content vs Blocks
+
+**Default content** is content an author intuitively puts on a page without additional semantics: text, headings, links, and images. In AEM, this is implemented as components with simple, pre-defined models that serialize to Markdown and HTML.
+
+| Default Component | Model Fields |
+|-------------------|--------------|
+| **Text** | Rich text (lists, strong, italic) |
+| **Title** | Text, type (h1–h6) |
+| **Image** | Source, description |
+| **Button** | Text, title, url, type (default, primary, secondary) |
+
+**Blocks** require additional semantics and are decorated by JavaScript with stylesheets. Blocks must have explicit models so the authoring UI knows what options to present. Default content is part of the boilerplate; blocks are defined in `component-models.json` and `component-definition.json`.
+
+**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)
+
 ---
 
 ## Component Definition Structure
 
+**WARNING:** Do not implement custom AEM components. The Edge Delivery Services components provided by AEM are sufficient and offer guard rails. Custom components can break the markup contract between AEM and the delivery tier. Use `core/franklin/components/block/v1/block` and related resource types only.
+
 ### Step-by-Step: Adding Configuration to Block-Level JSON
 
-**CRITICAL:** Add configuration to `blocks/<block-name>/_<block-name>.json`. Run `npm run build:json` to merge into root files. Do NOT edit the root-level JSON files directly — they are build outputs.
+**CRITICAL:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Add config to `blocks/<block-name>/_<block-name>.json`; run `npm run build:json`.
 
 #### Step 1: Create Block-Level JSON and Add Definition
 
@@ -616,19 +671,53 @@ Parent blocks can have two configurations depending on whether they have authori
 
 ## Field Configuration
 
+### Field Definition Basics
+
+Every field object supports these key properties. The `component` and `name` properties are required; others are optional.
+
+| Property | Purpose |
+|----------|---------|
+| `component` | Defines what kind of UI control to render (see [Field Component Types](#field-component-types) below) |
+| `name` | Where the data is stored; must match the structure contract for index-based access |
+| `label` | Title shown to the author in the properties panel |
+| `description` | Optional description or help text for the author |
+| `value` | Default or placeholder value |
+| `valueType` | Type of data: `string`, `number`, `boolean`, etc. |
+| `required` | When true, field must have a value before save |
+| `readOnly` | When true, field is displayed but not editable |
+| `hidden` | When true, field is hidden from the author |
+| `multi` | When true, allows multiple values (e.g., `reference` for multiple assets) |
+| `validation` | Rules for user input (see [Validation Patterns](#validation-patterns) below) |
+
+**Note:** Underscores (`_`) are not allowed in field names for some plugins. Use camelCase (e.g., `imageAlt` not `image_alt`).
+
+**Reference:** [Adobe Experience League — Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types)
+
 ### Field Component Types
 
-**Common Field Types:**
-- `text` - Single line text
-- `richtext` - Rich text editor
-- `reference` - Asset reference
-- `custom-asset-namespace:custom-asset` - DAM asset picker
-- `aem-content` - AEM content reference
-- `select` - Dropdown
-- `multiselect` - Multiple selection
-- `boolean` - Checkbox
-- `tab` - Tab separator (for grouping)
-- `container` - Container for nested fields
+These define how the field is rendered in the Universal Editor properties panel. Each type may offer additional configuration options (e.g., `options` for select, `rootPath` for reference).
+
+| Component Type | Purpose |
+|----------------|---------|
+| `text` | Single-line text input |
+| `richtext` | Rich text editor (bold, links, etc.) |
+| `number` | Numeric input |
+| `boolean` | True/false toggle (checkbox) |
+| `select` | Dropdown with single selection |
+| `multiselect` | Dropdown with multiple selection |
+| `radio-group` | Single choice among multiple options (radio buttons) |
+| `checkbox-group` | Multiple checkboxes |
+| `reference` | Asset picker (images, documents, etc.) |
+| `aem-content` | Picks any AEM content (pages, assets) |
+| `aem-tag` | Tag picker UI |
+| `aem-content-fragment` | Content Fragment picker |
+| `aem-experience-fragment` | Experience Fragment picker |
+| `date-time` | Date and/or time input |
+| `container` | Groups nested fields; supports multifields |
+| `tab` | Separates fields into tabbed sections in the UI |
+| `custom-asset-namespace:custom-asset` | DAM asset picker (project-specific) |
+
+**Commonly used in EDS blocks:** `text`, `richtext`, `reference`, `aem-content`, `select`, `multiselect`, `boolean`, `tab`, `container`
 
 **Reference:** `component-models.json` (comprehensive examples)
 
@@ -662,17 +751,11 @@ Parent blocks can have two configurations depending on whether they have authori
 
 **Critical: Field Order Determines HTML Structure**
 
-**Important:** The order of fields in the `fields` array directly determines the HTML structure that AEM generates at runtime. This order becomes your **structure contract** for JavaScript index-based access.
-
-- Field at index 0 → `block.children[0]` in generated HTML
-- Field at index 1 → `block.children[1]` in generated HTML
-- And so on...
-
-**Plan your field order carefully** - it must match the index-based access pattern in your JavaScript `decorate()` function. Document this structure contract in your JavaScript code.
+See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Field at index N → `block.children[N]` in generated HTML. Plan field order to match the index-based access pattern in `decorate()`; document the structure contract in code.
 
 **Critical: Validate Field Order with User-Provided HTML**
 
-**MANDATORY:** After configuring the XWalk model, you MUST obtain the actual HTML from the user (who authors in Universal Editor). Do NOT assume the structure matches your model - verify it with user-provided HTML from Universal Editor.
+See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Obtain user-provided HTML from Universal Editor before frontend work. Do not assume structure matches the model.
 
 **Common Issues to Watch For:**
 - **Empty fields may not generate cells:** If a field is empty, AEM may skip generating a cell for it, shifting subsequent field indices
@@ -683,9 +766,7 @@ Parent blocks can have two configurations depending on whether they have authori
 - Expected: `cells[0]=image, cells[1]=imageAlt, cells[2]=badge`
 - Actual: `cells[0]=image, cells[1]=badge` (imageAlt cell missing)
 
-**Solution:** Request user to provide semantic HTML from Universal Editor to verify the real structure contract. Do NOT generate HTML — Cursor-generated HTML can differ from Universal Editor output.
-
-**Reference:** See "Understanding the Structure Contract" section in Part 2 and "Development Workflow: Backend First, Then User-Provided Semantic HTML" in Pre-Implementation section for detailed explanation.
+**Solution:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Also: [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).
 
 **Model Structure:**
 
@@ -770,6 +851,95 @@ Parent blocks can have two configurations depending on whether they have authori
 ```
 
 **Reference:** `component-models.json` lines 1197-1204
+
+### Multi-Fields and Composite Multi-Fields
+
+Use `multi: true` to allow multiple values for a field. Use a `container` with `multi: true` and nested fields for structured lists.
+
+**Rendering behavior:**
+- **Single semantic elements** (plain text, links, images): Rendered as `<ul><li>` list
+- **Composite elements** (text + richtext + links): Rendered as flat list with `<hr>` separators
+
+**Examples:**
+- `reference` with `multi: true` → Multiple images or assets
+- `text` with `multi: true` → Keyword list
+- `container` with `multi: true` and nested `reference` + `text` → Image carousel with alt text per item
+
+**Note:** Multi-fields and composite multi-fields may be early-access features. Verify availability in your AEM environment.
+
+**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)
+
+---
+
+## AEM Rendering Mechanics
+
+AEM infers semantics from field values and uses naming conventions to combine fields. Understanding these mechanics helps you design models that produce the expected HTML.
+
+### Type Inference
+
+AEM infers semantic meaning from values:
+
+| Value Type | Inference | Rendered As |
+|------------|-----------|-------------|
+| **Image reference** | MIME type starts with `image/` | `<picture><img src="..."></picture>` |
+| **Link reference** | Non-image ref, or starts with `https?://` or `#` | `<a href="...">...</a>` |
+| **Rich text** | Trimmed value starts with `p`, `ul`, `ol`, `h1`–`h6` | Rendered as HTML |
+| **Class names** | `classes` property | Block options in table header |
+| **Value lists** | Multi-value, first value not above | Comma-separated list |
+| **Other** | — | Plain text |
+
+### Field Collapse
+
+Properties ending with `Title`, `Type`, `MimeType`, `Alt`, or `Text` (case sensitive) are collapsed into the preceding property as attributes:
+
+| Base + Suffix | Result |
+|---------------|--------|
+| `image` + `imageAlt` | Single `<picture>` with `alt` attribute |
+| `link` + `linkTitle` + `linkText` + `linkType` | Single `<a>` with title, text, type |
+| `heading` + `headingType` | Single `<h2>` (or h1–h6) |
+
+**Example:** `image` and `imageAlt` in the same row produce one cell with `<picture><img src="..." alt="..."></picture>`.
+
+### Element Grouping
+
+Use `groupName_fieldName` (underscore) to group multiple fields into a single cell:
+
+- `teaserText_subtitle`, `teaserText_title`, `teaserText_description` → One cell with combined content
+- `classes_background`, `classes_fullwidth` → Block options (e.g., `class="teaser light fullwidth"`)
+
+For block options, `classes` can be boolean (adds property name as class) or text/array.
+
+**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)
+
+---
+
+## Block Structure Variants
+
+### Simple Blocks
+
+One row per field, one or more cells per row. Field order in the model → row order in HTML.
+
+### Key-Value Blocks
+
+Set `key-value: true` for table-like representation (e.g., section metadata). Each row has a key cell and a value cell.
+
+**Example:** Section metadata with `source`, `keywords`, `limit` renders as key-value pairs.
+
+### Container Blocks
+
+Parent block with child items. Parent properties render as rows first; each child is a row with properties as columns.
+
+### Columns Block
+
+**Limitations:** The columns block (`core/franklin/components/columns/v1/columns`) has no content modeling. It only supports `rows`, `columns`, and `classes` (or `classes_*`). You can only add default content (text, title, image, link/button) to cells.
+
+### Sections and Section Metadata
+
+Sections use resource type `core/franklin/components/section/v1/section`. The section model defines section metadata. If the section model is not empty, a key-value metadata block is automatically appended to the section. The default section model ID is `section`; use it to add styles, background image, or other metadata fields.
+
+### Page Metadata
+
+Create a model with ID `page-metadata` for custom page metadata (e.g., theme, custom meta tags). For template-specific metadata, create models named `<template>-metadata` where `template` matches the template metadata property value.
 
 ---
 
@@ -1403,6 +1573,7 @@ if (ctaLink) {
 
 5. **SvgIcon.js** - SVG icon component
    - Reference: `shared-components/SvgIcon.js`
+   - **Icons source:** Fetch SVG markup from Figma via Figma MCP; save as `icons/<name>.svg` using the inline SVG format (see [Using Figma MCP Tools](#using-figma-mcp-tools) → Fetch SVG Icons from Figma)
 
 ### Frontend Utility Functions
 
@@ -2802,6 +2973,19 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 ## Appendix C: Key References
 
+### Primary Documentation (Backend / Content Modeling)
+
+| Document | URL |
+|----------|-----|
+| **Model Definitions, Fields, and Component Types** (Experience League) | https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types |
+| **Content modeling for AEM authoring projects** (AEM.live) | https://www.aem.live/developer/component-model-definitions |
+
+### Content Modeling (AEM Authoring)
+- **[Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types)** — Field types, component types, model linking, loading models
+- **[Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)** — Type inference, field collapse, element grouping, multi-fields, block structure variants
+- **[Block Collection](https://aem.live/developer/block-collection)** — Content models for common UI patterns; reference for semantic content modeling
+- **David's Model** — Content modeling guidance for content-source-agnostic blocks (see Block Collection and AEM authoring docs)
+
 ### Performance & Lighthouse (EDS)
 - **[Keeping It 100](https://aem.live/developer/keeping-it-100)** — Adobe's official EDS performance guide
 - **[PageSpeed Insights](https://pagespeed.web.dev/)** — Lab testing for Lighthouse scores
@@ -2849,7 +3033,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ---
 
 **Document Version:** EDS-2026.1.0  
-**Last Updated:** 2026-02-18  
+**Last Updated:** 2026-02-25  
 **Maintained By:** AI Documentation Engineer  
 **Review Status:** Ready for Use
 
