@@ -180,6 +180,147 @@
     ]
   },
   {
+    "id": "featurecardscarousel",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "description": "Max 42 characters"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag",
+        "label": "Tag",
+        "value": "",
+        "description": "Optional, max 24 characters"
+      },
+      {
+        "component": "richtext",
+        "name": "subheading",
+        "label": "Sub heading",
+        "value": "",
+        "valueType": "string",
+        "description": "Optional, max 150 characters"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta1Link",
+        "label": "CTA 1 Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta1Text",
+        "label": "CTA 1 Text",
+        "value": "",
+        "description": "Max 25 characters"
+      },
+      {
+        "component": "select",
+        "name": "cta1Type",
+        "label": "CTA 1 Type",
+        "options": [
+          {
+            "name": "Primary",
+            "value": "primary"
+          },
+          {
+            "name": "Secondary",
+            "value": "secondary"
+          }
+        ]
+      },
+      {
+        "component": "aem-content",
+        "name": "cta2Link",
+        "label": "CTA 2 Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta2Text",
+        "label": "CTA 2 Text",
+        "value": "",
+        "description": "Max 25 characters"
+      },
+      {
+        "component": "select",
+        "name": "cta2Type",
+        "label": "CTA 2 Type",
+        "options": [
+          {
+            "name": "Primary",
+            "value": "primary"
+          },
+          {
+            "name": "Secondary",
+            "value": "secondary"
+          }
+        ]
+      },
+      {
+        "component": "number",
+        "valueType": "number",
+        "name": "carouselLagTime",
+        "label": "Carousel Lag (sec)",
+        "value": 4,
+        "description": "1-5 seconds"
+      }
+    ]
+  },
+  {
+    "id": "featurecardscarouselitem",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "centerImage",
+        "label": "Center Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "centerImageAlt",
+        "label": "Center Image Alt",
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "logo",
+        "label": "Logo",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "logoAlt",
+        "label": "Logo Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": "",
+        "description": "Max 35 characters"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "value": "",
+        "valueType": "string",
+        "description": "Optional, max 52 characters"
+      }
+    ]
+  },
+  {
     "id": "fragment",
     "fields": [
       {
@@ -296,6 +437,179 @@
         "name": "ctaText",
         "label": "CTA Text",
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "socialpromo",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "validation": {
+          "maxLength": 42
+        }
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaLink",
+        "label": "CTA Link (Instagram URL)",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "socialpromo-card",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "caption",
+        "label": "Caption",
+        "value": "",
+        "validation": {
+          "maxLength": 65
+        }
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag",
+        "label": "Tag",
+        "value": "",
+        "validation": {
+          "maxLength": 12
+        }
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "theme",
+        "label": "Card Theme",
+        "value": "green",
+        "options": [
+          {
+            "name": "Green",
+            "value": "green"
+          },
+          {
+            "name": "Light yellow",
+            "value": "light-yellow"
+          },
+          {
+            "name": "Dark Yellow",
+            "value": "dark-yellow"
+          },
+          {
+            "name": "Pink",
+            "value": "pink"
+          },
+          {
+            "name": "Dark green",
+            "value": "dark-green"
+          },
+          {
+            "name": "White",
+            "value": "white"
+          },
+          {
+            "name": "Gradient",
+            "value": "gradient"
+          },
+          {
+            "name": "Brown",
+            "value": "brown"
+          },
+          {
+            "name": "Orange",
+            "value": "orange"
+          },
+          {
+            "name": "Blue",
+            "value": "blue"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "textwithimage",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag",
+        "label": "Tag",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "value": "",
+        "label": "Description",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Media",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "mediaType",
+        "label": "Media Type",
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
       }
     ]
   }

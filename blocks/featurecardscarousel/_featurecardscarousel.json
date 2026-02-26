@@ -1,0 +1,172 @@
+{
+  "definitions": [
+    {
+      "title": "Feature Cards Carousel",
+      "id": "featurecardscarousel",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "FeatureCardsCarousel",
+              "model": "featurecardscarousel",
+              "filter": "featurecardscarousel"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Feature Cards Carousel Item",
+      "id": "featurecardscarouselitem",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "FeatureCardsCarouselItem",
+              "model": "featurecardscarouselitem"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "featurecardscarousel",
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Title",
+          "description": "Max 42 characters"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "tag",
+          "label": "Tag",
+          "value": "",
+          "description": "Optional, max 24 characters"
+        },
+        {
+          "component": "richtext",
+          "name": "subheading",
+          "label": "Sub heading",
+          "value": "",
+          "valueType": "string",
+          "description": "Optional, max 150 characters"
+        },
+        {
+          "component": "aem-content",
+          "name": "cta1Link",
+          "label": "CTA 1 Link"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "cta1Text",
+          "label": "CTA 1 Text",
+          "value": "",
+          "description": "Max 25 characters"
+        },
+        {
+          "component": "select",
+          "name": "cta1Type",
+          "label": "CTA 1 Type",
+          "options": [
+            { "name": "Primary", "value": "primary" },
+            { "name": "Secondary", "value": "secondary" }
+          ]
+        },
+        {
+          "component": "aem-content",
+          "name": "cta2Link",
+          "label": "CTA 2 Link"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "cta2Text",
+          "label": "CTA 2 Text",
+          "value": "",
+          "description": "Max 25 characters"
+        },
+        {
+          "component": "select",
+          "name": "cta2Type",
+          "label": "CTA 2 Type",
+          "options": [
+            { "name": "Primary", "value": "primary" },
+            { "name": "Secondary", "value": "secondary" }
+          ]
+        },
+        {
+          "component": "number",
+          "valueType": "number",
+          "name": "carouselLagTime",
+          "label": "Carousel Lag (sec)",
+          "value": 4,
+          "description": "1-5 seconds"
+        }
+      ]
+    },
+    {
+      "id": "featurecardscarouselitem",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "centerImage",
+          "label": "Center Image",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "centerImageAlt",
+          "label": "Center Image Alt",
+          "value": ""
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "logo",
+          "label": "Logo",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "logoAlt",
+          "label": "Logo Alt",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Title",
+          "value": "",
+          "description": "Max 35 characters"
+        },
+        {
+          "component": "richtext",
+          "name": "description",
+          "label": "Description",
+          "value": "",
+          "valueType": "string",
+          "description": "Optional, max 52 characters"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "featurecardscarousel",
+      "components": ["featurecardscarouselitem"]
+    }
+  ]
+}
