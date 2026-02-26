@@ -222,7 +222,7 @@
 
 @media (width >= 1200px) {
   .featurecardscarousel-cards-row {
-    padding: 0 120px 24px;
+    padding: 0;
   }
 }
 
