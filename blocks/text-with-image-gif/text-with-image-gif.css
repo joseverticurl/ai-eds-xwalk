@@ -30,7 +30,7 @@
   top: 55%;
   left: 42%;
   transform: translate(-50%, -50%);
-  /* width: 80%; */
+  width: 80%;
   max-width: 500px;
   height: auto;
   animation: text-with-image-gif-rotate 12s linear infinite;
@@ -71,7 +71,7 @@
 
 .text-with-image-gif-badge {
   position: absolute;
-  bottom: 16px;
+  bottom: -13px;
   left: 16px;
   padding: 8px 12px;
   background-color: #004122;
