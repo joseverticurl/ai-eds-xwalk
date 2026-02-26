@@ -78,8 +78,9 @@ export default function decorate(block) {
     imageWrap.className = 'social-promo-card-image';
     if (imgSrc) {
       const optimizedPic = createOptimizedPicture(imgSrc, imgAlt, false, [
-        { media: '(min-width: 600px)', width: '395' },
-        { width: '347' },
+        { media: '(min-width: 1024px)', width: '356' },
+        { media: '(min-width: 768px)', width: '328' },
+        { width: '349' },
       ]);
       moveInstrumentation(img, optimizedPic.querySelector('img'));
       imageWrap.appendChild(optimizedPic);
