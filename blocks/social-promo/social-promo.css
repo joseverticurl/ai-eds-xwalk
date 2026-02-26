@@ -69,9 +69,9 @@
   padding-bottom: 36px;
 }
 
-.social-promo-marquee:hover .social-promo-marquee-inner {
-  animation-duration: 20s;
-}
+/* .social-promo-marquee:hover .social-promo-marquee-inner {
+  animation-duration: 10s;
+} */
 
 .social-promo-marquee-inner {
   display: flex;
