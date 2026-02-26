@@ -151,19 +151,20 @@ export default async function decorate(block) {
 
   const centerImageWrap = document.createElement('div');
   centerImageWrap.className = 'featurecardscarousel-center-image';
+  centerImageWrap.style.setProperty('--bullet-duration', `${carouselLagSec}s`);
   const centerImg = document.createElement('img');
   centerImg.alt = cards[0].centerImageAlt;
   centerImg.loading = 'lazy';
   centerImg.src = cards[0].centerImage;
   centerImageWrap.appendChild(centerImg);
+  const paginationEl = document.createElement('div');
+  paginationEl.className = 'swiper-pagination featurecardscarousel-pagination';
+  centerImageWrap.appendChild(paginationEl);
   carouselSection.appendChild(centerImageWrap);
 
   const swiperWrap = document.createElement('div');
   swiperWrap.className = 'swiper featurecardscarousel-swiper';
-  swiperWrap.innerHTML = `
-    <div class="swiper-wrapper"></div>
-    <div class="swiper-pagination featurecardscarousel-pagination"></div>
-  `;
+  swiperWrap.innerHTML = '<div class="swiper-wrapper"></div>';
   const swiperWrapper = swiperWrap.querySelector('.swiper-wrapper');
 
   cards.forEach((card, idx) => {
@@ -223,8 +224,15 @@ export default async function decorate(block) {
       disableOnInteraction: false,
     },
     pagination: {
-      el: swiperWrap.querySelector('.featurecardscarousel-pagination'),
+      el: paginationEl,
       clickable: true,
+      renderBullet(index, className) {
+        const bullet = document.createElement('span');
+        bullet.className = `${className} featurecardscarousel-progress-bullet`;
+        bullet.dataset.index = String(index);
+        bullet.innerHTML = '<span class="featurecardscarousel-bullet-track"></span><span class="featurecardscarousel-bullet-fill"></span>';
+        return bullet;
+      },
     },
     breakpoints: {
       680: {
@@ -237,8 +245,8 @@ export default async function decorate(block) {
     },
   });
 
-  // Update center image on slide change (autoplay, click, pagination)
-  swiper.on('slideChange', () => {
+  // Update center image and progress indicators on slide change
+  function updateActiveState() {
     const idx = swiper.activeIndex;
     const slide = swiper.slides[idx];
     const img = centerImageWrap.querySelector('img');
@@ -246,7 +254,20 @@ export default async function decorate(block) {
       img.src = slide.dataset.centerImage || '';
       img.alt = slide.dataset.centerImageAlt || '';
     }
-  });
+    // Progress indicators: fill animates over lag time (force restart on change)
+    const fills = paginationEl.querySelectorAll('.featurecardscarousel-bullet-fill');
+    fills.forEach((fill, i) => {
+      const isActive = i === idx;
+      fill.classList.remove('featurecardscarousel-bullet-fill--active');
+      if (isActive) {
+        void fill.offsetHeight; // force reflow to restart animation
+        fill.classList.add('featurecardscarousel-bullet-fill--active');
+      }
+    });
+  }
+
+  swiper.on('slideChange', updateActiveState);
+  updateActiveState(); // Initial state (first card selected, progress fill starts)
 
   // Click on card to go to slide
   swiperWrap.querySelectorAll('.featurecardscarousel-card').forEach((slide, idx) => {

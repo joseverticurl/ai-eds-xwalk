@@ -90,6 +90,16 @@
   background: #000;
 }
 
+/* Indicators over center image (desktop) */
+.featurecardscarousel-center-image .featurecardscarousel-pagination {
+  position: absolute;
+  left: 50%;
+  bottom: 140px;
+  transform: translateX(-50%);
+  margin-top: 0;
+  z-index: 2;
+}
+
 .featurecardscarousel-center-image::after {
   content: '';
   position: absolute;
@@ -163,26 +173,54 @@
   margin: 0;
 }
 
+/* Progress indicators: track (darker) + fill (animates over lag time) */
 .featurecardscarousel-pagination {
-  position: relative;
-  margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
 }
 
-.featurecardscarousel-pagination .swiper-pagination-bullet {
+.featurecardscarousel-progress-bullet {
   width: 56px;
   height: 6px;
   border-radius: 24px;
+  background: transparent;
+  opacity: 1;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.featurecardscarousel-bullet-track {
+  position: absolute;
+  inset: 0;
   background: white;
   opacity: 0.3;
-  transition: opacity 0.2s, width 0.2s;
+  border-radius: 24px;
 }
 
-.featurecardscarousel-pagination .swiper-pagination-bullet-active {
-  opacity: 1;
-  width: 24px;
+.featurecardscarousel-bullet-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: white;
+  border-radius: 24px 0 0 24px;
+  pointer-events: none;
 }
 
-/* Tablet */
+.featurecardscarousel-bullet-fill--active {
+  animation: featurecardscarousel-bullet-progress var(--bullet-duration, 4s) linear forwards;
+}
+
+@keyframes featurecardscarousel-bullet-progress {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Tablet: cards expand to full space */
 @media (width >= 680px) and (width < 900px) {
   .featurecardscarousel-wrapper {
     padding: 28px 44px;
@@ -193,19 +231,29 @@
     padding: 0 44px 24px;
   }
 
+  .featurecardscarousel-swiper .swiper-slide {
+    max-width: 100%;
+  }
+
   .featurecardscarousel-card-inner {
     min-height: 200px;
+    width: 100%;
+    max-width: none;
+  }
+
+  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner {
+    max-width: none;
   }
 }
 
-/* Mobile */
+/* Mobile: cards expand and occupy full space per Figma */
 @media (width < 680px) {
   .featurecardscarousel-wrapper {
     padding: 24px 20px;
   }
 
   .featurecardscarousel-heading {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .featurecardscarousel-tag,
@@ -228,18 +276,29 @@
   }
 
   .featurecardscarousel-center-image img {
-    border-radius: 16px;
+    border-radius: 20px;
   }
 
   .featurecardscarousel-swiper {
     margin-top: -100px;
-    padding: 0 20px 16px;
+    padding: 0 0 16px;
+  }
+
+  .featurecardscarousel-swiper .swiper-slide {
+    max-width: 100%;
   }
 
   .featurecardscarousel-card-inner {
     padding: 24px;
     min-height: 160px;
     border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
+  .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
+    max-width: none;
   }
 
   .featurecardscarousel-card-logo {
@@ -248,7 +307,12 @@
   }
 
   .featurecardscarousel-carousel-section {
-    border-radius: 16px;
+    border-radius: 20px;
+  }
+
+  /* Indicators over center image for mobile */
+  .featurecardscarousel-center-image .featurecardscarousel-pagination {
+    bottom: 130px;
   }
 }
 
