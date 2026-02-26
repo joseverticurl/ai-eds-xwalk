@@ -112,11 +112,31 @@
   }
 }
 
+/* Desktop: image carousel + fixed cards | Mobile: cards swiper */
+.featurecardscarousel-desktop {
+  display: none;
+}
+
+.featurecardscarousel-mobile {
+  display: block;
+}
+
+@media (width >= 900px) {
+  .featurecardscarousel-desktop {
+    display: block;
+  }
+
+  .featurecardscarousel-mobile {
+    display: none;
+  }
+}
+
 .featurecardscarousel-center-image {
   position: relative;
   width: 100%;
   aspect-ratio: 350 / 617;
   background: #000;
+  overflow: hidden;
 }
 
 @media (width >= 680px) {
@@ -181,7 +201,48 @@
   border-radius: 24px;
 }
 
-/* Cards swiper */
+/* Desktop: image swiper (only image moves) */
+.featurecardscarousel-image-swiper {
+  position: absolute;
+  inset: 0;
+}
+
+.featurecardscarousel-image-swiper .swiper-slide {
+  height: 100%;
+}
+
+.featurecardscarousel-image-swiper .swiper-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+/* Desktop: fixed cards row (selectors, no swiper) */
+.featurecardscarousel-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+  margin-top: -120px;
+  padding: 0 80px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (width >= 1200px) {
+  .featurecardscarousel-cards-row {
+    padding: 0 120px 24px;
+  }
+}
+
+.featurecardscarousel-cards-row .featurecardscarousel-card {
+  flex: 1 1 auto;
+  max-width: 280px;
+  min-width: 200px;
+}
+
+/* Cards swiper (mobile) */
 .featurecardscarousel-swiper {
   position: relative;
   margin-top: -120px;
@@ -216,18 +277,21 @@
   }
 }
 
-.featurecardscarousel-card.swiper-slide-active {
+.featurecardscarousel-card.swiper-slide-active,
+.featurecardscarousel-card--selected {
   height: 221px;
 }
 
 @media (width >= 900px) {
-  .featurecardscarousel-card.swiper-slide-active {
+  .featurecardscarousel-card.swiper-slide-active,
+  .featurecardscarousel-card--selected {
     height: 264px;
   }
 }
 
 @media (width >= 1200px) {
-  .featurecardscarousel-card.swiper-slide-active {
+  .featurecardscarousel-card.swiper-slide-active,
+  .featurecardscarousel-card--selected {
     height: 279px;
   }
 }
@@ -277,7 +341,9 @@
 
 @media (width >= 900px) {
   .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
-  .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
+  .featurecardscarousel-card:hover .featurecardscarousel-card-inner,
+  .featurecardscarousel-card--selected .featurecardscarousel-card-inner,
+  .featurecardscarousel-cards-row .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
     transform: scale(1.02);
     max-width: 560px;
   }
@@ -336,7 +402,8 @@
 }
 
 .featurecardscarousel-card:hover .featurecardscarousel-card-description,
-.featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-description {
+.featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-description,
+.featurecardscarousel-card--selected .featurecardscarousel-card-description {
   display: block;
 }
 
