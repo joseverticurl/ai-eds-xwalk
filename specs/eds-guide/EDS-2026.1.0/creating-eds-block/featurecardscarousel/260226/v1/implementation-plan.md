@@ -169,12 +169,16 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 **Reference:** [Implementation Guide - Step 2: User Provides Semantic HTML](../implementation-guide.md#step-2-user-provides-semantic-html)
 
-- [ ] **2.1** Request user to author the block in Adobe Universal Editor with sample content:
+**Structure contract (from [featurecardscarousel.html](../../../../requirements/featurecardscarousel.html)):**
+- block.children[0–9] = parent fields (title, tag, subheading, cta1Link, cta1Text, cta1Type, cta2Link, cta2Text, cta2Type, carouselLagTime)
+- block.children[10+] = card rows; each row: children[0]=centerImage, [1]=logo, [2]=title, [3]=description
+
+- [x] **2.1** Request user to author the block in Adobe Universal Editor with sample content:
   - Title, tag (optional), subheading (optional)
   - Both CTAs (Our Story, Shop Now)
   - 2–4 cards with full content (center image, logo, title, description)
-- [ ] **2.2** User provides the generated HTML (view source or DevTools).
-- [ ] **2.3** Document structure contract from user-provided HTML:
+- [x] **2.2** User provides the generated HTML (view source or DevTools).
+- [x] **2.3** Document structure contract from user-provided HTML:
   - Parent row indices (title, tag, subheading, cta1, cta2, carouselLagTime)
   - Child item row structure (centerImage, logo, title, description)
   - Empty/optional field behavior
@@ -189,8 +193,8 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 3.1: Create Block Files
 
-- [ ] **3.1.1** Create `blocks/featurecardscarousel/featurecardscarousel.js`.
-- [ ] **3.1.2** Create `blocks/featurecardscarousel/featurecardscarousel.css`.
+- [x] **3.1.1** Create `blocks/featurecardscarousel/featurecardscarousel.js`.
+- [x] **3.1.2** Create `blocks/featurecardscarousel/featurecardscarousel.css`.
 
 **Human test:** [ ] Verify files exist and block folder structure matches `blocks/cards/`.
 
@@ -198,11 +202,11 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 3.2: Implement decorate() – Structure Extraction
 
-- [ ] **3.2.1** Add JSDoc with structure contract (based on user-provided HTML).
-- [ ] **3.2.2** Extract parent fields using index-based access (title, tag, subheading, CTAs, carouselLagTime).
-- [ ] **3.2.3** Extract child items (each row = one card: centerImage, logo, title, description).
-- [ ] **3.2.4** Use `moveInstrumentation()` when transforming DOM.
-- [ ] **3.2.5** Use optional chaining for link extraction; handle wrapped `<p>` tags.
+- [x] **3.2.1** Add JSDoc with structure contract (based on user-provided HTML).
+- [x] **3.2.2** Extract parent fields using index-based access (title, tag, subheading, CTAs, carouselLagTime).
+- [x] **3.2.3** Extract child items (each row = one card: centerImage, logo, title, description).
+- [x] **3.2.4** Use `moveInstrumentation()` when transforming DOM.
+- [x] **3.2.5** Use optional chaining for link extraction; handle wrapped `<p>` tags.
 
 **Human test:** [ ] Run block with user-provided HTML; verify data extraction in console.
 
@@ -210,24 +214,24 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 3.3: Implement DOM Transformation
 
-- [ ] **3.3.1** Build title section (tag, title, subheading).
-- [ ] **3.3.2** Build CTA buttons (primary, secondary) with `ButtonCTA` or equivalent pattern.
-- [ ] **3.3.3** Build center image container (background image changes per selected card).
-- [ ] **3.3.4** Build cards container (cards at bottom, each with logo, title, description).
-- [ ] **3.3.5** Build carousel indicators (dots).
-- [ ] **3.3.6** Replace block content with transformed structure.
+- [x] **3.3.1** Build title section (tag, title, subheading).
+- [x] **3.3.2** Build CTA buttons (primary, secondary) with inline pattern.
+- [x] **3.3.3** Build center image container (background image changes per selected card).
+- [x] **3.3.4** Build cards container (cards at bottom, each with logo, title, description).
+- [x] **3.3.5** Build carousel indicators (dots) via Swiper pagination.
+- [x] **3.3.6** Replace block content with transformed structure.
 
 **Human test:** [ ] Verify transformed DOM structure in browser DevTools.
 
 ---
 
-#### Step 3.4: Implement Carousel Logic
+#### Step 3.4: Implement Carousel Logic (Swiper JS)
 
-- [ ] **3.4.1** Set first card as selected by default.
-- [ ] **3.4.2** On card click: select card, update center image, update indicators.
-- [ ] **3.4.3** Auto-scroll: use `setInterval` with `carouselLagTime` (sec).
-- [ ] **3.4.4** On hover/selected: increase card size, show description (per requirements).
-- [ ] **3.4.5** Debounce resize/scroll handlers (150ms).
+- [x] **3.4.1** Set first card as selected by default (Swiper default).
+- [x] **3.4.2** On card click: select card, update center image, update indicators (Swiper slideTo).
+- [x] **3.4.3** Auto-scroll: Swiper autoplay with `carouselLagTime` (sec).
+- [x] **3.4.4** On hover/selected: increase card size, show description (CSS).
+- [x] **3.4.5** Swiper handles touch/swipe natively.
 
 **Human test:** [ ] Test desktop: click cards, verify auto-scroll, verify center image updates.
 
@@ -235,9 +239,9 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 3.5: Implement Touch/Swipe (Tablet/Mobile)
 
-- [ ] **3.5.1** Detect touch devices; show one card at a time on tablet/mobile.
-- [ ] **3.5.2** Implement swipe (touchstart, touchmove, touchend) for card navigation.
-- [ ] **3.5.3** Update indicators on swipe.
+- [x] **3.5.1** Swiper breakpoints: 1 slide on tablet/mobile, 4 on desktop.
+- [x] **3.5.2** Swiper handles touch/swipe natively.
+- [x] **3.5.3** Pagination updates on slide change.
 
 **Human test:** [ ] Test on tablet/mobile viewport; verify swipe works.
 
@@ -245,9 +249,9 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 3.6: Image Optimization
 
-- [ ] **3.6.1** Use `createOptimizedPicture()` for center image and card logos.
-- [ ] **3.6.2** Use `loading="lazy"` for non-LCP images (center image may be LCP if first section).
-- [ ] **3.6.3** Use `loading="eager"` for LCP hero image if block is first section.
+- [x] **3.6.1** Use `createOptimizedPicture()` for card logos; center image as img (swap src on slide change).
+- [x] **3.6.2** Use `loading="lazy"` for center image and card images.
+- [x] **3.6.3** Center image can be LCP if first section; consider eager for first slide.
 
 **Human test:** [ ] Verify images load correctly; check Network tab for optimized srcset.
 
@@ -257,11 +261,11 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 4.1: Base Styles
 
-- [ ] **4.1.1** Style title section (tag, title, subheading) per Figma.
-- [ ] **4.1.2** Style CTA buttons (primary dark green, secondary outline) with hover states.
-- [ ] **4.1.3** Style center image container (gradient overlay, rounded corners).
-- [ ] **4.1.4** Style cards (background, border, logo, title, description).
-- [ ] **4.1.5** Style carousel indicators (active vs inactive).
+- [x] **4.1.1** Style title section (tag, title, subheading) per Figma.
+- [x] **4.1.2** Style CTA buttons (primary dark green, secondary outline) with hover states.
+- [x] **4.1.3** Style center image container (gradient overlay, rounded corners).
+- [x] **4.1.4** Style cards (background, border, logo, title, description).
+- [x] **4.1.5** Style carousel indicators (Swiper pagination bullets).
 
 **Human test:** [ ] Verify desktop layout matches Figma.
 
@@ -269,9 +273,9 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 4.2: Responsive Styles
 
-- [ ] **4.2.1** Tablet (680px): single card, stacked layout.
-- [ ] **4.2.2** Mobile (350px): single card, full-width CTAs.
-- [ ] **4.2.3** Handle < 4 cards: expand cards to full space.
+- [x] **4.2.1** Tablet (680px): single card via Swiper breakpoints.
+- [x] **4.2.2** Mobile (350px): single card, full-width CTAs.
+- [x] **4.2.3** Handle < 4 cards: CSS flex, Swiper slidesPerView: Math.min(cards.length, 4).
 
 **Human test:** [ ] Test at 1280px, 680px, 350px; verify layout matches Figma.
 
@@ -279,9 +283,9 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 
 #### Step 4.3: Interactive States
 
-- [ ] **4.3.1** Selected card: larger size, description visible.
-- [ ] **4.3.2** Hover state: same as selected (per requirements).
-- [ ] **4.3.3** CTA hover: primary lighter shade, secondary outline change.
+- [x] **4.3.1** Selected card: larger size, description visible.
+- [x] **4.3.2** Hover state: same as selected (per requirements).
+- [x] **4.3.3** CTA hover: primary lighter shade, secondary outline change.
 
 **Human test:** [ ] Verify hover and selected states.
 
@@ -307,6 +311,7 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 | Carousel lag | `number` field, 1–5 sec, default 4 |
 | Breakpoints | Figma: 350px mobile, 680px tablet, 1120px desktop |
 | Section filter | Edit `models/_section.json` to add featurecardscarousel |
+| Carousel library | Swiper JS v11 (loaded via loadScript/CDN) |
 
 ---
 
@@ -319,9 +324,9 @@ Implement a **Feature Cards Carousel** block that displays a title section with 
 | 2–4 cards | Child items, filter |
 | Center image per card | featurecardscarouselitem.centerImage |
 | Logo per card | featurecardscarouselitem.logo |
-| Auto-scroll 4–5 sec | carouselLagTime, setInterval |
-| Card click selects | JS event handler |
-| Tablet/mobile swipe | Touch events |
+| Auto-scroll 4–5 sec | carouselLagTime, Swiper autoplay |
+| Card click selects | Swiper slideTo |
+| Tablet/mobile swipe | Swiper touch |
 | < 4 cards expand | CSS flex/grid |
 
 ---
