@@ -275,10 +275,12 @@
   }
 }
 
-.featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
-.featurecardscarousel-card:hover .featurecardscarousel-card-inner {
-  transform: scale(1.02);
-  max-width: 560px;
+@media (width >= 900px) {
+  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
+  .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
+    transform: scale(1.02);
+    max-width: 560px;
+  }
 }
 
 .featurecardscarousel-card-logo {
@@ -398,18 +400,8 @@
     padding: 0 44px 24px;
   }
 
-  .featurecardscarousel-swiper .swiper-slide {
-    max-width: 100%;
-  }
-
   .featurecardscarousel-card-inner {
     min-height: 200px;
-    width: 100%;
-    max-width: none;
-  }
-
-  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner {
-    max-width: none;
   }
 }
 
@@ -447,21 +439,10 @@
     padding: 0 0 16px;
   }
 
-  .featurecardscarousel-swiper .swiper-slide {
-    max-width: 100%;
-  }
-
   .featurecardscarousel-card-inner {
     padding: 24px;
     min-height: 160px;
     border-radius: 24px 24px 0 0;
-    width: 100%;
-    max-width: none;
-  }
-
-  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
-  .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
-    max-width: none;
   }
 
   .featurecardscarousel-carousel-section {
@@ -469,12 +450,36 @@
   }
 }
 
-/* Less than 4 cards - expand to fill */
-.featurecardscarousel-swiper .swiper-wrapper {
-  justify-content: center;
+/* Desktop: less than 4 cards - expand to fill */
+@media (width >= 900px) {
+  .featurecardscarousel-swiper .swiper-wrapper {
+    justify-content: center;
+  }
+
+  .featurecardscarousel-swiper .swiper-slide {
+    flex: 1 1 auto;
+    max-width: 280px;
+  }
 }
 
-.featurecardscarousel-swiper .swiper-slide {
-  flex: 1 1 auto;
-  max-width: 280px;
+/* Mobile/Tablet: cards 100% expanded */
+@media (width < 900px) {
+  .featurecardscarousel-swiper .swiper-slide {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .featurecardscarousel-card-inner {
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+
+  .featurecardscarousel-card.swiper-slide-active .featurecardscarousel-card-inner,
+  .featurecardscarousel-card:hover .featurecardscarousel-card-inner {
+    max-width: none;
+    transform: none;
+  }
 }

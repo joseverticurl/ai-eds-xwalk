@@ -227,11 +227,7 @@ export default async function decorate(block) {
       el: paginationEl,
       clickable: true,
       renderBullet(index, className) {
-        const bullet = document.createElement('span');
-        bullet.className = `${className} featurecardscarousel-progress-bullet`;
-        bullet.dataset.index = String(index);
-        bullet.innerHTML = '<span class="featurecardscarousel-bullet-track"></span><span class="featurecardscarousel-bullet-fill"></span>';
-        return bullet;
+        return `<span class="${className} featurecardscarousel-progress-bullet" data-index="${index}"><span class="featurecardscarousel-bullet-track"></span><span class="featurecardscarousel-bullet-fill"></span></span>`;
       },
     },
     breakpoints: {
