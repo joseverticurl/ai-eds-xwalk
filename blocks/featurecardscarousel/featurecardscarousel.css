@@ -157,28 +157,18 @@
   }
 }
 
-/* Indicators over center image - progress bars positioning */
-.featurecardscarousel-center-image .featurecardscarousel-pagination {
-  position: absolute;
-  left: 50%;
-  bottom: 246px;
+/* Override Swiper default pagination positioning */
+.featurecardscarousel-wrapper .swiper-horizontal > .swiper-pagination-bullets,
+.featurecardscarousel-wrapper .swiper-pagination-bullets.swiper-pagination-horizontal,
+.featurecardscarousel-wrapper .swiper-pagination-custom,
+.featurecardscarousel-wrapper .swiper-pagination-fraction {
+  bottom: var(--swiper-pagination-bottom, 8px);
+  top: 65px !important;
+  left: 50% !important;
+  width: 100%;
   transform: translateX(-50%);
-  margin-top: 0;
   z-index: 2;
   justify-content: center;
-  width: 100%;
-}
-
-@media (width >= 900px) {
-  .featurecardscarousel-center-image .featurecardscarousel-pagination {
-    bottom: 295px;
-  }
-}
-
-@media (width >= 1200px) {
-  .featurecardscarousel-center-image .featurecardscarousel-pagination {
-    bottom: 347px;
-  }
 }
 
 .featurecardscarousel-center-image::after {
