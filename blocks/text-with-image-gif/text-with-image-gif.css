@@ -222,4 +222,8 @@
   .text-with-image-gif-tag {
     font-size: 16px;
   }
+
+  .text-with-image-gif-text-section {
+    margin-top: 21%;
+  }
 }
