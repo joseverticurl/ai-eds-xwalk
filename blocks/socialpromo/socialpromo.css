@@ -1,0 +1,278 @@
+/* Social Promo Block - supports both .socialpromo and .social-promo block classes */
+.socialpromo,
+.social-promo {
+  background-color: #fffbe3;
+  overflow: hidden;
+}
+
+.social-promo-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Header */
+.social-promo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36px 80px 24px;
+  gap: 56px;
+}
+
+.social-promo-title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-family, inherit);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  color: #013b1c;
+  text-transform: capitalize;
+}
+
+.social-promo-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 40px;
+  padding: 8px 24px;
+  background-color: #004122;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  font-family: var(--font-family, inherit);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.64px;
+  color: white;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.social-promo-cta:hover {
+  opacity: 0.9;
+}
+
+.social-promo-cta svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+/* Marquee */
+.social-promo-marquee {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 36px;
+}
+
+.social-promo-marquee:hover .social-promo-marquee-inner {
+  animation-duration: 20s;
+}
+
+.social-promo-marquee-inner {
+  display: flex;
+  width: max-content;
+  animation: social-promo-scroll 10s linear infinite;
+}
+
+.social-promo-track {
+  display: flex;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+@keyframes social-promo-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Cards */
+.social-promo-card {
+  flex: 0 0 395px;
+  max-width: 395px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.social-promo-card-image {
+  position: relative;
+  aspect-ratio: 347 / 420;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.social-promo-card-image picture,
+.social-promo-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.social-promo-card-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  background-color: #004122;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.social-promo-card-caption {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #fffefc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Card themes */
+.social-promo-card--green {
+  background-color: #289200;
+}
+
+.social-promo-card--light-yellow {
+  background-color: #fffbe3;
+}
+
+.social-promo-card--light-yellow .social-promo-card-caption {
+  color: #013b1c;
+}
+
+.social-promo-card--dark-yellow {
+  background-color: #b8860b;
+}
+
+.social-promo-card--pink {
+  background-color: #ff69b4;
+}
+
+.social-promo-card--dark-green {
+  background-color: #004122;
+}
+
+.social-promo-card--white {
+  background-color: #ffffff;
+}
+
+.social-promo-card--white .social-promo-card-caption {
+  color: #013b1c;
+}
+
+.social-promo-card--gradient {
+  background: linear-gradient(135deg, #289200 0%, #004122 100%);
+}
+
+.social-promo-card--brown {
+  background-color: #8b4513;
+}
+
+.social-promo-card--orange {
+  background-color: #ff8c00;
+}
+
+.social-promo-card--blue {
+  background-color: #0066cc;
+}
+
+/* Tablet */
+@media (max-width: 1280px) {
+  .social-promo-header {
+    padding: 28px 44px 24px;
+    gap: 48px;
+  }
+
+  .social-promo-title {
+    font-size: 28px;
+  }
+
+  .social-promo-cta {
+    padding: 8px 24px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .social-promo-card {
+    flex: 0 0 395px;
+    padding: 20px;
+    border-radius: 20px;
+    gap: 16px;
+  }
+
+  .social-promo-track {
+    gap: 16px;
+    padding: 0 16px;
+  }
+
+  .social-promo-marquee {
+    padding-bottom: 28px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .social-promo-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 20px 24px;
+  }
+
+  .social-promo-title {
+    font-size: 24px;
+    text-align: center;
+  }
+
+  .social-promo-cta {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .social-promo-card {
+    flex: 0 0 395px;
+    padding: 16px;
+    border-radius: 16px;
+    gap: 16px;
+  }
+
+  .social-promo-card-image {
+    border-radius: 8px;
+  }
+
+  .social-promo-card-tag {
+    font-size: 14px;
+    padding: 2px 12px;
+  }
+
+  .social-promo-card-caption {
+    font-size: 14px;
+  }
+
+  .social-promo-track {
+    gap: 16px;
+    padding: 0 16px;
+  }
+
+  .social-promo-marquee {
+    padding-bottom: 24px;
+  }
+}

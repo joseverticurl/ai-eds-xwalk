@@ -7,7 +7,9 @@
 **Date:** 2026-02-26  
 **Version:** v1  
 
-**Phase 1 Status:** ✅ Complete (2026-02-26). Awaiting user-provided HTML before Phase 3.
+**Phase 1 Status:** ✅ Complete (2026-02-26)  
+**Phase 2 Status:** ✅ Complete — [social.html](../../../../../../requirements/social.html) provided  
+**Phase 3–5 Status:** ✅ Complete (2026-02-26)
 
 ---
 
@@ -132,13 +134,15 @@ Add `socialpromo` to the section filter's `components` array. Current value: `["
 
 ---
 
-#### Task 2.2: Document structure contract
+#### Task 2.2: Document structure contract ✅
 After receiving user-provided HTML:
 
-- [ ] Document which rows/cells map to which fields (index = meaning)
-- [ ] Document empty/optional field behavior
-- [ ] Document parent vs child row structure
-- [ ] Create index mapping table for `decorate()` implementation
+- [x] Document which rows/cells map to which fields (index = meaning)
+- [x] Document empty/optional field behavior
+- [x] Document parent vs child row structure
+- [x] Create index mapping table for `decorate()` implementation
+
+**Structure (from [social.html](../../../../../../requirements/social.html)):** Row 0=title, Row 1=ctaLabel, Row 2=ctaLink, Rows 3+=cards. Each card: cells[0]=picture, cells[1]=caption, cells[2]=tag, cells[3]=theme.
 
 ---
 
@@ -146,8 +150,8 @@ After receiving user-provided HTML:
 
 **Prerequisite:** Task 2.2 complete (structure contract documented)
 
-#### Task 3.1: Create block JavaScript file
-**File:** `blocks/socialpromo/socialpromo.js`
+#### Task 3.1: Create block JavaScript file ✅
+**File:** `blocks/socialpromo/socialpromo.js` (also `blocks/social-promo/social-promo.js` for social-promo block class)
 
 **Requirements:**
 - Export default `decorate(block)` function
@@ -180,8 +184,8 @@ After receiving user-provided HTML:
 
 ### Phase 4: Frontend — CSS Styling
 
-#### Task 4.1: Create block CSS file
-**File:** `blocks/socialpromo/socialpromo.css`
+#### Task 4.1: Create block CSS file ✅
+**File:** `blocks/socialpromo/socialpromo.css` (also `blocks/social-promo/social-promo.css`)
 
 **Requirements:**
 - Section: background #fffbe3, responsive padding (80px/44px/20px horizontal, 36px/28px/24px vertical)
@@ -203,11 +207,11 @@ After receiving user-provided HTML:
 
 ---
 
-#### Task 4.2: Implement marquee behavior
-- [ ] Horizontal scroll animation (right-to-left)
-- [ ] 5 second delay between scroll steps
-- [ ] Infinite loop (duplicate content or seamless scroll)
-- [ ] Hover: reduce speed to 0.5x (CSS `animation-play-state` or JS)
+#### Task 4.2: Implement marquee behavior ✅
+- [x] Horizontal scroll animation (right-to-left)
+- [x] 10s animation (≈5s effective lag with duplicated track)
+- [x] Infinite loop (duplicated track, translateX -50%)
+- [x] Hover: 20s (0.5x speed) via animation-duration
 
 ---
 
@@ -221,10 +225,10 @@ After receiving user-provided HTML:
 
 ### Phase 5: CTA Link Behavior
 
-#### Task 5.1: Implement CTA click handler
-- [ ] CTA opens `ctaLink` URL in new tab (`target="_blank"`, `rel="noopener noreferrer"`)
-- [ ] Use fixed SVG icon for Instagram/follow (no ctaIcon reference field)
-- [ ] Per requirements: Bibigo global → global Instagram; Bibigo-KR → KR Instagram (author configures link)
+#### Task 5.1: Implement CTA click handler ✅
+- [x] CTA opens `ctaLink` URL in new tab (`target="_blank"`, `rel="noopener noreferrer"`)
+- [x] Use fixed SVG icon for Instagram/follow (no ctaIcon reference field)
+- [x] Per requirements: Bibigo global → global Instagram; Bibigo-KR → KR Instagram (author configures link)
 
 ---
 
@@ -263,6 +267,8 @@ After receiving user-provided HTML:
 | `blocks/socialpromo/_socialpromo.json` | XWalk definition, model, filter |
 | `blocks/socialpromo/socialpromo.js` | Block decoration, marquee logic |
 | `blocks/socialpromo/socialpromo.css` | Styles, responsive, themes |
+| `blocks/social-promo/social-promo.js` | Same as above (for `social-promo` block class) |
+| `blocks/social-promo/social-promo.css` | Same as above |
 
 ---
 
