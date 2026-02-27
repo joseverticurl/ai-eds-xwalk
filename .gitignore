@@ -7,6 +7,3 @@ helix-importer-ui
 .DS_Store
 *.bak
 .idea
-
-# Implementation guide (large generated/synced file)
-specs/eds-guide/EDS-2026.1.0/creating-eds-block/implementation-guide.md
