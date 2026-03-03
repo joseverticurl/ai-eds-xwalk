@@ -19,7 +19,8 @@
       "quotescard",
       "relatedarticles",
       "ourcompanycarousel",
-      "testimonialcards"
+      "testimonialcards",
+      "relatedcards"
     ]
   },
   {
@@ -59,6 +60,12 @@
     "id": "relatedarticles",
     "components": [
       "relatedarticle"
+    ]
+  },
+  {
+    "id": "relatedcards",
+    "components": [
+      "relatedcard"
     ]
   },
   {
