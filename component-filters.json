@@ -18,7 +18,8 @@
       "fragment",
       "quotescard",
       "relatedarticles",
-      "ourcompanycarousel"
+      "ourcompanycarousel",
+      "testimonialcards"
     ]
   },
   {
@@ -58,6 +59,12 @@
     "id": "relatedarticles",
     "components": [
       "relatedarticle"
+    ]
+  },
+  {
+    "id": "testimonialcards",
+    "components": [
+      "testimonialcardsitem"
     ]
   }
 ]

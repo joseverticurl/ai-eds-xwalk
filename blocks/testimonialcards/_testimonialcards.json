@@ -1,0 +1,65 @@
+{
+  "definitions": [
+    {
+      "title": "Testimonial Cards",
+      "id": "testimonialcards",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "TestimonialCards",
+              "model": "testimonialcards",
+              "filter": "testimonialcards"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Testimonial Cards Item",
+      "id": "testimonialcardsitem",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "TestimonialCardsItem",
+              "model": "testimonialcardsitem"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "testimonialcards",
+      "fields": [
+        { "component": "text", "valueType": "string", "name": "sectionTitleLine1", "label": "Section Title (Line 1)", "value": "" },
+        { "component": "text", "valueType": "string", "name": "sectionTitleLine2", "label": "Section Title (Line 2)", "value": "" },
+        { "component": "text", "valueType": "string", "name": "description", "label": "Description/Body copy", "value": "" },
+        { "component": "text", "valueType": "string", "name": "ctaLabel", "label": "CTA Label", "value": "" },
+        { "component": "aem-content", "name": "ctaLink", "label": "CTA Link" },
+        { "component": "text", "valueType": "string", "name": "backgroundOption", "label": "Background styling option", "value": "default" }
+      ]
+    },
+    {
+      "id": "testimonialcardsitem",
+      "fields": [
+        { "component": "reference", "valueType": "string", "name": "image", "label": "Image", "multi": false },
+        { "component": "text", "valueType": "string", "name": "imageAlt", "label": "Alt", "value": "" },
+        { "component": "text", "valueType": "string", "name": "name", "label": "Name/Title", "value": "" },
+        { "component": "text", "valueType": "string", "name": "role", "label": "Role/Label", "value": "" },
+        { "component": "text", "valueType": "string", "name": "quote", "label": "Quote text", "value": "" },
+        { "component": "text", "valueType": "string", "name": "mediaType", "label": "Media type", "value": "None" },
+        { "component": "aem-content", "name": "mediaSource", "label": "Media source" },
+        { "component": "reference", "valueType": "string", "name": "mediaThumbnail", "label": "Media thumbnail", "multi": false },
+        { "component": "text", "valueType": "string", "name": "errorMessageOverride", "label": "Error message override", "value": "" }
+      ]
+    }
+  ],
+  "filters": [
+    { "id": "testimonialcards", "components": ["testimonialcardsitem"] }
+  ]
+}
