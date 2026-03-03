@@ -224,9 +224,9 @@ Add `"testimonialcards"` to the section's `components` array in the `filters` se
 
 ---
 
-### Phase 0.5: Request User-Provided Semantic HTML
+### Phase 0.5: Request User-Provided Semantic HTML ✓
 
-#### Task 0.5.1: Obtain semantic HTML from Universal Editor
+#### Task 0.5.1: Obtain semantic HTML from Universal Editor ✓
 
 **Prerequisite:** Phase 1 complete and deployed.
 
@@ -260,11 +260,11 @@ Add `"testimonialcards"` to the section's `components` array in the `filters` se
 
 ---
 
-#### Task 2.2: Implement decorate() – structure contract
+#### Task 2.2: Implement decorate() – structure contract ✓
 
 **File:** `blocks/testimonialcards/testimonialcards.js`
 
-Document the structure contract in JSDoc based on **user-provided HTML** (to be saved as `testimonialcards.html`):
+Document the structure contract in JSDoc based on **user-provided HTML** (testimonialcards.html):
 
 ```javascript
 /**
@@ -287,45 +287,45 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ---
 
-#### Task 2.3: Implement decorate() – data extraction and DOM transform
+#### Task 2.3: Implement decorate() – data extraction and DOM transform ✓
 
-- [ ] Extract section title lines, description, CTA label/link, background option from parent rows (0–5)
-- [ ] Extract per item: image, alt, name, role, quote, mediaType, mediaSource, mediaThumbnail, errorMessageOverride
-- [ ] Build DOM: heading (2-line title), carousel container with cards, description, CTA button
-- [ ] Per card: render Quote-type (quote box + profile pill) or Video-type (image + play bar) based on mediaType and quote
-- [ ] Use `createOptimizedPicture()` for images
-- [ ] Use `moveInstrumentation()` when replacing/moving elements
-- [ ] Image fallback: default placeholder on load error (`onerror` handler)
-- [ ] Media fallback: show "Media unavailable" (or errorMessageOverride) on media load failure
-
----
-
-#### Task 2.4: Implement carousel interaction logic
-
-- [ ] Load Swiper via `loadScript()`/`loadCSS()` from `scripts/aem.js` (per implementation guide Pattern 7)
-- [ ] **Desktop:** Swiper with `grabCursor`, multiple slides visible (up to 3), central "Drag" control (optional overlay or arrows)
-- [ ] **Mobile:** `slidesPerView: 1`, swipe; arrow buttons below carousel
-- [ ] No autoplay; loop enabled
-- [ ] Breakpoints: ~390 (1 slide), ~768 (1–2), ~1280 (2–3), ~1920 (3)
+- [x] Extract section title lines, description, CTA label/link, background option from parent rows (0–5)
+- [x] Extract per item: image, alt, name, role, quote, mediaType, mediaSource, mediaThumbnail, errorMessageOverride
+- [x] Build DOM: heading (2-line title), carousel container with cards, description, CTA button
+- [x] Per card: render Quote-type (quote box + profile pill) or Video-type (image + play bar) based on mediaType and quote
+- [x] Use `createOptimizedPicture()` for images
+- [x] Use `moveInstrumentation()` when replacing/moving elements
+- [x] Image fallback: default placeholder on load error (`onerror` handler)
+- [x] Media fallback: show "Media unavailable" (or errorMessageOverride) on media load failure
 
 ---
 
-#### Task 2.5: Implement media playback
+#### Task 2.4: Implement carousel interaction logic ✓
 
-- [ ] Video/Audio cards: play button triggers native `<video>`/`<audio>` or embed (YouTube, etc.)
-- [ ] Show only play control per design (minimal player chrome)
-- [ ] Media load failure: display "Media unavailable" or authored errorMessageOverride
-- [ ] `aria-label="Play testimonial video"` (or "Play testimonial audio") on play button
+- [x] Load Swiper via `loadScript()`/`loadCSS()` from `scripts/aem.js` (per implementation guide Pattern 7)
+- [x] **Desktop:** Swiper with `grabCursor`, multiple slides visible (up to 3), central "Drag" control (optional overlay or arrows)
+- [x] **Mobile:** `slidesPerView: 1`, swipe; arrow buttons below carousel
+- [x] No autoplay; loop enabled
+- [x] Breakpoints: ~390 (1 slide), ~768 (1–2), ~1280 (2–3), ~1920 (3)
 
 ---
 
-#### Task 2.6: Add carousel and CTA accessibility
+#### Task 2.5: Implement media playback ✓
 
-- [ ] Arrow buttons: `aria-label="Previous slide"`, `aria-label="Next slide"`
-- [ ] CTA: keyboard-focusable, accessible name = authored label
-- [ ] Media controls: keyboard accessible
-- [ ] Carousel: `role="region"`, `aria-label="Testimonial cards"` (or similar)
-- [ ] `touch-action: pan-x` on carousel track if needed (horizontal swipe; vertical scroll unaffected)
+- [x] Video/Audio cards: play button triggers native `<video>`/`<audio>` or embed (YouTube, etc.)
+- [x] Show only play control per design (minimal player chrome)
+- [x] Media load failure: display "Media unavailable" or authored errorMessageOverride
+- [x] `aria-label="Play testimonial video"` (or "Play testimonial audio") on play button
+
+---
+
+#### Task 2.6: Add carousel and CTA accessibility ✓
+
+- [x] Arrow buttons: `aria-label="Previous slide"`, `aria-label="Next slide"`
+- [x] CTA: keyboard-focusable, accessible name = authored label
+- [x] Media controls: keyboard accessible
+- [x] Carousel: `role="region"`, `aria-label="Testimonial cards"` (or similar)
+- [x] `touch-action: pan-x` on carousel track if needed (horizontal swipe; vertical scroll unaffected)
 
 ---
 
@@ -343,37 +343,37 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ### Phase 3: Frontend – CSS Styling
 
-#### Task 3.1: Base and desktop styles
+#### Task 3.1: Base and desktop styles ✓
 
 **File:** `blocks/testimonialcards/testimonialcards.css`
 
-- [ ] Section title: 2-line layout; large, bold; desktop centered
-- [ ] Background: gradient ellipses + noise texture (same on desktop and mobile); conditional on backgroundOption
-- [ ] Carousel: Swiper structure; cards 370px width (desktop); rounded corners; card accent colors (aqua, yellow, orange, green rotation)
-- [ ] Quote card: colored box (e.g. aqua), quote text, white pill (profile image, name, role)
-- [ ] Video card: full image, gradient overlay, bottom bar (accent color) with name/role + play button
-- [ ] Central "Drag" control: black circle, arrows + "Drag" label (desktop)
-- [ ] Section CTA: black background, white text, rounded
-- [ ] Breakpoint `(width >= 900px)` or similar for desktop
+- [x] Section title: 2-line layout; large, bold; desktop centered
+- [x] Background: gradient ellipses + noise texture (same on desktop and mobile); conditional on backgroundOption
+- [x] Carousel: Swiper structure; cards 370px width (desktop); rounded corners; card accent colors (aqua, yellow, orange, green rotation)
+- [x] Quote card: colored box (e.g. aqua), quote text, white pill (profile image, name, role)
+- [x] Video card: full image, gradient overlay, bottom bar (accent color) with name/role + play button
+- [x] Central "Drag" control: black circle, arrows + "Drag" label (desktop)
+- [x] Section CTA: black background, white text, rounded
+- [x] Breakpoint `(width >= 900px)` or similar for desktop
 
 ---
 
-#### Task 3.2: Mobile styles
+#### Task 3.2: Mobile styles ✓
 
-- [ ] Section title: left-aligned, smaller (44px per Figma)
-- [ ] Single card prominent; swipe/scroll
-- [ ] Arrow buttons: below carousel
-- [ ] Background: same gradient/pattern as desktop (per updated story)
-- [ ] `touch-action`, adequate touch targets
+- [x] Section title: left-aligned, smaller (44px per Figma)
+- [x] Single card prominent; swipe/scroll
+- [x] Arrow buttons: below carousel
+- [x] Background: same gradient/pattern as desktop (per updated story)
+- [x] `touch-action`, adequate touch targets
 
 ---
 
-#### Task 3.3: Card and media styles
+#### Task 3.3: Card and media styles ✓
 
-- [ ] Card accent colors as CSS variables or classes
-- [ ] Play button: circular, black; icon only
-- [ ] "Media unavailable" message styling
-- [ ] Image placeholder styling
+- [x] Card accent colors as CSS variables or classes
+- [x] Play button: circular, black; icon only
+- [x] "Media unavailable" message styling
+- [x] Image placeholder styling
 
 ---
 
@@ -407,7 +407,7 @@ Use index-based access only. No `data-*` attributes for structure.
 
 ---
 
-## Structure Contract Summary (To Be Validated from User-Provided HTML)
+## Structure Contract Summary (Validated from testimonialcards.html)
 
 | Index | Meaning |
 |-------|---------|
@@ -419,17 +419,14 @@ Use index-based access only. No `data-*` attributes for structure.
 | `block.children[5]` | Background option row |
 | `block.children[6]` | First card row |
 | ... | ... |
-| `row.children[0]` | Image |
-| `row.children[1]` | imageAlt |
-| `row.children[2]` | name |
-| `row.children[3]` | role |
-| `row.children[4]` | quote |
-| `row.children[5]` | mediaType |
-| `row.children[6]` | mediaSource |
-| `row.children[7]` | mediaThumbnail |
-| `row.children[8]` | errorMessageOverride |
+| `row.children[0]` | Image (picture) |
+| `row.children[1]` | name (or imageAlt when present) |
+| `row.children[2]` | quote |
+| `row.children[3]` | mediaType or role (when not None/Video/Audio) |
+| `row.children[4]` | mediaSource |
+| `row.children[6]` | errorMessageOverride |
 
-**Note:** Actual indices will be confirmed from user-provided HTML.
+**Note:** Provided HTML has 7 cells per item; indices may vary when all 9 model fields are populated.
 
 ---
 
