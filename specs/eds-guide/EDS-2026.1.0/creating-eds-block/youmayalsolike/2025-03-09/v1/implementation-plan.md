@@ -120,7 +120,7 @@ Implement the **youmayalsolike** EDS block: a parent block with optional section
 |---|------|--------|
 | 2.1 | **CHECKPOINT — WAIT** | **STOP.** Do not implement frontend yet. |
 | 2.2 | Request HTML | Ask user: *“Please author the youmayalsolike block in Adobe Universal Editor with sample content (title, aura, 2–3 cards with image, category, title, link). Then provide the semantic HTML output (view source or DevTools). Include the block root element and full structure.”* |
-| 2.3 | Document structure contract | After user provides HTML: document which indices correspond to which content (e.g. `block.children[0]` = title row, `block.children[1..n]` = card rows; per-card row cells: image, category, title, link). Note empty/optional field behavior. |
+| 2.3 | Document structure contract | **Documented:** `block.children[0]` = title row; `block.children[1]` = aura row; `block.children[2..n]` = card rows. Per card: `row.children[0]` = image, `[1]` = category, `[2]` = title, `[3]` = link, `[4]` = ctaText. |
 | 2.4 | Proceed to Phase 3 | Only after 2.2 and 2.3 are done, proceed to Phase 3. |
 
 ---
@@ -214,6 +214,6 @@ Implement the **youmayalsolike** EDS block: a parent block with optional section
 
 - [x] Implementation plan reviewed and approved.
 - [x] Phase 1 completed and backend tests passed.
-- [ ] Phase 2 completed (user provided semantic HTML; structure contract documented).
-- [ ] Phase 3 completed and frontend tests passed.
+- [x] Phase 2 completed (user provided semantic HTML; structure contract documented).
+- [x] Phase 3 completed and frontend tests passed.
 - [ ] Phase 4 integration and validation passed.

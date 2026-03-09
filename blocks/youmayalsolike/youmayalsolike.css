@@ -1,0 +1,187 @@
+/* You May Also Like Block */
+
+.youmayalsolike-wrapper {
+  padding: 50px 24px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+.youmayalsolike-title {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.68px;
+  text-align: center;
+  margin: 0 0 30px;
+  color: var(--text-color, #000);
+}
+
+.youmayalsolike-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.youmayalsolike-card {
+  display: block;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 360px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.youmayalsolike-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.youmayalsolike-card-image {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.youmayalsolike-card-image picture,
+.youmayalsolike-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.youmayalsolike-card-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+
+.youmayalsolike-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.youmayalsolike-card-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 12px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  background: #fff;
+  color: #000;
+  border-radius: 50px;
+  width: fit-content;
+}
+
+.youmayalsolike-card-title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  color: #fff;
+}
+
+.youmayalsolike-card-cta {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+/* Tablet: 2 columns */
+@media (width >= 600px) {
+  .youmayalsolike-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Desktop: 2 or 3 columns based on card count */
+@media (width >= 900px) {
+  .youmayalsolike-wrapper {
+    padding: 50px 40px;
+  }
+
+  .youmayalsolike-title {
+    font-size: 64px;
+    letter-spacing: -1.92px;
+    margin-bottom: 50px;
+  }
+
+  .youmayalsolike-cards {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .youmayalsolike-card,
+  .youmayalsolike-card-inner {
+    min-height: 400px;
+  }
+
+  .youmayalsolike-card-inner {
+    padding: 30px;
+  }
+
+  .youmayalsolike-card {
+    border-radius: 24px;
+  }
+
+  .youmayalsolike-card-title {
+    font-size: 26px;
+  }
+}
+
+/* 3 cards: 3 columns on large desktop */
+.youmayalsolike-cards:has(.youmayalsolike-card:nth-child(3)) {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (width < 900px) {
+  .youmayalsolike-cards:has(.youmayalsolike-card:nth-child(3)) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (width >= 600px) and (width < 900px) {
+  .youmayalsolike-cards:has(.youmayalsolike-card:nth-child(3)) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Aura gradient backgrounds (configurable by authors) */
+.youmayalsolike-wrapper.aura-creative {
+  background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 50%, #fff0e0 100%);
+}
+
+.youmayalsolike-wrapper.aura-health {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #e0f2e1 100%);
+}
+
+.youmayalsolike-wrapper.aura-sustainability {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #dcedfc 100%);
+}
+
+.youmayalsolike-wrapper.aura-light {
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #eeeeee 100%);
+}
+
+.youmayalsolike-wrapper.aura-dark {
+  background: linear-gradient(135deg, #37474f 0%, #263238 50%, #37474f 100%);
+}
+
+.youmayalsolike-wrapper.aura-dark .youmayalsolike-title {
+  color: #fff;
+}
