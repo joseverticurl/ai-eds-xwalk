@@ -16,10 +16,11 @@
       "cards",
       "columns",
       "fragment",
-      "textwithimagegif",
       "featurecardscarousel",
       "socialpromo",
-      "textwithimage"
+      "textwithimage",
+      "textwithimagegif",
+      "youmayalsolike"
     ]
   },
   {
@@ -53,6 +54,12 @@
     "id": "socialpromo",
     "components": [
       "socialpromo-card"
+    ]
+  },
+  {
+    "id": "youmayalsolike",
+    "components": [
+      "youmayalsolikeitem"
     ]
   }
 ]

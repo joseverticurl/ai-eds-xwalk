@@ -1,15 +1,3292 @@
-**Download ready.** Write these files to your workspace (paths are relative to workspace root):
+# Implementation Guide: Creating a New EDS Block
+
+**Functionality:** Creating a New EDS Block with XWalk Authoring Integration  
+**Date:** 2026-01-08  
+**Version:** EDS-2026.1.0  
+**Confidence Score:** 98% (based on analysis of 6+ existing blocks in codebase)
+
+---
+
+## Purpose and Scope
+
+This guide provides step-by-step instructions for creating new EDS blocks or enhancing existing ones with XWalk authoring integration. It covers the complete development lifecycle from block creation to AEM authoring validation.
+
+**Development Process (in order):**
+1. **Generate backend code first** — block-level JSON (`blocks/<block-name>/_<block-name>.json`), then run `npm run build:json`
+2. **User provides semantic HTML** — User authors the block in Adobe Universal Editor and provides the generated HTML to Cursor (do NOT generate HTML — Cursor output can differ from Universal Editor)
+3. **Generate styling and scripting** — JavaScript and CSS based on the user-provided semantic HTML
+
+**Scope Includes:**
+- Simple blocks (single content blocks)
+- Complex blocks (nested items, containers)
+- XWalk configuration for AEM authoring
+- Frontend JavaScript and CSS
+- Unit testing (if applicable)
+
+**Out of Scope:**
+- OSGi services
+- Dispatcher configuration
+- AEM templates and page policies
+
+---
+
+## Quick Reference
+
+**Development order (follow in sequence):**
+1. **Backend first** — Add XWalk config to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json`
+2. **User provides semantic HTML** — Author block in Adobe Universal Editor, then provide the generated HTML (do NOT generate HTML — Cursor output can differ from Universal Editor)
+3. **Frontend** — Generate JavaScript and CSS based on user-provided HTML
+
+**Critical rules:**
+- Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`); run build command to update root files
+- Use **index-based** structure only — no `data-*` attributes for selection
+- **User-provided HTML is mandatory** — validate structure contract before coding
+- Parent-child blocks use **ONE folder** — one JS file and one CSS file for both parent and children
+- **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).
+
+**Jump to:**
+- [Part 1: Process Flow (3 Steps)](#part-1-process-flow-3-steps)
+- [Part 2: Backend Code Generation](#part-2-backend-code-generation)
+- [Part 3: Frontend Code Generation](#part-3-frontend-code-generation)
+- [Implementation Checklist](#implementation-checklist) — full phase-by-phase checklist
+
+**Checklist at a glance:** Prerequisites → Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend) → Validation
+
+**Key documentation:**
+- [Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) (Experience League)
+- [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions) (AEM.live)
+
+---
+
+## Document Structure
+
+This guide is organized into three parts:
+
+1. **Part 1: Process Flow (3 Steps)** - The 3-step process, Step 2 (User Provides HTML), validation, checklist, and end-to-end workflow
+2. **Part 2: Backend Code Generation** - XWalk JSON configuration (block-level JSON, build step)
+3. **Part 3: Frontend Code Generation** - JavaScript, CSS, and HTML implementation
+
+**Development Order:** Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend)
+
+---
+
+## Table of Contents
+
+**Pre-Implementation**
+- [Requirements Gathering](#pre-implementation-gathering-requirements)
+- [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
+
+**Part 1: Process Flow (3 Steps)**
+- [AI Governance Rules (Process)](#ai-governance-rules-process)
+- [The 3-Step Process](#the-3-step-process)
+- [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html)
+- [End-to-End Flow](#end-to-end-flow)
+- [Development Workflow](#development-workflow)
+- [Implementation Checklist](#implementation-checklist)
+- [Validation Workflow](#validation-workflow)
+- [Considerations](#considerations)
+- [Next Steps](#next-steps)
+
+**Part 2: Backend Code Generation**
+- [AI Governance Rules (Backend)](#ai-governance-rules-backend)
+- [Configuration Overview](#configuration-overview)
+- [Component Definition](#component-definition-structure)
+- [Field Configuration](#field-configuration)
+  - [Field Definition Basics](#field-definition-basics)
+  - [Field Component Types](#field-component-types)
+  - [Validation Patterns](#validation-patterns)
+  - [Multi-Fields and Composite Multi-Fields](#multi-fields-and-composite-multi-fields)
+- [AEM Rendering Mechanics](#aem-rendering-mechanics)
+- [Block Structure Variants](#block-structure-variants)
+- [Resource Types](#resource-types)
+- [Filter/Nesting Rules](#filternesting-rules)
+
+**Part 3: Frontend Code Generation**
+- [Part 3a: Core Concepts](#part-3a-core-concepts)
+- [Part 3b: JavaScript Implementation](#part-3b-javascript-implementation)
+  - [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)
+  - [Carousel Component Snippets (Swiper)](#carousel-component-snippets-swiper)
+- [Part 3c: CSS Implementation](#part-3c-css-implementation)
+- [Part 3d: HTML Implementation](#part-3d-html-implementation)
+- [Part 3e: Best Practices](#part-3e-best-practices-and-reference)
+
+**Appendices**
+- [Appendix A: EDS Performance & Lighthouse](#appendix-a-eds-performance--lighthouse-best-practices)
+- [Appendix B: Adobe FE EDS Practices](#appendix-b-adobe-fe-eds-recommended-practices-block-creation)
+- [Appendix C: Key References](#appendix-c-key-references)
+- [Appendix D: Common Issues and Solutions](#appendix-d-common-issues-and-solutions)
+
+---
+
+## Pre-Implementation: Gathering Requirements
+
+Before starting implementation, gather all necessary requirements and design assets. This ensures accurate implementation that matches design specifications and business requirements.
+
+### Required Information
+
+When creating a component implementation plan, **always ask for**:
+
+1. **Design Source (one of the following):**
+   - **Figma Design URL** (preferred when available):
+     - Full Figma file URL or specific frame/component URL
+     - Access permissions (if file is private)
+     - Specific variant or state to implement (if multiple exist)
+     - Breakpoint specifications (mobile, tablet, desktop)
+   - **OR Component Design Images** (when Figma URL is not available):
+     - Design images for **desktop** viewport
+     - Design images for **tablet** viewport (if layout differs)
+     - Design images for **mobile** viewport (if layout differs)
+     - Cursor can analyze images and generate code based on visual design
+     - Provide clear, high-resolution screenshots or exports of the component
+
+2. **Story/Requirements Document**
+   - User story or feature requirements
+   - Acceptance criteria
+   - Functional requirements
+   - Content structure and field requirements
+   - Interaction requirements (animations, hover states, etc.)
+   - Accessibility requirements
+   - Browser/device compatibility requirements
+
+3. **Additional Context**
+   - Similar existing blocks in codebase to reference
+   - Content authoring requirements (what fields authors need)
+   - Any AEM-specific requirements
+   - Performance considerations (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices) for guidelines)
+
+### Using Figma MCP Tools
+
+**When Figma URL is provided, use Figma MCP tools to extract design information:**
+
+1. **Extract Design Specifications:**
+   - Use Figma MCP to fetch the design file
+   - Extract component structure, layout, and hierarchy
+   - Identify colors, typography, spacing, and sizing
+   - Extract responsive breakpoints and variants
+   - Identify interactive states (hover, active, disabled, etc.)
+
+2. **Analyze Design Elements:**
+   - Component structure and nesting
+   - Text content and hierarchy
+   - Image requirements and dimensions
+   - Icon usage and placement
+   - Button styles and states
+   - Form elements (if applicable)
+
+3. **Fetch SVG Icons from Figma:**
+   - Use Figma MCP (`get_design_context` or `get_screenshot`) to extract icon nodes from the design
+   - For each icon in the design, obtain the node ID and fetch the SVG markup
+   - Save icons as `.svg` files in `icons/` (e.g., `icons/icon-name.svg`) for use with `decorateIcon()` / `decorateIcons()`
+   - Use inline SVG format with proper attributes:
+
+   ```html
+   <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="none">
+     <rect width="72" height="72" rx="36" fill="#FFFBE3"/>
+     <path d="M47.2791 32.2804C49.9793 33.7603 50.0649 37.6084 47.4331 39.2069L33.5817 47.62C30.9499 49.2185 27.5746 47.3686 27.5062 44.2902L27.1459 28.0879C27.0774 25.0095 30.3671 23.0113 33.0674 24.4913L47.2791 32.2804Z" fill="#F85001"/>
+   </svg>
+   ```
+
+   - Ensure each SVG has: `xmlns`, `width`, `height`, `viewBox`, and `fill` (or `fill="none"` with fills on child elements)
+   - Preserve design colors and paths from Figma; avoid altering the exported markup
+
+4. **Document Findings:**
+   - Create a design analysis summary
+   - Map Figma elements to HTML structure
+   - Map Figma styles to CSS properties
+   - Identify reusable components from `shared-components/`
+   - Note any design tokens or CSS variables needed
+
+**Example Workflow:**
+```
+1. Receive Figma URL: https://www.figma.com/file/...
+2. Use Figma MCP to fetch design file
+3. Analyze component structure and extract:
+   - Layout: Grid, Flexbox, or custom
+   - Colors: Primary, secondary, text colors
+   - Typography: Font families, sizes, weights
+   - Spacing: Margins, padding values
+   - Breakpoints: Mobile, tablet, desktop
+   - Icons: Fetch SVG markup from Figma for each icon node; save as icons/<name>.svg
+4. Cross-reference with story requirements
+5. Create implementation plan based on design + requirements
+```
+
+### Using Design Images (When Figma URL is Not Available)
+
+**When Figma URL is not provided, request component design images and generate code from visual analysis:**
+
+1. **Request Design Images:**
+   - Ask user: "Please provide component design images for desktop, tablet, and mobile viewports (if layouts differ)."
+   - Desktop image (required) — primary layout reference
+   - Tablet image (if layout differs from desktop)
+   - Mobile image (if layout differs from desktop/tablet)
+
+2. **Analyze Design Images:**
+   - Use image analysis to extract layout, structure, and hierarchy
+   - Identify colors, typography, spacing, and sizing from visual inspection
+   - Infer responsive breakpoints from layout differences across viewports
+   - Map visual elements to HTML structure and CSS properties
+
+3. **Generate Implementation:**
+   - Create implementation plan based on image analysis + story requirements
+   - Generate code (HTML structure, CSS, JavaScript) that matches the visual design
+   - Cursor can infer design specifications from images and produce equivalent code
+
+**Example Workflow (Design Images):**
+```
+1. Request: "Please provide design images for desktop, tablet, and mobile."
+2. User provides images (e.g., desktop.png, tablet.png, mobile.png)
+3. Analyze images to extract:
+   - Layout (Grid, Flexbox, stacking order)
+   - Component structure and nesting
+   - Colors, typography, spacing
+   - Breakpoint differences (layout changes at tablet/mobile)
+4. Cross-reference with story requirements
+5. Generate implementation plan and code based on visual design
+```
+
+### Requirements Checklist
+
+Before starting implementation, ensure you have:
+
+- [ ] Design source: Figma design URL (with access) OR component design images (desktop, tablet, mobile)
+- [ ] Story/requirements document
+- [ ] Design specifications extracted (via Figma MCP, design images, or manual review)
+- [ ] Content structure mapped to XWalk fields
+- [ ] Similar blocks identified for reference
+- [ ] Breakpoint requirements confirmed
+- [ ] Accessibility requirements documented
+- [ ] Browser compatibility requirements noted
+- [ ] Performance requirements reviewed (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices))
+
+**Note:** If Figma URL is not available, request component design images (desktop, tablet, mobile) instead. Cursor can generate code from design images. Ensure story requirements are provided before proceeding. Accurate requirements prevent rework and ensure the component meets design and functional specifications.
+
+### Development Workflow: Backend First, Then User-Provided Semantic HTML
+
+**Critical:** To avoid DOM structure mismatches, the development process follows this order:
+
+1. **Generate backend code first** (block-level JSON, then `npm run build:json`)
+2. **User provides semantic HTML** — The user authors the block in Adobe Universal Editor and provides the actual generated HTML to Cursor
+3. **Generate styling and scripting** based on the user-provided semantic HTML
+
+**Why User-Provided HTML is Essential:**
+- Cursor-generated HTML can differ from actual Adobe Universal Editor output
+- Universal Editor generates the authoritative DOM structure
+- Ensures JavaScript index-based access matches the real structure
+- Prevents structure mismatches and index-based access errors
+- Validates that field order in XWalk model matches actual output
+
+**Workflow Steps:**
+
+1. **Generate Backend Configuration First:**
+   - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`
+   - Run `npm run build:json` to update root files
+   - Deploy to AEM/Universal Editor environment
+
+2. **Request User to Provide Semantic HTML:**
+   - **Prompt the user:** "Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output."
+   - **User actions:**
+     - Add the block to a page in Universal Editor
+     - Configure all fields (including empty/optional fields where relevant)
+     - Add multiple items if it's a parent-child block
+     - Extract the generated HTML (view source or DevTools)
+     - Provide the HTML to Cursor
+   - **User should provide variations if applicable:**
+     - Basic structure with all fields
+     - With/without optional fields (e.g., section title)
+     - Multiple child items for parent-child blocks
+
+3. **Generate JavaScript and CSS:**
+   - Analyze the user-provided HTML to document the structure contract
+   - Write `decorate()` function using index-based access matching the actual DOM
+   - Write CSS targeting the transformed structure
+   - Test with the user-provided HTML
+
+**What to Request from the User:**
+
+```
+Please provide the semantic HTML for the [block-name] block:
+
+1. Author the block in Adobe Universal Editor with sample content
+2. Configure all relevant fields (including optional fields if applicable)
+3. For parent-child blocks: add multiple items
+4. Copy the generated HTML (view page source or use DevTools)
+5. Paste the HTML here
+
+Include the block's root element (e.g., <div class="blockname">...</div>) and its full structure.
+```
+
+**Key Observations to Document from User-Provided HTML:**
+- Which fields generate rows vs cells
+- Field indices (0, 1, 2, etc.)
+- Empty field behavior (missing cells vs empty cells)
+- Optional field behavior (parent title, etc.)
+- How parent-child blocks are structured
+
+**Important Notes:**
+- Do NOT generate static HTML — the user provides it from Universal Editor
+- The user-provided HTML is the source of truth for DOM structure
+- JavaScript and CSS must be generated to match this structure
+
+---
+
+# Part 1: Process Flow (3 Steps)
+
+**Purpose:** This part enforces deterministic AI-driven block generation by formalizing the structure contract between XWalk model configuration and runtime DOM output. The strict Backend → User HTML → Frontend sequence prevents structural hallucination and DOM mismatch.
+
+## AI Governance Rules (Process)
+
+Rules for Cursor AI when generating EDS blocks:
+
+- **Never generate HTML** — Wait for user-provided HTML from Universal Editor; Cursor output can differ from AEM output
+- **Follow sequence strictly** — Backend first, then user provides HTML, then frontend
+- **Document structure contract** — After receiving user HTML, document field indices and empty/optional field behavior before coding
+- **Index-based only** — No `data-*` attributes for structure or selection; use position-based access
+
+## The 3-Step Process
+
+| Step | Action | Details |
+|------|--------|---------|
+| **Step 1** | Backend | Add block-level JSON, run `npm run build:json`. See [Part 2: Backend Code Generation](#part-2-backend-code-generation). |
+| **Step 2** | User Provides Semantic HTML | User authors block in Universal Editor and provides the generated HTML. Cursor must not generate HTML ([AI Governance Rules](#ai-governance-rules-process)). Details: [Step 2](#step-2-user-provides-semantic-html) below. |
+| **Step 3** | Frontend | Generate JavaScript and CSS based on user-provided HTML. See [Part 3: Frontend Code Generation](#part-3-frontend-code-generation). |
+
+**Prerequisites:** [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning.
+
+---
+
+## Step 2: User Provides Semantic HTML
+
+**Execute this step AFTER Step 1 (Backend) is complete and deployed.**
+
+**Prerequisites:** [Part 2: Backend Code Generation](#part-2-backend-code-generation) must be complete and deployed to Universal Editor.
+
+**Objective:** Obtain the actual HTML structure from Adobe Universal Editor. See [AI Governance Rules (Process)](#ai-governance-rules-process).
+
+**Steps:**
+1. **Prerequisite:** Backend configuration is complete and deployed to AEM/Universal Editor
+2. **Request user:** "Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output."
+3. **User actions:** Add block to page, configure all fields, add multiple items if parent-child, extract HTML (view source or DevTools), provide to Cursor
+4. **Document:** Structure contract (field indices, empty/optional field behavior) from user-provided HTML
+5. **Use for:** Generating JavaScript and CSS that match the actual DOM structure
+
+**See also:**
+- [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html) (Pre-Implementation) — full workflow details
+- [Step 2: User Provides Semantic HTML (Checklist)](#step-2-user-provides-semantic-html-mandatory) — detailed checklist
+
+---
+
+## End-to-End Flow
+
+### Sequence Diagram
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
+│   Author    │     │   XWalk      │     │   Block     │     │   Frontend   │
+│   (AEM UI)  │────▶│   Config     │────▶│   JS/CSS    │────▶│   (Browser)  │
+└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
+      │                    │                    │                    │
+      │ 1. Configure       │                    │                    │
+      │    Block in AEM    │                    │                    │
+      │                    │ 2. Save to         │                    │
+      │                    │    Content         │                    │
+      │                    │                    │ 3. Page Load       │
+      │                    │                    │    decorateBlock() │
+      │                    │                    │ 4. loadBlock()      │
+      │                    │                    │    Load CSS/JS     │
+      │                    │                    │                    │ 5. decorate()
+      │                    │                    │                    │    Transform DOM
+      │                    │                    │                    │ 6. Render HTML
+```
+
+**Flow Steps:**
+1. Author configures block via XWalk-enabled AEM UI (Part 2)
+2. Content saved to AEM repository
+3. Page loads, `decorateBlock()` identifies block (Part 3)
+4. `loadBlock()` asynchronously loads CSS and JS module (Part 3)
+5. Block's `decorate()` function transforms DOM (Part 3)
+6. Final HTML rendered in browser (Part 3)
+
+### Data Flow: AEM Authoring → Block Rendering
+
+```
+AEM Content (HTML) – structure by index, no reliance on data attributes
+  ↓
+decorate(block) receives block element (Part 3)
+  ↓
+Extract data by index (e.g. block.children[0], block.children[1]) (Part 3)
+  ↓
+Transform to final HTML structure (Part 3)
+  ↓
+Rendered output
+```
+
+**Reference:** Index-based extraction patterns in Part 3.
+
+---
+
+# Part 2: Backend Code Generation
+
+**Purpose:** Part 2 enforces deterministic block configuration by defining the structure contract between XWalk model configuration and runtime DOM output. Field order in the model directly determines HTML structure; plan it carefully.
+
+This section covers XWalk JSON configuration for AEM authoring interface integration. **Do this first (Step 1).**
+
+## AI Governance Rules (Backend)
+
+Rules for Cursor AI when generating backend configuration:
+
+- **Block-level JSON only** — Add config to `blocks/<block-name>/_<block-name>.json`; never edit `component-definition.json`, `component-models.json`, or `component-filters.json` directly
+- **Run build after changes** — Execute `npm run build:json` to merge block configs into root files
+- **Plan field order** — Field order = structure contract; field at index N → `block.children[N]` in generated HTML
+- **Use EDS resource types only** — No custom AEM components; use `core/franklin/components/block/v1/block` and related types
+- **Validate with user HTML** — After configuring the model, obtain user-provided HTML from Universal Editor to verify structure before frontend work
+
+**Prerequisites:**
+- [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning
+- [Getting Started – Universal Editor Developer Tutorial](https://www.aem.live/developer/universal-editor-blocks), [Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks), and [Block Collection](https://aem.live/developer/block-collection) — essential for understanding content modeling
+
+---
+
+## CRITICAL: Use Block-Level JSON Files
+
+See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Summary:
+
+| Required | Forbidden |
+|----------|-----------|
+| Create `blocks/<block-name>/_<block-name>.json` | Edit root files directly |
+| Run `npm run build:json` after config changes | Manually copy config into root files |
+
+---
+
+## Build Step Check
+
+**Workflow:** Create block-level JSON → Run build → Root files updated. See [AI Governance Rules (Backend)](#ai-governance-rules-backend).
+
+1. Add `blocks/<block-name>/_<block-name>.json` with definition, model, and filter
+2. Run `npm run build:json`
+3. Verify root files are updated (they are build outputs; do not edit directly)
+
+---
+
+## Configuration Overview
+
+### XWalk Configuration Files
+
+**Edit:** `blocks/<block-name>/_<block-name>.json` (definition, model, filter). **Build output (do not edit):** `component-definition.json`, `component-models.json`, `component-filters.json`. See [AI Governance Rules (Backend)](#ai-governance-rules-backend).
+
+**Reference Examples:**
+- Simple block: See `hero` definition in `component-definition.json` (lines 145-159)
+- Complex block: See `cards` and `card` definitions in `component-definition.json` (lines 85-114)
+- Models: See `hero` model in `component-models.json` (lines 192-217)
+- Filters: See `cards` filter in `component-filters.json` (lines 21-26)
+
+### Configuration Flow
+
+```
+1. Developer adds block configuration:
+   - Create blocks/<block-name>/_<block-name>.json with definition, model, filter
+   - Run npm run build:json → root files (component-definition.json, etc.) are updated
+   ↓
+2. Author opens AEM page editor
+   - XWalk reads component-definition.json
+   - Finds block definition
+   ↓
+3. Authoring UI generated from:
+   - component-models.json (field definitions)
+   - component-filters.json (nesting rules)
+   ↓
+4. Author configures block
+   - Fields mapped from model
+   - Validation applied
+   ↓
+5. Content saved to AEM
+   - Rendered as HTML; block JS uses index-based structure only (no reliance on data attributes)
+```
+
+**Reference:** `component-definition.json`, `component-models.json`, `component-filters.json`
+
+### Default Content vs Blocks
+
+**Default content** is content an author intuitively puts on a page without additional semantics: text, headings, links, and images. In AEM, this is implemented as components with simple, pre-defined models that serialize to Markdown and HTML.
+
+| Default Component | Model Fields |
+|-------------------|--------------|
+| **Text** | Rich text (lists, strong, italic) |
+| **Title** | Text, type (h1–h6) |
+| **Image** | Source, description |
+| **Button** | Text, title, url, type (default, primary, secondary) |
+
+**Blocks** require additional semantics and are decorated by JavaScript with stylesheets. Blocks must have explicit models so the authoring UI knows what options to present. Default content is part of the boilerplate; blocks are defined in `component-models.json` and `component-definition.json`.
+
+**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)
+
+---
+
+## Component Definition Structure
+
+**WARNING:** Do not implement custom AEM components. The Edge Delivery Services components provided by AEM are sufficient and offer guard rails. Custom components can break the markup contract between AEM and the delivery tier. Use `core/franklin/components/block/v1/block` and related resource types only.
+
+### Step-by-Step: Adding Configuration to Block-Level JSON
+
+**CRITICAL:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Add config to `blocks/<block-name>/_<block-name>.json`; run `npm run build:json`.
+
+#### Step 1: Create Block-Level JSON and Add Definition
+
+**Location:** Create or edit `blocks/<block-name>/_<block-name>.json`. Add the block definition (typically in a `definition` or `component-definition` section, per project convention).
+
+**Standard Block Definition:**
 
 ```json
 {
-  "files": [
-    {
-      "relativePath": "specs/eds-guide/EDS-2026.1.0/creating-eds-block/implementation-guide.md",
-      "content": "# Implementation Guide: Creating a New EDS Block\n\n**Functionality:** Creating a New EDS Block with XWalk Authoring Integration  \n**Date:** 2026-01-08  \n**Version:** EDS-2026.1.0  \n**Confidence Score:** 98% (based on analysis of 6+ existing blocks in codebase)\n\n---\n\n## Purpose and Scope\n\nThis guide provides step-by-step instructions for creating new EDS blocks or enhancing existing ones with XWalk authoring integration. It covers the complete development lifecycle from block creation to AEM authoring validation.\n\n**Development Process (in order):**\n1. **Generate backend code first** — block-level JSON (`blocks/<block-name>/_<block-name>.json`), then run `npm run build:json`\n2. **User provides semantic HTML** — User authors the block in Adobe Universal Editor and provides the generated HTML to Cursor (do NOT generate HTML — Cursor output can differ from Universal Editor)\n3. **Generate styling and scripting** — JavaScript and CSS based on the user-provided semantic HTML\n\n**Scope Includes:**\n- Simple blocks (single content blocks)\n- Complex blocks (nested items, containers)\n- XWalk configuration for AEM authoring\n- Frontend JavaScript and CSS\n- Unit testing (if applicable)\n\n**Out of Scope:**\n- OSGi services\n- Dispatcher configuration\n- AEM templates and page policies\n\n---\n\n## Quick Reference\n\n**Development order (follow in sequence):**\n1. **Backend first** — Add XWalk config to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json`\n2. **User provides semantic HTML** — Author block in Adobe Universal Editor, then provide the generated HTML (do NOT generate HTML — Cursor output can differ from Universal Editor)\n3. **Frontend** — Generate JavaScript and CSS based on user-provided HTML\n\n**Critical rules:**\n- Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`); run build command to update root files\n- Use **index-based** structure only — no `data-*` attributes for selection\n- **User-provided HTML is mandatory** — validate structure contract before coding\n- Parent-child blocks use **ONE folder** — one JS file and one CSS file for both parent and children\n- **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).\n\n**Jump to:**\n- [Part 1: Process Flow (3 Steps)](#part-1-process-flow-3-steps)\n- [Part 2: Backend Code Generation](#part-2-backend-code-generation)\n- [Part 3: Frontend Code Generation](#part-3-frontend-code-generation)\n- [Implementation Checklist](#implementation-checklist) — full phase-by-phase checklist\n\n**Checklist at a glance:** Prerequisites → Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend) → Validation\n\n**Key documentation:**\n- [Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) (Experience League)\n- [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions) (AEM.live)\n\n---\n\n## Document Structure\n\nThis guide is organized into three parts:\n\n1. **Part 1: Process Flow (3 Steps)** - The 3-step process, Step 2 (User Provides HTML), validation, checklist, and end-to-end workflow\n2. **Part 2: Backend Code Generation** - XWalk JSON configuration (block-level JSON, build step)\n3. **Part 3: Frontend Code Generation** - JavaScript, CSS, and HTML implementation\n\n**Development Order:** Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend)\n\n---\n\n## Table of Contents\n\n**Pre-Implementation**\n- [Requirements Gathering](#pre-implementation-gathering-requirements)\n- [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)\n\n**Part 1: Process Flow (3 Steps)**\n- [AI Governance Rules (Process)](#ai-governance-rules-process)\n- [The 3-Step Process](#the-3-step-process)\n- [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html)\n- [End-to-End Flow](#end-to-end-flow)\n- [Development Workflow](#development-workflow)\n- [Implementation Checklist](#implementation-checklist)\n- [Validation Workflow](#validation-workflow)\n- [Considerations](#considerations)\n- [Next Steps](#next-steps)\n\n**Part 2: Backend Code Generation**\n- [AI Governance Rules (Backend)](#ai-governance-rules-backend)\n- [Configuration Overview](#configuration-overview)\n- [Component Definition](#component-definition-structure)\n- [Field Configuration](#field-configuration)\n  - [Field Definition Basics](#field-definition-basics)\n  - [Field Component Types](#field-component-types)\n  - [Validation Patterns](#validation-patterns)\n  - [Multi-Fields and Composite Multi-Fields](#multi-fields-and-composite-multi-fields)\n- [AEM Rendering Mechanics](#aem-rendering-mechanics)\n- [Block Structure Variants](#block-structure-variants)\n- [Resource Types](#resource-types)\n- [Filter/Nesting Rules](#filternesting-rules)\n\n**Part 3: Frontend Code Generation**\n- [Part 3a: Core Concepts](#part-3a-core-concepts)\n- [Part 3b: JavaScript Implementation](#part-3b-javascript-implementation)\n  - [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)\n  - [Carousel Component Snippets (Swiper)](#carousel-component-snippets-swiper)\n- [Part 3c: CSS Implementation](#part-3c-css-implementation)\n- [Part 3d: HTML Implementation](#part-3d-html-implementation)\n- [Part 3e: Best Practices](#part-3e-best-practices-and-reference)\n\n**Appendices**\n- [Appendix A: EDS Performance & Lighthouse](#appendix-a-eds-performance--lighthouse-best-practices)\n- [Appendix B: Adobe FE EDS Practices](#appendix-b-adobe-fe-eds-recommended-practices-block-creation)\n- [Appendix C: Key References](#appendix-c-key-references)\n- [Appendix D: Common Issues and Solutions](#appendix-d-common-issues-and-solutions)\n\n---\n\n## Pre-Implementation: Gathering Requirements\n\nBefore starting implementation, gather all necessary requirements and design assets. This ensures accurate implementation that matches design specifications and business requirements.\n\n### Required Information\n\nWhen creating a component implementation plan, **always ask for**:\n\n1. **Design Source (one of the following):**\n   - **Figma Design URL** (preferred when available):\n     - Full Figma file URL or specific frame/component URL\n     - Access permissions (if file is private)\n     - Specific variant or state to implement (if multiple exist)\n     - Breakpoint specifications (mobile, tablet, desktop)\n   - **OR Component Design Images** (when Figma URL is not available):\n     - Design images for **desktop** viewport\n     - Design images for **tablet** viewport (if layout differs)\n     - Design images for **mobile** viewport (if layout differs)\n     - Cursor can analyze images and generate code based on visual design\n     - Provide clear, high-resolution screenshots or exports of the component\n\n2. **Story/Requirements Document**\n   - User story or feature requirements\n   - Acceptance criteria\n   - Functional requirements\n   - Content structure and field requirements\n   - Interaction requirements (animations, hover states, etc.)\n   - Accessibility requirements\n   - Browser/device compatibility requirements\n\n3. **Additional Context**\n   - Similar existing blocks in codebase to reference\n   - Content authoring requirements (what fields authors need)\n   - Any AEM-specific requirements\n   - Performance considerations (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices) for guidelines)\n\n### Using Figma MCP Tools\n\n**When Figma URL is provided, use Figma MCP tools to extract design information:**\n\n1. **Extract Design Specifications:**\n   - Use Figma MCP to fetch the design file\n   - Extract component structure, layout, and hierarchy\n   - Identify colors, typography, spacing, and sizing\n   - Extract responsive breakpoints and variants\n   - Identify interactive states (hover, active, disabled, etc.)\n\n2. **Analyze Design Elements:**\n   - Component structure and nesting\n   - Text content and hierarchy\n   - Image requirements and dimensions\n   - Icon usage and placement\n   - Button styles and states\n   - Form elements (if applicable)\n\n3. **Fetch SVG Icons from Figma:**\n   - Use Figma MCP (`get_design_context` or `get_screenshot`) to extract icon nodes from the design\n   - For each icon in the design, obtain the node ID and fetch the SVG markup\n   - Save icons as `.svg` files in `icons/` (e.g., `icons/icon-name.svg`) for use with `decorateIcon()` / `decorateIcons()`\n   - Use inline SVG format with proper attributes:\n\n   ```html\n   <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"72\" height=\"72\" viewBox=\"0 0 72 72\" fill=\"none\">\n     <rect width=\"72\" height=\"72\" rx=\"36\" fill=\"#FFFBE3\"/>\n     <path d=\"M47.2791 32.2804C49.9793 33.7603 50.0649 37.6084 47.4331 39.2069L33.5817 47.62C30.9499 49.2185 27.5746 47.3686 27.5062 44.2902L27.1459 28.0879C27.0774 25.0095 30.3671 23.0113 33.0674 24.4913L47.2791 32.2804Z\" fill=\"#F85001\"/>\n   </svg>\n   ```\n\n   - Ensure each SVG has: `xmlns`, `width`, `height`, `viewBox`, and `fill` (or `fill=\"none\"` with fills on child elements)\n   - Preserve design colors and paths from Figma; avoid altering the exported markup\n\n4. **Document Findings:**\n   - Create a design analysis summary\n   - Map Figma elements to HTML structure\n   - Map Figma styles to CSS properties\n   - Identify reusable components from `shared-components/`\n   - Note any design tokens or CSS variables needed\n\n**Example Workflow:**\n```\n1. Receive Figma URL: https://www.figma.com/file/...\n2. Use Figma MCP to fetch design file\n3. Analyze component structure and extract:\n   - Layout: Grid, Flexbox, or custom\n   - Colors: Primary, secondary, text colors\n   - Typography: Font families, sizes, weights\n   - Spacing: Margins, padding values\n   - Breakpoints: Mobile, tablet, desktop\n   - Icons: Fetch SVG markup from Figma for each icon node; save as icons/<name>.svg\n4. Cross-reference with story requirements\n5. Create implementation plan based on design + requirements\n```\n\n### Using Design Images (When Figma URL is Not Available)\n\n**When Figma URL is not provided, request component design images and generate code from visual analysis:**\n\n1. **Request Design Images:**\n   - Ask user: \"Please provide component design images for desktop, tablet, and mobile viewports (if layouts differ).\"\n   - Desktop image (required) — primary layout reference\n   - Tablet image (if layout differs from desktop)\n   - Mobile image (if layout differs from desktop/tablet)\n\n2. **Analyze Design Images:**\n   - Use image analysis to extract layout, structure, and hierarchy\n   - Identify colors, typography, spacing, and sizing from visual inspection\n   - Infer responsive breakpoints from layout differences across viewports\n   - Map visual elements to HTML structure and CSS properties\n\n3. **Generate Implementation:**\n   - Create implementation plan based on image analysis + story requirements\n   - Generate code (HTML structure, CSS, JavaScript) that matches the visual design\n   - Cursor can infer design specifications from images and produce equivalent code\n\n**Example Workflow (Design Images):**\n```\n1. Request: \"Please provide design images for desktop, tablet, and mobile.\"\n2. User provides images (e.g., desktop.png, tablet.png, mobile.png)\n3. Analyze images to extract:\n   - Layout (Grid, Flexbox, stacking order)\n   - Component structure and nesting\n   - Colors, typography, spacing\n   - Breakpoint differences (layout changes at tablet/mobile)\n4. Cross-reference with story requirements\n5. Generate implementation plan and code based on visual design\n```\n\n### Requirements Checklist\n\nBefore starting implementation, ensure you have:\n\n- [ ] Design source: Figma design URL (with access) OR component design images (desktop, tablet, mobile)\n- [ ] Story/requirements document\n- [ ] Design specifications extracted (via Figma MCP, design images, or manual review)\n- [ ] Content structure mapped to XWalk fields\n- [ ] Similar blocks identified for reference\n- [ ] Breakpoint requirements confirmed\n- [ ] Accessibility requirements documented\n- [ ] Browser compatibility requirements noted\n- [ ] Performance requirements reviewed (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices))\n\n**Note:** If Figma URL is not available, request component design images (desktop, tablet, mobile) instead. Cursor can generate code from design images. Ensure story requirements are provided before proceeding. Accurate requirements prevent rework and ensure the component meets design and functional specifications.\n\n### Development Workflow: Backend First, Then User-Provided Semantic HTML\n\n**Critical:** To avoid DOM structure mismatches, the development process follows this order:\n\n1. **Generate backend code first** (block-level JSON, then `npm run build:json`)\n2. **User provides semantic HTML** — The user authors the block in Adobe Universal Editor and provides the actual generated HTML to Cursor\n3. **Generate styling and scripting** based on the user-provided semantic HTML\n\n**Why User-Provided HTML is Essential:**\n- Cursor-generated HTML can differ from actual Adobe Universal Editor output\n- Universal Editor generates the authoritative DOM structure\n- Ensures JavaScript index-based access matches the real structure\n- Prevents structure mismatches and index-based access errors\n- Validates that field order in XWalk model matches actual output\n\n**Workflow Steps:**\n\n1. **Generate Backend Configuration First:**\n   - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`\n   - Run `npm run build:json` to update root files\n   - Deploy to AEM/Universal Editor environment\n\n2. **Request User to Provide Semantic HTML:**\n   - **Prompt the user:** \"Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output.\"\n   - **User actions:**\n     - Add the block to a page in Universal Editor\n     - Configure all fields (including empty/optional fields where relevant)\n     - Add multiple items if it's a parent-child block\n     - Extract the generated HTML (view source or DevTools)\n     - Provide the HTML to Cursor\n   - **User should provide variations if applicable:**\n     - Basic structure with all fields\n     - With/without optional fields (e.g., section title)\n     - Multiple child items for parent-child blocks\n\n3. **Generate JavaScript and CSS:**\n   - Analyze the user-provided HTML to document the structure contract\n   - Write `decorate()` function using index-based access matching the actual DOM\n   - Write CSS targeting the transformed structure\n   - Test with the user-provided HTML\n\n**What to Request from the User:**\n\n```\nPlease provide the semantic HTML for the [block-name] block:\n\n1. Author the block in Adobe Universal Editor with sample content\n2. Configure all relevant fields (including optional fields if applicable)\n3. For parent-child blocks: add multiple items\n4. Copy the generated HTML (view page source or use DevTools)\n5. Paste the HTML here\n\nInclude the block's root element (e.g., <div class=\"blockname\">...</div>) and its full structure.\n```\n\n**Key Observations to Document from User-Provided HTML:**\n- Which fields generate rows vs cells\n- Field indices (0, 1, 2, etc.)\n- Empty field behavior (missing cells vs empty cells)\n- Optional field behavior (parent title, etc.)\n- How parent-child blocks are structured\n\n**Important Notes:**\n- Do NOT generate static HTML — the user provides it from Universal Editor\n- The user-provided HTML is the source of truth for DOM structure\n- JavaScript and CSS must be generated to match this structure\n\n---\n\n# Part 1: Process Flow (3 Steps)\n\n**Purpose:** This part enforces deterministic AI-driven block generation by formalizing the structure contract between XWalk model configuration and runtime DOM output. The strict Backend → User HTML → Frontend sequence prevents structural hallucination and DOM mismatch.\n\n## AI Governance Rules (Process)\n\nRules for Cursor AI when generating EDS blocks:\n\n- **Never generate HTML** — Wait for user-provided HTML from Universal Editor; Cursor output can differ from AEM output\n- **Follow sequence strictly** — Backend first, then user provides HTML, then frontend\n- **Document structure contract** — After receiving user HTML, document field indices and empty/optional field behavior before coding\n- **Index-based only** — No `data-*` attributes for structure or selection; use position-based access\n\n## The 3-Step Process\n\n| Step | Action | Details |\n|------|--------|---------|\n| **Step 1** | Backend | Add block-level JSON, run `npm run build:json`. See [Part 2: Backend Code Generation](#part-2-backend-code-generation). |\n| **Step 2** | User Provides Semantic HTML | User authors block in Universal Editor and provides the generated HTML. Cursor must not generate HTML ([AI Governance Rules](#ai-governance-rules-process)). Details: [Step 2](#step-2-user-provides-semantic-html) below. |\n| **Step 3** | Frontend | Generate JavaScript and CSS based on user-provided HTML. See [Part 3: Frontend Code Generation](#part-3-frontend-code-generation). |\n\n**Prerequisites:** [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning.\n\n---\n\n## Step 2: User Provides Semantic HTML\n\n**Execute this step AFTER Step 1 (Backend) is complete and deployed.**\n\n**Prerequisites:** [Part 2: Backend Code Generation](#part-2-backend-code-generation) must be complete and deployed to Universal Editor.\n\n**Objective:** Obtain the actual HTML structure from Adobe Universal Editor. See [AI Governance Rules (Process)](#ai-governance-rules-process).\n\n**Steps:**\n1. **Prerequisite:** Backend configuration is complete and deployed to AEM/Universal Editor\n2. **Request user:** \"Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output.\"\n3. **User actions:** Add block to page, configure all fields, add multiple items if parent-child, extract HTML (view source or DevTools), provide to Cursor\n4. **Document:** Structure contract (field indices, empty/optional field behavior) from user-provided HTML\n5. **Use for:** Generating JavaScript and CSS that match the actual DOM structure\n\n**See also:**\n- [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html) (Pre-Implementation) — full workflow details\n- [Step 2: User Provides Semantic HTML (Checklist)](#step-2-user-provides-semantic-html-mandatory) — detailed checklist\n\n---\n\n## End-to-End Flow\n\n### Sequence Diagram\n\n```\n┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐\n│   Author    │     │   XWalk      │     │   Block     │     │   Frontend   │\n│   (AEM UI)  │────▶│   Config     │────▶│   JS/CSS    │────▶│   (Browser)  │\n└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘\n      │                    │                    │                    │\n      │ 1. Configure       │                    │                    │\n      │    Block in AEM    │                    │                    │\n      │                    │ 2. Save to         │                    │\n      │                    │    Content         │                    │\n      │                    │                    │ 3. Page Load       │\n      │                    │                    │    decorateBlock() │\n      │                    │                    │ 4. loadBlock()      │\n      │                    │                    │    Load CSS/JS     │\n      │                    │                    │                    │ 5. decorate()\n      │                    │                    │                    │    Transform DOM\n      │                    │                    │                    │ 6. Render HTML\n```\n\n**Flow Steps:**\n1. Author configures block via XWalk-enabled AEM UI (Part 2)\n2. Content saved to AEM repository\n3. Page loads, `decorateBlock()` identifies block (Part 3)\n4. `loadBlock()` asynchronously loads CSS and JS module (Part 3)\n5. Block's `decorate()` function transforms DOM (Part 3)\n6. Final HTML rendered in browser (Part 3)\n\n### Data Flow: AEM Authoring → Block Rendering\n\n```\nAEM Content (HTML) – structure by index, no reliance on data attributes\n  ↓\ndecorate(block) receives block element (Part 3)\n  ↓\nExtract data by index (e.g. block.children[0], block.children[1]) (Part 3)\n  ↓\nTransform to final HTML structure (Part 3)\n  ↓\nRendered output\n```\n\n**Reference:** Index-based extraction patterns in Part 3.\n\n---\n\n# Part 2: Backend Code Generation\n\n**Purpose:** Part 2 enforces deterministic block configuration by defining the structure contract between XWalk model configuration and runtime DOM output. Field order in the model directly determines HTML structure; plan it carefully.\n\nThis section covers XWalk JSON configuration for AEM authoring interface integration. **Do this first (Step 1).**\n\n## AI Governance Rules (Backend)\n\nRules for Cursor AI when generating backend configuration:\n\n- **Block-level JSON only** — Add config to `blocks/<block-name>/_<block-name>.json`; never edit `component-definition.json`, `component-models.json`, or `component-filters.json` directly\n- **Run build after changes** — Execute `npm run build:json` to merge block configs into root files\n- **Plan field order** — Field order = structure contract; field at index N → `block.children[N]` in generated HTML\n- **Use EDS resource types only** — No custom AEM components; use `core/franklin/components/block/v1/block` and related types\n- **Validate with user HTML** — After configuring the model, obtain user-provided HTML from Universal Editor to verify structure before frontend work\n\n**Prerequisites:**\n- [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning\n- [Getting Started – Universal Editor Developer Tutorial](https://www.aem.live/developer/universal-editor-blocks), [Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks), and [Block Collection](https://aem.live/developer/block-collection) — essential for understanding content modeling\n\n---\n\n## CRITICAL: Use Block-Level JSON Files\n\nSee [AI Governance Rules (Backend)](#ai-governance-rules-backend). Summary:\n\n| Required | Forbidden |\n|----------|-----------|\n| Create `blocks/<block-name>/_<block-name>.json` | Edit root files directly |\n| Run `npm run build:json` after config changes | Manually copy config into root files |\n\n---\n\n## Build Step Check\n\n**Workflow:** Create block-level JSON → Run build → Root files updated. See [AI Governance Rules (Backend)](#ai-governance-rules-backend).\n\n1. Add `blocks/<block-name>/_<block-name>.json` with definition, model, and filter\n2. Run `npm run build:json`\n3. Verify root files are updated (they are build outputs; do not edit directly)\n\n---\n\n## Configuration Overview\n\n### XWalk Configuration Files\n\n**Edit:** `blocks/<block-name>/_<block-name>.json` (definition, model, filter). **Build output (do not edit):** `component-definition.json`, `component-models.json`, `component-filters.json`. See [AI Governance Rules (Backend)](#ai-governance-rules-backend).\n\n**Reference Examples:**\n- Simple block: See `hero` definition in `component-definition.json` (lines 145-159)\n- Complex block: See `cards` and `card` definitions in `component-definition.json` (lines 85-114)\n- Models: See `hero` model in `component-models.json` (lines 192-217)\n- Filters: See `cards` filter in `component-filters.json` (lines 21-26)\n\n### Configuration Flow\n\n```\n1. Developer adds block configuration:\n   - Create blocks/<block-name>/_<block-name>.json with definition, model, filter\n   - Run npm run build:json → root files (component-definition.json, etc.) are updated\n   ↓\n2. Author opens AEM page editor\n   - XWalk reads component-definition.json\n   - Finds block definition\n   ↓\n3. Authoring UI generated from:\n   - component-models.json (field definitions)\n   - component-filters.json (nesting rules)\n   ↓\n4. Author configures block\n   - Fields mapped from model\n   - Validation applied\n   ↓\n5. Content saved to AEM\n   - Rendered as HTML; block JS uses index-based structure only (no reliance on data attributes)\n```\n\n**Reference:** `component-definition.json`, `component-models.json`, `component-filters.json`\n\n### Default Content vs Blocks\n\n**Default content** is content an author intuitively puts on a page without additional semantics: text, headings, links, and images. In AEM, this is implemented as components with simple, pre-defined models that serialize to Markdown and HTML.\n\n| Default Component | Model Fields |\n|-------------------|--------------|\n| **Text** | Rich text (lists, strong, italic) |\n| **Title** | Text, type (h1–h6) |\n| **Image** | Source, description |\n| **Button** | Text, title, url, type (default, primary, secondary) |\n\n**Blocks** require additional semantics and are decorated by JavaScript with stylesheets. Blocks must have explicit models so the authoring UI knows what options to present. Default content is part of the boilerplate; blocks are defined in `component-models.json` and `component-definition.json`.\n\n**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)\n\n---\n\n## Component Definition Structure\n\n**WARNING:** Do not implement custom AEM components. The Edge Delivery Services components provided by AEM are sufficient and offer guard rails. Custom components can break the markup contract between AEM and the delivery tier. Use `core/franklin/components/block/v1/block` and related resource types only.\n\n### Step-by-Step: Adding Configuration to Block-Level JSON\n\n**CRITICAL:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Add config to `blocks/<block-name>/_<block-name>.json`; run `npm run build:json`.\n\n#### Step 1: Create Block-Level JSON and Add Definition\n\n**Location:** Create or edit `blocks/<block-name>/_<block-name>.json`. Add the block definition (typically in a `definition` or `component-definition` section, per project convention).\n\n**Standard Block Definition:**\n\n```json\n{\n  \"title\": \"Block Name\",\n  \"id\": \"blockname\",\n  \"plugins\": {\n    \"xwalk\": {\n      \"page\": {\n        \"resourceType\": \"core/franklin/components/block/v1/block\",\n        \"template\": {\n          \"name\": \"BlockName\",\n          \"model\": \"blockname\"\n        }\n      }\n    }\n  }\n}\n```\n\n**Where to add:** In `blocks/<block-name>/_<block-name>.json`, add the definition object. The build merges it into `component-definition.json` under the `\"Blocks\"` group's `components` array.\n\n**Example definition (for block-level JSON):**\n```json\n{\n  \"groups\": [\n    {\n      \"title\": \"Blocks\",\n      \"id\": \"blocks\",\n      \"components\": [\n        {\n          \"title\": \"HeroComponent\",\n          \"id\": \"hero\",\n          \"plugins\": {\n            \"xwalk\": {\n              \"page\": {\n                \"resourceType\": \"core/franklin/components/block/v1/block\",\n                \"template\": {\n                  \"name\": \"Hero\",\n                  \"model\": \"hero\"\n                }\n              }\n            }\n          }\n        }\n        // Add your new block definition here\n      ]\n    }\n  ]\n}\n```\n\n**Reference:** `component-definition.json` lines 145-159 (hero example)\n\n### Block with Items (Parent + Child)\n\n**CRITICAL: Parent Block Configuration**\n\nParent blocks can have two configurations depending on whether they have authoring fields:\n\n1. **Parent Block WITHOUT Authoring Fields** (container only):\n   - Only needs `filter` to define which child components can be nested\n   - Example: `cards` block (no parent fields, only contains child `card` items)\n\n2. **Parent Block WITH Authoring Fields** (has configurable fields):\n   - **MUST have BOTH `model` AND `filter`**\n   - `model` enables authoring fields for the parent block\n   - `filter` defines which child components can be nested\n   - Example: `projectcards` block (has parent fields: classes, title, heading, description)\n\n**Parent Block Definition (WITH Authoring Fields):**\n```json\n{\n  \"title\": \"Parent Block\",\n  \"id\": \"parentblock\",\n  \"plugins\": {\n    \"xwalk\": {\n      \"page\": {\n        \"resourceType\": \"core/franklin/components/block/v1/block\",\n        \"template\": {\n          \"name\": \"ParentBlock\",\n          \"model\": \"parentblock\",    // ✅ REQUIRED if parent has authoring fields\n          \"filter\": \"parentblock\"     // ✅ REQUIRED to allow child items\n        }\n      }\n    }\n  }\n}\n```\n\n**Parent Block Definition (WITHOUT Authoring Fields):**\n```json\n{\n  \"title\": \"Parent Block\",\n  \"id\": \"parentblock\",\n  \"plugins\": {\n    \"xwalk\": {\n      \"page\": {\n        \"resourceType\": \"core/franklin/components/block/v1/block\",\n        \"template\": {\n          \"name\": \"ParentBlock\",\n          \"filter\": \"parentblock\"     // ✅ Only filter needed (no model)\n        }\n      }\n    }\n  }\n}\n```\n\n**Child Item Definition:**\n```json\n{\n  \"title\": \"Item\",\n  \"id\": \"item\",\n  \"plugins\": {\n    \"xwalk\": {\n      \"page\": {\n        \"resourceType\": \"core/franklin/components/block/v1/block/item\",\n        \"template\": {\n          \"name\": \"Item\",\n          \"model\": \"item\"             // ✅ REQUIRED for child items (defines fields)\n        }\n      }\n    }\n  }\n}\n```\n\n**Both definitions go in the same `components` array**\n\n**Key Points:**\n- If parent block has fields in `component-models.json`, it **MUST** have `model` in template\n- If parent block has no fields, it only needs `filter` (no `model`)\n- Child items always need `model` (they always have fields)\n- The `model` value must match the `id` in `component-models.json`\n\n---\n\n## Field Configuration\n\n### Field Definition Basics\n\nEvery field object supports these key properties. The `component` and `name` properties are required; others are optional.\n\n| Property | Purpose |\n|----------|---------|\n| `component` | Defines what kind of UI control to render (see [Field Component Types](#field-component-types) below) |\n| `name` | Where the data is stored; must match the structure contract for index-based access |\n| `label` | Title shown to the author in the properties panel |\n| `description` | Optional description or help text for the author |\n| `value` | Default or placeholder value |\n| `valueType` | Type of data: `string`, `number`, `boolean`, etc. |\n| `required` | When true, field must have a value before save |\n| `readOnly` | When true, field is displayed but not editable |\n| `hidden` | When true, field is hidden from the author |\n| `multi` | When true, allows multiple values (e.g., `reference` for multiple assets) |\n| `validation` | Rules for user input (see [Validation Patterns](#validation-patterns) below) |\n\n**Note:** Underscores (`_`) are not allowed in field names for some plugins. Use camelCase (e.g., `imageAlt` not `image_alt`).\n\n**Reference:** [Adobe Experience League — Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types)\n\n### Field Component Types\n\nThese define how the field is rendered in the Universal Editor properties panel. Each type may offer additional configuration options (e.g., `options` for select, `rootPath` for reference).\n\n| Component Type | Purpose |\n|----------------|---------|\n| `text` | Single-line text input |\n| `richtext` | Rich text editor (bold, links, etc.) |\n| `number` | Numeric input |\n| `boolean` | True/false toggle (checkbox) |\n| `select` | Dropdown with single selection |\n| `multiselect` | Dropdown with multiple selection |\n| `radio-group` | Single choice among multiple options (radio buttons) |\n| `checkbox-group` | Multiple checkboxes |\n| `reference` | Asset picker (images, documents, etc.) |\n| `aem-content` | Picks any AEM content (pages, assets) |\n| `aem-tag` | Tag picker UI |\n| `aem-content-fragment` | Content Fragment picker |\n| `aem-experience-fragment` | Experience Fragment picker |\n| `date-time` | Date and/or time input |\n| `container` | Groups nested fields; supports multifields |\n| `tab` | Separates fields into tabbed sections in the UI |\n| `custom-asset-namespace:custom-asset` | DAM asset picker (project-specific) |\n\n**Commonly used in EDS blocks:** `text`, `richtext`, `reference`, `aem-content`, `select`, `multiselect`, `boolean`, `tab`, `container`\n\n**Reference:** `component-models.json` (comprehensive examples)\n\n### Validation Patterns\n\n```json\n{\n  \"component\": \"text\",\n  \"name\": \"fieldName\",\n  \"label\": \"Field Label\",\n  \"validation\": {\n    \"maxLength\": 100,\n    \"customErrorMsg\": \"Error message\"\n  }\n}\n```\n\n**Validation Types:**\n- `maxLength` - Character limit\n- `maxSize` - Size limit (for text fields)\n- `minLength` - Minimum length\n- `regExp` - Regular expression\n- `customErrorMsg` - Custom error message\n- `rootPath` - Asset path restriction (for custom-asset)\n\n**Reference:** `component-models.json` lines 159, 1156, 1166, 911\n\n### Adding Model to Block-Level JSON\n\n**Location:** Add the model to your block's `blocks/<block-name>/_<block-name>.json` file. The build merges it into `component-models.json`.\n\n**Critical: Field Order Determines HTML Structure**\n\nSee [AI Governance Rules (Backend)](#ai-governance-rules-backend). Field at index N → `block.children[N]` in generated HTML. Plan field order to match the index-based access pattern in `decorate()`; document the structure contract in code.\n\n**Critical: Validate Field Order with User-Provided HTML**\n\nSee [AI Governance Rules (Backend)](#ai-governance-rules-backend). Obtain user-provided HTML from Universal Editor before frontend work. Do not assume structure matches the model.\n\n**Common Issues to Watch For:**\n- **Empty fields may not generate cells:** If a field is empty, AEM may skip generating a cell for it, shifting subsequent field indices\n- **Optional fields may not exist:** If a parent block has an optional title field and it's empty, there may be no title row at all\n- **Field order may differ:** The actual HTML structure may differ from your model if fields are conditionally rendered\n\n**Example:** If `imageAlt` field is empty, AEM might not generate a cell for it, so:\n- Expected: `cells[0]=image, cells[1]=imageAlt, cells[2]=badge`\n- Actual: `cells[0]=image, cells[1]=badge` (imageAlt cell missing)\n\n**Solution:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Also: [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).\n\n**Model Structure:**\n\n```json\n{\n  \"id\": \"blockname\",\n  \"fields\": [\n    {\n      \"component\": \"text\",\n      \"name\": \"title\",\n      \"label\": \"Title\",\n      \"valueType\": \"string\"\n    },\n    {\n      \"component\": \"richtext\",\n      \"name\": \"text\",\n      \"label\": \"Text\",\n      \"value\": \"\",\n      \"valueType\": \"string\"\n    }\n  ]\n}\n```\n\n**Where to add:** In your block's `_<block-name>.json` file. The build merges the model into `component-models.json`.\n\n**Example from codebase:**\n```json\n[\n  {\n    \"id\": \"page-metadata\",\n    \"fields\": [...]\n  },\n  {\n    \"id\": \"hero\",\n    \"fields\": [\n      {\n        \"component\": \"reference\",\n        \"valueType\": \"string\",\n        \"name\": \"image\",\n        \"label\": \"Image\",\n        \"multi\": false\n      },\n      {\n        \"component\": \"text\",\n        \"valueType\": \"string\",\n        \"name\": \"imageAlt\",\n        \"label\": \"Alt\",\n        \"value\": \"\"\n      },\n      {\n        \"component\": \"richtext\",\n        \"name\": \"text\",\n        \"value\": \"\",\n        \"label\": \"Text\",\n        \"valueType\": \"string\"\n      }\n    ]\n  }\n  // Add your new model here\n]\n```\n\n**Important:** The `id` field must match the `model` value in the definition's `template.model` property.\n\n**Reference:** `component-models.json` lines 192-217 (hero model example)\n\n### Field Condition Patterns\n\n```json\n{\n  \"component\": \"text\",\n  \"name\": \"conditionalField\",\n  \"label\": \"Conditional Field\",\n  \"condition\": {\n    \"===\": [\n      { \"var\": \"otherField\" },\n      true\n    ]\n  }\n}\n```\n\n**Reference:** `component-models.json` lines 1197-1204\n\n### Multi-Fields and Composite Multi-Fields\n\nUse `multi: true` to allow multiple values for a field. Use a `container` with `multi: true` and nested fields for structured lists.\n\n**Rendering behavior:**\n- **Single semantic elements** (plain text, links, images): Rendered as `<ul><li>` list\n- **Composite elements** (text + richtext + links): Rendered as flat list with `<hr>` separators\n\n**Examples:**\n- `reference` with `multi: true` → Multiple images or assets\n- `text` with `multi: true` → Keyword list\n- `container` with `multi: true` and nested `reference` + `text` → Image carousel with alt text per item\n\n**Note:** Multi-fields and composite multi-fields may be early-access features. Verify availability in your AEM environment.\n\n**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)\n\n---\n\n## AEM Rendering Mechanics\n\nAEM infers semantics from field values and uses naming conventions to combine fields. Understanding these mechanics helps you design models that produce the expected HTML.\n\n### Type Inference\n\nAEM infers semantic meaning from values:\n\n| Value Type | Inference | Rendered As |\n|------------|-----------|-------------|\n| **Image reference** | MIME type starts with `image/` | `<picture><img src=\"...\"></picture>` |\n| **Link reference** | Non-image ref, or starts with `https?://` or `#` | `<a href=\"...\">...</a>` |\n| **Rich text** | Trimmed value starts with `p`, `ul`, `ol`, `h1`–`h6` | Rendered as HTML |\n| **Class names** | `classes` property | Block options in table header |\n| **Value lists** | Multi-value, first value not above | Comma-separated list |\n| **Other** | — | Plain text |\n\n### Field Collapse\n\nProperties ending with `Title`, `Type`, `MimeType`, `Alt`, or `Text` (case sensitive) are collapsed into the preceding property as attributes:\n\n| Base + Suffix | Result |\n|---------------|--------|\n| `image` + `imageAlt` | Single `<picture>` with `alt` attribute |\n| `link` + `linkTitle` + `linkText` + `linkType` | Single `<a>` with title, text, type |\n| `heading` + `headingType` | Single `<h2>` (or h1–h6) |\n\n**Example:** `image` and `imageAlt` in the same row produce one cell with `<picture><img src=\"...\" alt=\"...\"></picture>`.\n\n### Element Grouping\n\nUse `groupName_fieldName` (underscore) to group multiple fields into a single cell:\n\n- `teaserText_subtitle`, `teaserText_title`, `teaserText_description` → One cell with combined content\n- `classes_background`, `classes_fullwidth` → Block options (e.g., `class=\"teaser light fullwidth\"`)\n\nFor block options, `classes` can be boolean (adds property name as class) or text/array.\n\n**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)\n\n---\n\n## Block Structure Variants\n\n### Simple Blocks\n\nOne row per field, one or more cells per row. Field order in the model → row order in HTML.\n\n### Key-Value Blocks\n\nSet `key-value: true` for table-like representation (e.g., section metadata). Each row has a key cell and a value cell.\n\n**Example:** Section metadata with `source`, `keywords`, `limit` renders as key-value pairs.\n\n### Container Blocks\n\nParent block with child items. Parent properties render as rows first; each child is a row with properties as columns.\n\n### Columns Block\n\n**Limitations:** The columns block (`core/franklin/components/columns/v1/columns`) has no content modeling. It only supports `rows`, `columns`, and `classes` (or `classes_*`). You can only add default content (text, title, image, link/button) to cells.\n\n### Sections and Section Metadata\n\nSections use resource type `core/franklin/components/section/v1/section`. The section model defines section metadata. If the section model is not empty, a key-value metadata block is automatically appended to the section. The default section model ID is `section`; use it to add styles, background image, or other metadata fields.\n\n### Page Metadata\n\nCreate a model with ID `page-metadata` for custom page metadata (e.g., theme, custom meta tags). For template-specific metadata, create models named `<template>-metadata` where `template` matches the template metadata property value.\n\n---\n\n## Resource Types\n\n### Available Resource Types\n\n- **`core/franklin/components/block/v1/block`** - Standard block\n- **`core/franklin/components/block/v1/block/item`** - Block item (nested)\n- **`core/franklin/components/section/v1/section`** - Section container\n- **`core/franklin/components/columns/v1/columns`** - Columns layout\n- **`core/franklin/components/button/v1/button`** - Button component\n- **`core/franklin/components/image/v1/image`** - Image component\n\n**Reference:** `component-definition.json`\n\n---\n\n## Filter/Nesting Rules\n\n### Adding Filters to Block-Level JSON\n\n**Location:** Add the filter to your block's `blocks/<block-name>/_<block-name>.json` file. The build merges it into `component-filters.json`.\n\n**Filter Configuration:**\n\n```json\n{\n  \"id\": \"parentblock\",\n  \"components\": [\"item\", \"linkField\"]\n}\n```\n\n**Where to add:** In your block's `_<block-name>.json` file. The build merges the filter into `component-filters.json`.\n\n**Example from codebase:**\n```json\n[\n  {\n    \"id\": \"main\",\n    \"components\": [\"section\"]\n  },\n  {\n    \"id\": \"section\",\n    \"components\": [\"text\", \"image\", \"button\", \"title\", \"hero\", \"cards\", \"columns\", \"fragment\"]\n  },\n  {\n    \"id\": \"cards\",\n    \"components\": [\"card\"]\n  }\n  // Add your new filter here\n]\n```\n\n**Reference:** `component-filters.json` lines 21-26 (cards filter example)\n\n---\n\n## Reusable Models\n\n**Location:** `models/`\n\n- **`_button.json`** - Button field definition\n- **`_image.json`** - Image field definition\n- **`_title.json`** - Title field definition\n- **`_text.json`** - Text field definition\n- **`_section.json`** - Section field definition\n\n**Usage:** Reference in XWalk config using JSON pointer or include fields directly\n\n**Reference:** `models/_button.json`, `models/_image.json`\n\n---\n\n## XWalk Configuration Template\n\n### Complete Configuration Example\n\nAdd definition, model, and filter to `blocks/<block-name>/_<block-name>.json`. Structure may vary by project; the build merges these into the root files.\n\n**Definition (merged into component-definition.json):**\n\n```json\n{\n  \"title\": \"Block Name\",\n  \"id\": \"blockname\",\n  \"plugins\": {\n    \"xwalk\": {\n      \"page\": {\n        \"resourceType\": \"core/franklin/components/block/v1/block\",\n        \"template\": {\n          \"name\": \"BlockName\",\n          \"model\": \"blockname\"\n        }\n      }\n    }\n  }\n}\n```\n\n**Model (merged into component-models.json):**\n\n```json\n{\n  \"id\": \"blockname\",\n  \"fields\": [\n    {\n      \"component\": \"text\",\n      \"name\": \"title\",\n      \"label\": \"Title\",\n      \"valueType\": \"string\"\n    },\n    {\n      \"component\": \"richtext\",\n      \"name\": \"text\",\n      \"label\": \"Text\",\n      \"value\": \"\",\n      \"valueType\": \"string\"\n    }\n  ]\n}\n```\n\n**Filter (merged into component-filters.json, if block has nested items):**\n\n```json\n{\n  \"id\": \"blockname\",\n  \"components\": [\"item\"]\n}\n```\n\n**After adding config:** Run `npm run build:json` to update the root files.\n\n**Reference:** Check existing blocks for the exact block-level JSON structure used in your project.\n\n---\n\n## Configuration Best Practices\n\n### ✅ XWalk Configuration Best Practices\n\n- ✅ **DO:** Add definitions, models, and filters to block-level JSON (`blocks/<block-name>/_<block-name>.json`)\n- ✅ **DO:** Run `npm run build:json` after adding or updating block config\n- ✅ **DO:** Use consistent naming between definition ID and model ID\n- ✅ **DO:** Add validation rules for user input\n- ✅ **DO:** Use reusable models from `models/` directory when possible (copy fields)\n- ✅ **DO:** Set appropriate resource types\n- ✅ **DO:** Keep JSON syntax valid (use a JSON validator)\n\n### ❌ XWalk Configuration Anti-patterns\n\n- ❌ **DON'T:** Edit `component-definition.json`, `component-models.json`, or `component-filters.json` directly — use block-level JSON and run build\n- ❌ **DON'T:** Skip validation rules\n- ❌ **DON'T:** Use inconsistent naming between definition ID and model ID\n- ❌ **DON'T:** Mix resource types incorrectly\n- ❌ **DON'T:** Forget to add all three parts (definition, model, filter if needed)\n\n**Next step:** [Part 3: Frontend Code Generation](#part-3-frontend-code-generation) — generate JavaScript and CSS based on user-provided HTML (after Step 2 is complete).\n\n---\n\n# Part 3: Frontend Code Generation\n\nThis section covers all frontend implementation aspects: JavaScript and CSS. HTML is generated automatically by AEM from XWalk configuration. **Do this after Step 2 (user provides semantic HTML).**\n\n**Prerequisites:** [Part 2 (Backend)](#part-2-backend-code-generation) complete; [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) — user must provide actual HTML from Universal Editor.\n\n---\n\n## Part 3a: Core Concepts\n\n### Frontend Overview\n\n### Block Types Supported\n\n1. **Simple Blocks** - Single content blocks\n   - Example: `hero`, `fragment`, `textsection`\n   - See: `blocks/hero/`, `blocks/fragment/` in codebase\n\n2. **Complex Blocks with Items** - Parent block with nested items\n   - Example: `feature` → `featureItem`, `cards` → `card`\n   - See: `blocks/feature/`, `blocks/cards/` in codebase\n\n3. **Section-Level Blocks** - Section containers with nested blocks\n   - Example: `section`, `tabs`, `columns`\n   - See: `blocks/section/`, `blocks/tabs/` in codebase\n\n### Frontend Tech Stack\n\n- **JavaScript:** ES6+ modules\n- **CSS:** Standard CSS (no preprocessor)\n- **HTML:** Generated by AEM from XWalk configuration (no static HTML files); **index-based structure only** (no data attributes for selection)\n\n### Index-Based Implementation Standard\n\nAll block HTML and JavaScript must use **index-based implementation**: elements are identified by their **position (index)** in the DOM (e.g. `block.children[0]`, `row.children[1]`). Do **not** use `data-*` attributes for structure or for selecting content. Document the structure contract (which index means which content) in the block's code.\n\n---\n\n## Understanding the Structure Contract: How CSS/JS Work Without Static HTML\n\n### The Core Question: How Can You Write CSS/JS Without Knowing HTML Structure?\n\nSince EDS blocks have **no static HTML** (HTML is generated at runtime by AEM), you might wonder: *How can you write CSS and JavaScript without knowing the actual HTML structure?*\n\n**Answer:** The structure is determined by the **XWalk model field order**, and CSS targets the **transformed structure** created by JavaScript, not the initial AEM-generated HTML.\n\n### How XWalk Model Determines HTML Structure\n\n**Critical:** The order of fields in your `component-models.json` directly determines the HTML structure that AEM generates at runtime.\n\n**Mapping Rule:**\n- Each field in the model → One row (`<div>`) in generated HTML\n- Field order in model → Row order in HTML (index 0, 1, 2...)\n- Field values → Cells within that row\n\n**Example:**\n\n```json\n// component-models.json\n{\n  \"id\": \"hero\",\n  \"fields\": [\n    {\n      \"component\": \"reference\",\n      \"name\": \"image\"\n    },      // → block.children[0] (first row)\n    {\n      \"component\": \"text\",\n      \"name\": \"imageAlt\"\n    },     // → block.children[0].children[1] (first row, second cell)\n    {\n      \"component\": \"richtext\",\n      \"name\": \"text\"\n    }      // → block.children[1] (second row)\n  ]\n}\n```\n\n**Generated HTML (at runtime by AEM):**\n\n```html\n<div class=\"hero\">\n  <div>                    <!-- block.children[0] = image row -->\n    <div>image-url</div>   <!-- cell 0 = image value -->\n    <div>alt-text</div>    <!-- cell 1 = imageAlt value -->\n  </div>\n  <div>                    <!-- block.children[1] = text row -->\n    <div>Rich text...</div> <!-- cell 0 = text value -->\n  </div>\n</div>\n```\n\n**Key Point:** The field order in your XWalk model **is** the structure contract. You know the structure because you define it in the model.\n\n### CSS and JavaScript Development Strategy\n\n#### JavaScript (`decorate()` function) Workflow:\n\n1. **Receives** the AEM-generated HTML structure (based on XWalk model field order)\n2. **Extracts** data using index-based access (knowing the field order from the model)\n3. **Transforms** to the final desired structure\n4. **Adds CSS classes** to the transformed elements for styling\n\n**Example:**\n\n```javascript\nexport default function decorate(block) {\n  // Structure contract: field[0] = image, field[1] = text\n  const imageRow = block.children[0];        // First field = image\n  const textRow = block.children[1];         // Second field = text\n  \n  const imageSrc = imageRow?.children?.[0]?.textContent?.trim();\n  const text = textRow?.children?.[0]?.textContent?.trim();\n  \n  // Transform to final structure\n  const container = document.createElement('div');\n  container.classList.add('hero-container');  // CSS class for styling\n  \n  if (imageSrc) {\n    const img = document.createElement('img');\n    img.src = imageSrc;\n    img.classList.add('hero-image');  // CSS class for styling\n    container.appendChild(img);\n  }\n  \n  if (text) {\n    const textDiv = document.createElement('div');\n    textDiv.classList.add('hero-text');  // CSS class for styling\n    textDiv.textContent = text;\n    container.appendChild(textDiv);\n  }\n  \n  block.innerHTML = '';\n  block.appendChild(container);\n}\n```\n\n#### CSS Development Strategy:\n\n**Critical:** CSS should style the **final transformed structure** (after `decorate()` runs), **not** the initial AEM-generated HTML.\n\n**Why:** The initial AEM HTML is just raw data in a predictable structure. JavaScript transforms it into the final presentation structure, and that's what CSS should target.\n\n**Example:**\n\n```css\n/* ✅ CORRECT: Style the transformed structure */\n.hero-container {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n\n.hero-image {\n  width: 100%;\n  height: auto;\n}\n\n.hero-text {\n  font-size: 1.2rem;\n  line-height: 1.6;\n}\n\n/* ❌ WRONG: Don't style the initial AEM structure */\n/* .hero > div > div { ... } */\n```\n\n### Complete Development Workflow\n\n```\n1. Plan Structure Contract\n   ↓\n   Define field order in XWalk model\n   Document: \"field[0] = image, field[1] = text\"\n   ↓\n2. AEM Generates HTML (Runtime)\n   ↓\n   HTML structure matches field order\n   block.children[0] = first field\n   block.children[1] = second field\n   ↓\n3. JavaScript Transforms\n   ↓\n   decorate(block) receives AEM HTML\n   Extracts data by index (knowing field order)\n   Transforms to final structure\n   Adds CSS classes\n   ↓\n4. CSS Styles Final Structure\n   ↓\n   Targets transformed elements\n   Uses classes added by JavaScript\n   Styles the final DOM, not initial HTML\n```\n\n### Development Process Checklist\n\n1. **Generate Backend Configuration First:**\n   - [ ] Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json` (plan field order — this becomes structure contract)\n   - [ ] Run `npm run build:json`\n   - [ ] Deploy to AEM/Universal Editor\n\n2. **Request User to Provide Semantic HTML (MANDATORY):**\n   - [ ] Ask user to author the block in Adobe Universal Editor\n   - [ ] User provides the actual generated HTML (from view source or DevTools)\n   - [ ] Document structure contract from user-provided HTML (field indices, empty field behavior, etc.)\n   - [ ] Do NOT generate HTML — user provides it from Universal Editor\n\n3. **Write JavaScript (based on user-provided HTML):**\n   - [ ] Document structure contract in JSDoc (based on user-provided HTML)\n   - [ ] Access elements by index based on actual field order from user-provided HTML\n   - [ ] Transform to final structure\n   - [ ] Add CSS classes to transformed elements\n   - [ ] Test with user-provided HTML\n\n4. **Write CSS (based on user-provided HTML):**\n   - [ ] Target the transformed structure (after `decorate()` runs)\n   - [ ] Use classes added by JavaScript\n   - [ ] Test with user-provided HTML to verify styling\n   - [ ] Do NOT style the initial AEM-generated HTML structure\n\n### Key Takeaways\n\n- ✅ **You DO know the structure** - it's defined by your XWalk model field order\n- ✅ **JavaScript transforms** the AEM HTML to the final structure\n- ✅ **CSS targets** the transformed structure, not the initial HTML\n- ✅ **Field order = Structure contract** - document it clearly\n- ❌ **Don't style** the initial AEM-generated HTML directly\n- ❌ **Don't rely** on data attributes for structure (use index-based access)\n\n---\n\n## Frontend File Structure\n\n### Block Files\n\n```\nblocks/<block-name>/\n├── <block-name>.js              # Block JavaScript (FRONTEND)\n└── <block-name>.css             # Block Styles (FRONTEND)\n```\n\n**Critical: One JS and One CSS per Block — No Duplicates**\n\nGenerate **exactly one** JavaScript file and **exactly one** CSS file per block. The file names must match the block folder name exactly (e.g., for `blocks/social-promo/`, use `social-promo.js` and `social-promo.css`).\n\n- ✅ **Correct:** One `social-promo.js` and one `social-promo.css` in `blocks/social-promo/`\n- ❌ **Wrong:** Creating both `social-promo.js` and `socialpromo.js`, or both `social-promo.css` and `socialpromo.css` — never create two files with different naming (hyphenated vs non-hyphenated).\n\n**Note:** EDS projects do not use static HTML files. HTML is generated automatically by AEM from the XWalk configuration when content is authored.\n\n**Note:** XWalk configuration is added to block-level JSON files; the build updates root-level files (see Part 2):\n- `component-definition.json` - Component definitions\n- `component-models.json` - Field models\n- `component-filters.json` - Nesting rules\n\n### Critical: Parent-Child Blocks Use ONE Folder\n\n**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`, `relatedarticles` → `relatedarticle`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.\n\n**Pattern:**\n- **XWalk Config (Backend):** Parent block definition + Child block definition (two separate definitions in JSON)\n- **Frontend Files:** ONE folder `blocks/<parent-name>/` with ONE `decorate()` function that handles both parent and child items\n\n**Example:**\n- `blocks/cards/` - ONE folder\n  - `cards.js` - Handles parent container AND all child card items in one `decorate()` function\n  - `cards.css` - Styles for parent container AND all child card items\n- `blocks/relatedarticles/` - ONE folder\n  - `relatedarticles.js` - Handles section title (parent) AND all article items (children) in one `decorate()` function\n  - `relatedarticles.css` - Styles for section title AND all article items\n\n**Why:** The parent block's `decorate()` function receives all child items as `block.children`, so it processes everything in one place. There is no separate child block folder or files.\n\n**Reference:** `blocks/cards/cards.js`, `blocks/relatedarticles/relatedarticles.js`\n\n### Shared Resources\n\n```\nshared-components/               # Reusable frontend utilities\n    ├── Heading.js\n    ├── ImageComponent.js\n    ├── ButtonCTA.js\n├── SvgIcon.js\n    └── Utility.js\n```\n\n---\n\n## Part 3b: JavaScript Implementation\n\n**One JS file per block:** Create only `<block-name>.js` (matching the folder name). Never create two JS files (e.g., `social-promo.js` and `socialpromo.js`).\n\n### Block Initialization Flow\n\n```\n1. Page Load\n   ↓\n2. decorateSections() - Scans for sections\n   ↓\n3. decorateBlock() - Marks block as 'initialized'\n   - Adds 'block' class and block metadata\n   - Calls wrapTextNodes() - Wraps text content in <p> tags\n   ↓\n4. loadBlock() - Async loading\n   - Loads CSS: <block-name>.css\n   - Imports JS: <block-name>.js\n   - Calls default export: decorate(block)\n   ↓\n5. Block Status: 'loaded'\n```\n\n**Critical:** `wrapTextNodes()` runs BEFORE `decorate()` and wraps text content in `<p>` tags. Your extraction logic must account for this:\n- Links may be wrapped: `<div><p><a href=\"...\">`\n- Text may be wrapped: `<div><p>Text content</p></div>`\n- Always check for both direct children and wrapped elements when extracting\n\n**Reference:** `scripts/aem.js` lines 777-826, `scripts/aem.js` lines 378-425 (wrapTextNodes function)\n\n### Block Status Lifecycle\n\nBlocks progress through: `initialized` → `loading` → `loaded`. Check `block.dataset.blockStatus` before operations that should run once.\n\n**Reference:** `scripts/aem.js` lines 777-826\n\n### Index-Based Structure and Data Extraction\n\n**Standard:** Use **index-based implementation** only. Do not rely on data attributes for structure or selection. All elements are identified by their **position (index)** in the DOM. This keeps HTML semantic, avoids brittle attribute coupling, and follows a clear structure contract.\n\n#### Structure Contract (Index Convention)\n\nDefine a fixed order of direct children so that index = meaning. Document this contract in the block’s comment or README.\n\n**Simple block (single row of cells):**\n- `block.children[0]` = first row (often title or primary content)\n- `block.children[0].children[0]` = first cell, `block.children[0].children[1]` = second cell, etc.\n\n**Multi-row block (rows as direct children):**\n- `block.children[0]` = row 1 (e.g. title row)\n- `block.children[1]` = row 2 (e.g. description row)\n- `block.children[2]` = row 3 (e.g. CTA row)\n- Each row’s cells: `row.children[0]`, `row.children[1]`, …\n\n**Block with items (each row = one item):**\n- `block.children` = list of item rows\n- For each row: `row.children[0]` = field 1, `row.children[1]` = field 2, etc.\n\n#### Index-Based Data Extraction Patterns\n\n```javascript\n// Simple block: first row, first cell = title\nconst firstRow = block.children[0];\nconst titleElement = firstRow?.children?.[0];\nconst title = titleElement?.textContent?.trim() || '';\n\n// Multi-row: row index = meaning (document in block comment)\nconst rows = [...block.children];\nconst title = rows[0]?.children?.[0]?.textContent?.trim() || '';\nconst description = rows[1]?.children?.[0]?.textContent?.trim() || '';\n\n// Items: each direct child is one item; cells by index\nconst items = Array.from(block.children).map((row) => ({\n  title: row.children?.[0]?.textContent?.trim() ?? '',\n  description: row.children?.[1]?.textContent?.trim() ?? '',\n  link: row.children?.[2]?.querySelector?.('a')?.getAttribute?.('href') ?? ''\n}));\n\n// Link row: 3 cells = text, icon, target (by index)\nconst linkRow = block.children[2];\nif (linkRow?.children?.length >= 3) {\n  const [linkCell, iconCell, targetCell] = linkRow.children;\n  const linkData = {\n    text: linkCell?.textContent?.trim(),\n    url: linkCell?.querySelector?.('a')?.getAttribute?.('href'),\n    icon: iconCell?.textContent?.trim()?.replace('-', ''),\n    target: targetCell?.textContent?.trim()\n  };\n}\n\n// Image: first cell = image (anchor or img), second cell = alt text\nconst imageRow = block.children[0];\nconst imageCell = imageRow?.children?.[0];\nconst altCell = imageRow?.children?.[1];\nconst imageSrc = imageCell?.querySelector?.('img')?.getAttribute?.('src')\n  || imageCell?.querySelector?.('a')?.getAttribute?.('href');\nconst altText = altCell?.textContent?.trim() || '';\n\n// Safe access with fallbacks\nconst value = element?.textContent?.trim() ?? 'default';\n```\n\n**Best practice:** Use optional chaining (`?.`) and nullish coalescing (`??`) for index-based access. Document the index contract at the top of the block's `decorate()` function.\n\n#### Robust Data Extraction with Fallbacks\n\n**Critical:** After `decorateBlock()` runs, `wrapTextNodes()` wraps text content in `<p>` tags. Always account for wrapped elements when extracting data.\n\n**Link Extraction with Fallbacks:**\n```javascript\n// ✅ CORRECT: Handle wrapped links and use .href as fallback\nconst linkCell = row?.children?.[0];\n// Check for link in direct children OR wrapped in <p>\nconst linkElement = linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a');\n// Use .href as fallback (resolves relative URLs)\nconst linkUrl = linkElement?.getAttribute?.('href') || linkElement?.href || '';\n```\n\n**Text Extraction with Fallbacks:**\n```javascript\n// ✅ CORRECT: Extract text from cell or wrapped <p> tag\nconst textCell = row?.children?.[0];\n// Try direct textContent first, then check for wrapped <p>\nlet text = textCell?.textContent?.trim() || '';\nif (!text) {\n  text = textCell?.querySelector?.('p')?.textContent?.trim() || '';\n}\n```\n\n**CTA Extraction Pattern (with Multiple Fallbacks):**\n```javascript\n// CTA row: link cell, text cell, target cell\nconst ctaRow = rows[3];\nconst ctaLinkCell = ctaRow?.children?.[0];\nconst ctaTextCell = ctaRow?.children?.[1];\nconst ctaTargetCell = ctaRow?.children?.[2];\n\n// Extract link - handle wrapped elements and use .href fallback\nconst ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');\nconst ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';\n\n// Extract text - try text cell first, then fallback to link text (if not a URL)\nlet ctaText = ctaTextCell?.textContent?.trim() || \n              ctaTextCell?.querySelector?.('p')?.textContent?.trim() || '';\nif (!ctaText && ctaLinkElement) {\n  const linkText = ctaLinkElement.textContent?.trim() || '';\n  // Only use link text if it's not a URL (avoid using \"/path/to/page\" as button text)\n  ctaText = (linkText.startsWith('/') || linkText.includes('http')) ? '' : linkText;\n}\n\nconst ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';\n\n// Render button if link exists (text is optional with fallbacks)\nif (ctaLink) {\n  const button = document.createElement('a');\n  button.href = ctaLink;\n  button.textContent = ctaText || 'Learn more';  // Final fallback\n  button.target = ctaTarget;\n  // ...\n}\n```\n\n**Why Fallbacks Matter:**\n- `wrapTextNodes()` wraps content in `<p>` tags before `decorate()` runs\n- `getAttribute('href')` may return empty string; `.href` resolves relative URLs\n- Text cells may be empty; link text can serve as fallback (but filter out URLs)\n- Always render if link exists; text can have multiple fallback levels\n\n### Reusable Frontend Components\n\n**Location:** `shared-components/`\n\n1. **Heading.js** - Dynamic heading generator\n   - Usage: `Heading({ level: 2, text: \"Title\", className: \"class\" })`\n   - Reference: `shared-components/Heading.js`\n\n2. **ImageComponent.js** - Responsive image component\n   - Usage: `ImageComponent({ src, alt, className, breakpoints })`\n   - Reference: `shared-components/ImageComponent.js`\n\n3. **ButtonCTA.js** - CTA button component\n   - Usage: `ButtonCTA({ link, text, type, target })`\n   - Reference: `shared-components/ButtonCTA.js`\n\n4. **Utility.js** - Utility functions\n   - `stringToHTML()` - Convert string to DOM element (sanitizes HTML)\n   - `isMobile()` - Mobile detection\n   - Reference: `shared-components/Utility.js`\n\n5. **SvgIcon.js** - SVG icon component\n   - Reference: `shared-components/SvgIcon.js`\n   - **Icons source:** Fetch SVG markup from Figma via Figma MCP; save as `icons/<name>.svg` using the inline SVG format (see [Using Figma MCP Tools](#using-figma-mcp-tools) → Fetch SVG Icons from Figma)\n\n### Frontend Utility Functions\n\n**From `scripts/aem.js`:**\n- `createOptimizedPicture()` - Optimized image creation\n- `loadBlock()` - Block loading mechanism\n- `loadSections()` - Load sections asynchronously (for fragments)\n- `getMetadata()` - Extract metadata from page\n\n**From `scripts/scripts.js`:**\n- `moveInstrumentation(from, to)` - **Critical:** When transforming DOM, use when moving or replacing elements so that any authoring instrumentation (e.g. from AEM) is preserved on the new structure. Always use when replacing elements.\n\n**Reference:** `scripts/aem.js`, `scripts/scripts.js` lines 45-53\n\n### JavaScript Templates\n\n#### Synchronous Block Template (Index-Based)\n\n```javascript\nimport Heading from '../../shared-components/Heading.js';\nimport ImageComponent from '../../shared-components/ImageComponent.js';\nimport { moveInstrumentation } from '../../scripts/scripts.js';\nimport stringToHTML from '../../shared-components/Utility.js';\n\n/**\n * Structure contract: block.children[0] = title row, block.children[1] = content row.\n * @param {Element} block The block element\n */\nexport default function decorate(block) {\n  // Index-based extraction: first row, first cell = title\n  const firstRow = block.children[0];\n  const titleElement = firstRow?.children?.[0];\n  const title = titleElement?.textContent?.trim() || '';\n\n  const container = document.createElement('div');\n  container.classList.add('container');\n\n  if (title && titleElement) {\n    const heading = Heading({ level: 2, text: title, className: 'title' });\n    const parsedHeading = stringToHTML(heading);\n    moveInstrumentation(titleElement, parsedHeading);\n    container.appendChild(parsedHeading);\n  }\n\n  block.innerHTML = '';\n  block.appendChild(container);\n}\n```\n\n**Reference:** `blocks/hero/hero.js`, `blocks/feature/feature.js`\n\n#### Async Block Template (for External Resources)\n\n```javascript\nimport { loadFragment } from '../fragment/fragment.js';\nimport { loadSections } from '../../scripts/aem.js';\n\n/**\n * Decorates the block (async for loading external content)\n * @param {Element} block The block element\n */\nexport default async function decorate(block) {\n  const link = block.querySelector('a');\n  const path = link ? link.getAttribute('href') : block.textContent.trim();\n  \n  try {\n    const fragment = await loadFragment(path);\n    if (fragment) {\n      const fragmentSection = fragment.querySelector(':scope .section');\n      if (fragmentSection) {\n        block.classList.add(...fragmentSection.classList);\n        block.replaceChildren(...fragmentSection.childNodes);\n      }\n    }\n  } catch (error) {\n    // Handle error gracefully\n    console.error(`Failed to load fragment: ${path}`, error);\n  }\n}\n```\n\n## Recommended Patterns and Anti-Patterns\n\n**Reference:** See `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` for detailed patterns and anti-patterns.\n\n### Recommended Patterns\n\n#### Pattern 1: Standard Block Decoration (Index-Based)\n\n**Use Case:** Simple content blocks (hero, text sections)\n\n```javascript\n// Structure: block.children[0] = title row, block.children[1] = content row\nexport default function decorate(block) {\n  const rows = [...block.children];\n  const title = rows[0]?.children?.[0]?.textContent?.trim();\n\n  const wrapper = document.createElement('div');\n  wrapper.className = 'blockname-wrapper';\n  // ... build structure using index-based data\n\n  moveInstrumentation(block, wrapper);\n  block.replaceChildren(wrapper);\n}\n```\n\n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 1\n\n#### Pattern 2: Complex Block with Nested Items\n\n**Use Case:** Parent block with child items (cards → card)\n\n**Important:** Even though XWalk has parent-child definitions, the frontend uses ONE folder with ONE JS file. The `decorate()` function processes both parent and child items.\n\n```javascript\n/**\n * Cards Block\n * \n * Structure contract (index-based):\n * - block.children[0+] = Card item rows (each row = one card item)\n * \n * For each card item row:\n * - row.children[0] = Image cell\n * - row.children[1] = Text cell\n * \n * @param {Element} block The block element\n */\nexport default function decorate(block) {\n  const ul = document.createElement('ul');\n  [...block.children].forEach((row) => {\n    const li = document.createElement('li');\n    moveInstrumentation(row, li);  // CRITICAL\n    // ... transform row content (child item)\n    ul.append(li);\n  });\n  block.replaceChildren(ul);\n}\n```\n\n**Example with Parent Title + Child Items:**\n\n```javascript\n/**\n * Related Articles Block\n * \n * Structure contract (index-based):\n * - block.children[0] = Section title row (parent)\n * - block.children[1+] = Article item rows (children)\n * \n * @param {Element} block The block element\n */\nexport default function decorate(block) {\n  const rows = [...block.children];\n  \n  // Process parent: section title (first row)\n  const titleRow = rows[0];\n  const title = titleRow?.children?.[0]?.textContent?.trim() || '';\n  \n  // Process children: article items (remaining rows)\n  const articleRows = rows.slice(1);\n  \n  // Build container with title\n  const container = document.createElement('div');\n  if (title) {\n    const heading = document.createElement('h2');\n    heading.textContent = title;\n    container.appendChild(heading);\n  }\n  \n  // Process all child items\n  const articlesWrapper = document.createElement('div');\n  articleRows.forEach((row) => {\n    // Transform each child item row\n    const card = document.createElement('a');\n    // ... extract data and build card structure\n    articlesWrapper.appendChild(card);\n  });\n  \n  container.appendChild(articlesWrapper);\n  block.replaceChildren(container);\n}\n```\n\n**Key Points:**\n- ONE folder: `blocks/<parent-name>/`\n- ONE JS file: `<parent-name>.js` with ONE `decorate()` function\n- ONE CSS file: `<parent-name>.css` with styles for parent and children\n- Parent and child items are processed in the same `decorate()` function\n- Child items are accessed via `block.children[1+]` (after parent row at index 0)\n\n**See:** [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder) for full details.\n\n**Reference:** \n- `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2\n- `blocks/cards/cards.js` - Simple parent-child pattern\n- `blocks/relatedarticles/relatedarticles.js` - Parent title + child items pattern\n\n#### Pattern 3: Async Block with External Content\n\n**Use Case:** Blocks loading fragments or external content\n\n```javascript\nexport default async function decorate(block) {\n  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();\n  const content = await loadFragment(path);\n  if (content) {\n    block.replaceChildren(...content.childNodes);\n  }\n}\n```\n\n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 3\n\n#### Pattern 4: Interactive Block with Event Handlers\n\n**Use Case:** Blocks with user interaction (navigation, tabs)\n\n```javascript\nexport default async function decorate(block) {\n  // Setup DOM\n  // ...\n  \n  // Add event listeners\n  block.querySelector('.button').addEventListener('click', handleClick);\n  \n  // Media query listeners\n  const isDesktop = window.matchMedia('(min-width: 900px)');\n  isDesktop.addEventListener('change', handleResize);\n}\n```\n\n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 4\n\n#### Pattern 5: Image Optimization (Index-Based)\n\n**Use Case:** Blocks displaying images. Assume image row is first row; first cell contains picture/img.\n\n```javascript\nimport { createOptimizedPicture } from '../../scripts/aem.js';\nimport { moveInstrumentation } from '../../scripts/scripts.js';\n\n// In decorate function: image in first row, first cell\nconst imageRow = block.children[0];\nconst imageCell = imageRow?.children?.[0];\nconst altCell = imageRow?.children?.[1];\nconst altText = altCell?.textContent?.trim() || '';\n\n// Extract image source - handle wrapped elements\nconst pictureOrImg = imageCell?.querySelector?.('picture, img');\nif (pictureOrImg) {\n  const img = pictureOrImg.tagName === 'IMG' ? pictureOrImg : pictureOrImg.querySelector('img');\n  if (img) {\n    const optimizedPic = createOptimizedPicture(\n      img.src, \n      altText, \n      false, \n      [{ width: '750' }, { width: '1440' }]\n    );\n    moveInstrumentation(pictureOrImg, optimizedPic);\n    pictureOrImg.replaceWith(optimizedPic);\n  }\n}\n```\n\n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 5\n\n#### Pattern 6: CTA Button with Robust Extraction\n\n**Use Case:** Blocks with Call-to-Action buttons requiring link, text, and target fields.\n\n```javascript\n// CTA row: link cell (index 0), text cell (index 1), target cell (index 2)\nconst ctaRow = rows[3];\nconst ctaLinkCell = ctaRow?.children?.[0];\nconst ctaTextCell = ctaRow?.children?.[1];\nconst ctaTargetCell = ctaRow?.children?.[2];\n\n// Extract link - handle wrapped elements and use .href fallback\nconst ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');\nconst ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';\n\n// Extract text with multiple fallbacks\nlet ctaText = ctaTextCell?.textContent?.trim() || \n              ctaTextCell?.querySelector?.('p')?.textContent?.trim() || '';\nif (!ctaText && ctaLinkElement) {\n  const linkText = ctaLinkElement.textContent?.trim() || '';\n  // Only use link text if it's not a URL\n  ctaText = (linkText.startsWith('/') || linkText.includes('http')) ? '' : linkText;\n}\n\nconst ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';\n\n// Render button if link exists (text has fallbacks)\nif (ctaLink) {\n  const ctaButton = document.createElement('a');\n  ctaButton.href = ctaLink;\n  ctaButton.textContent = ctaText || 'Learn more';  // Final fallback\n  ctaButton.target = ctaTarget;\n  if (ctaTarget === '_blank') {\n    ctaButton.rel = 'noopener noreferrer';\n  }\n  if (ctaLinkCell) {\n    moveInstrumentation(ctaLinkCell, ctaButton);\n  }\n  // Append to container...\n}\n```\n\n**Key Points:**\n- Always use `.href` as fallback for `getAttribute('href')` (resolves relative URLs)\n- Check for wrapped `<p>` tags when extracting text\n- Use link text as fallback only if it's not a URL\n- Render button if link exists; text is optional with fallbacks\n- Always use `moveInstrumentation()` when replacing elements\n\n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 6\n\n#### Pattern 7: Carousel Block with Swiper\n\n**Use Case:** Blocks with carousel/slider behavior (cards, images, testimonials). Uses Swiper JS loaded via `loadScript()`/`loadCSS()` per EDS practice — no jQuery required.\n\n**EDS-specific requirements:**\n- Load Swiper in the block that needs it via `loadScript()`/`loadCSS()` from `scripts/aem.js` — do not add to `head.html`\n- Use `moveInstrumentation()` when transforming DOM (preserves AEM authoring)\n- Use index-based structure; document structure contract in JSDoc\n- Use `createOptimizedPicture()` for images in slides\n\n```javascript\nimport {\n  createOptimizedPicture,\n  loadCSS,\n  loadScript,\n} from '../../scripts/aem.js';\nimport { moveInstrumentation } from '../../scripts/scripts.js';\n\nconst SWIPER_CSS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';\nconst SWIPER_JS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';\n\n/**\n * Structure contract (index-based):\n * - block.children[0+] = Slide item rows (each row = one slide)\n * Each slide row: row.children[0] = image, row.children[1] = title, row.children[2] = description\n *\n * @param {Element} block The block element\n */\nexport default async function decorate(block) {\n  const rows = [...block.children];\n  if (rows.length < 2) return;\n\n  const swiperWrap = document.createElement('div');\n  swiperWrap.className = 'swiper blockname-swiper';\n  swiperWrap.innerHTML = `\n    <div class=\"swiper-wrapper\"></div>\n    <button type=\"button\" class=\"swiper-button-prev blockname-prev\" aria-label=\"Previous slide\"></button>\n    <button type=\"button\" class=\"swiper-button-next blockname-next\" aria-label=\"Next slide\"></button>\n    <div class=\"blockname-pagination swiper-pagination\"></div>\n  `;\n  const swiperWrapper = swiperWrap.querySelector('.swiper-wrapper');\n  const prevButton = swiperWrap.querySelector('.blockname-prev');\n  const nextButton = swiperWrap.querySelector('.blockname-next');\n  const paginationEl = swiperWrap.querySelector('.blockname-pagination');\n\n  rows.forEach((row) => {\n    const slide = document.createElement('div');\n    slide.className = 'swiper-slide blockname-slide';\n    const imgCell = row?.children?.[0]?.querySelector?.('picture, img');\n    const img = imgCell?.tagName === 'IMG' ? imgCell : imgCell?.querySelector?.('img');\n    const src = img?.src || img?.getAttribute?.('src') || '';\n    const alt = img?.alt || img?.getAttribute?.('alt') || '';\n    const title = row?.children?.[1]?.textContent?.trim() ?? '';\n    const desc = row?.children?.[2]?.textContent?.trim() ?? '';\n    if (src) {\n      const pic = createOptimizedPicture(src, alt, false, [{ width: '440' }, { width: '880' }]);\n      slide.appendChild(pic);\n    }\n    if (title) {\n      const h3 = document.createElement('h3');\n      h3.className = 'blockname-slide-title';\n      h3.textContent = title;\n      slide.appendChild(h3);\n    }\n    if (desc) {\n      const p = document.createElement('p');\n      p.className = 'blockname-slide-desc';\n      p.textContent = desc;\n      slide.appendChild(p);\n    }\n    moveInstrumentation(row, slide);\n    swiperWrapper.appendChild(slide);\n  });\n\n  moveInstrumentation(block, swiperWrap);\n  block.replaceChildren(swiperWrap);\n\n  await Promise.all([\n    loadCSS(SWIPER_CSS),\n    loadScript(SWIPER_JS),\n  ]);\n\n  const Swiper = globalThis.Swiper;\n  if (!Swiper) return;\n\n  const swiper = new Swiper(swiperWrap, {\n    grabCursor: true,\n    spaceBetween: 24,\n    navigation: {\n      nextEl: nextButton,\n      prevEl: prevButton,\n    },\n    pagination: {\n      el: paginationEl,\n      type: 'fraction',\n      clickable: true,\n    },\n    breakpoints: {\n      390: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 16 },\n      768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },\n      1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },\n      1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },\n    },\n  });\n}\n```\n\n**Key Points:**\n- Load Swiper via `loadScript()`/`loadCSS()` in the block — EDS pattern for third-party libs\n- Swiper is vanilla JS (no jQuery required)\n- Use `moveInstrumentation()` when transforming DOM\n- Responsive breakpoints match common EDS viewports (390, 768, 1280, 1920)\n- Use `createOptimizedPicture()` for slide images (EDS performance)\n\n**Reference:** `blocks/featurecardscarousel/featurecardscarousel.js`\n\n### Carousel Component Snippets (Swiper)\n\nReusable Swiper configuration snippets for EDS carousel blocks. Adapt to your block structure and naming.\n\n#### Snippet: Load Swiper (EDS Pattern)\n\n```javascript\nimport { loadCSS, loadScript } from '../../scripts/aem.js';\n\nconst SWIPER_CSS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';\nconst SWIPER_JS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';\n\n// In decorate():\nawait Promise.all([\n  loadCSS(SWIPER_CSS),\n  loadScript(SWIPER_JS),\n]);\n\nconst Swiper = globalThis.Swiper;\nif (!Swiper) return;\n```\n\n#### Snippet: Swiper Config (EDS Breakpoints)\n\n```javascript\nconst swiper = new Swiper(swiperWrap, {\n  grabCursor: true,\n  spaceBetween: 24,\n  navigation: {\n    nextEl: nextButton,\n    prevEl: prevButton,\n  },\n  pagination: {\n    el: paginationEl,\n    type: 'fraction',\n    clickable: true,\n  },\n  breakpoints: {\n    390: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 16 },\n    768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },\n    1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },\n    1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },\n  },\n});\n```\n\n#### Snippet: Swiper HTML Structure (EDS)\n\n```html\n<!-- Build in JS; Swiper expects this structure -->\n<div class=\"swiper blockname-swiper\">\n  <div class=\"swiper-wrapper\">\n    <div class=\"swiper-slide blockname-slide\">...</div>\n    <div class=\"swiper-slide blockname-slide\">...</div>\n  </div>\n  <button type=\"button\" class=\"swiper-button-prev blockname-prev\" aria-label=\"Previous slide\"></button>\n  <button type=\"button\" class=\"swiper-button-next blockname-next\" aria-label=\"Next slide\"></button>\n  <div class=\"blockname-pagination swiper-pagination\"></div>\n</div>\n```\n\n#### Snippet: Slide Change Handler (Sync Content)\n\nFor blocks that sync content (e.g. center image) when slide changes:\n\n```javascript\nswiper.on('slideChange', () => {\n  const idx = swiper.activeIndex;\n  const slide = swiper.slides[idx];\n  const img = centerImageWrap.querySelector('img');\n  if (slide?.dataset?.centerImage && img) {\n    img.src = slide.dataset.centerImage;\n    img.alt = slide.dataset.centerImageAlt || '';\n  }\n});\n\n// Click on slide to go to\nswiperWrap.querySelectorAll('.blockname-slide').forEach((el, idx) => {\n  el.addEventListener('click', () => swiper.slideTo(idx));\n});\n```\n\n#### Snippet: Autoplay (Configurable Delay)\n\n```javascript\n// carouselLagSec from authoring (e.g. 1–5, default 4)\nconst carouselLagSec = Math.min(5, Math.max(1, Number.parseInt(getText(rows[9]?.children?.[0]) || '4', 10) || 4));\n\nconst swiper = new Swiper(swiperWrap, {\n  // ... other options\n  autoplay: {\n    delay: carouselLagSec * 1000,\n    disableOnInteraction: false,\n  },\n});\n```\n\n### Anti-Patterns to Avoid\n\n#### ❌ Anti-Pattern 1: Skipping Instrumentation Preservation\n\n```javascript\n// ❌ WRONG - Loses AEM authoring attributes\nconst newElement = document.createElement('div');\nnewElement.innerHTML = block.innerHTML;\nblock.replaceChildren(newElement);\n\n// ✅ CORRECT - Preserves AEM authoring attributes\nconst newElement = document.createElement('div');\nmoveInstrumentation(block, newElement);\nwhile (block.firstElementChild) newElement.append(block.firstElementChild);\nblock.replaceChildren(newElement);\n```\n\n**Impact:** AEM authoring interface will not work correctly  \n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 1\n\n#### ❌ Anti-Pattern 2: Hardcoding Breakpoints\n\n```javascript\n// ❌ WRONG\nif (window.innerWidth >= 1024) { ... }\n\n// ✅ CORRECT - Use consistent breakpoint\nconst isDesktop = window.matchMedia('(min-width: 900px)');\nif (isDesktop.matches) { ... }\n```\n\n**Impact:** Inconsistent responsive behavior  \n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 2\n\n#### ❌ Anti-Pattern 3: Missing XWalk Configuration\n\n**Issue:** Block works but cannot be authored in AEM because XWalk configuration is missing.\n\n**Solution:** Add block definition, model, and filter to `blocks/<block-name>/_<block-name>.json`, then run `npm run build:json`.\n\n**Impact:** Block cannot be configured in AEM authoring interface  \n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 3\n\n#### ❌ Anti-Pattern 4: Using innerHTML with User Content\n\n```javascript\n// ❌ WRONG - XSS risk\nelement.innerHTML = userContent;\n\n// ✅ CORRECT - Safe\nelement.textContent = userContent;\n// OR use sanitization utility if HTML needed\nimport stringToHTML from '../../shared-components/Utility.js';\nconst safeHTML = stringToHTML(userContent);\n```\n\n**Impact:** Security vulnerability  \n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 4\n\n#### ❌ Anti-Pattern 5: Not Running Build Command\n\n```bash\n# After adding XWalk config, must run:\nnpm run build:json\n# Otherwise component-*.json files won't be updated\n```\n\n**Impact:** AEM won't recognize new block (if project uses build pipeline)  \n**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 5\n\n#### ❌ Anti-Pattern 6: Incomplete Link Extraction\n\n```javascript\n// ❌ WRONG - May fail if link is wrapped or getAttribute returns empty\nconst link = linkCell?.querySelector?.('a')?.getAttribute?.('href') || '';\nif (link && text) {  // Too strict - requires both\n  // render button\n}\n\n// ✅ CORRECT - Handle wrapped elements and use .href fallback\nconst linkElement = linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a');\nconst link = linkElement?.getAttribute?.('href') || linkElement?.href || '';\nif (link) {  // Only require link, text has fallbacks\n  // render button with fallback text\n}\n```\n\n**Impact:** Buttons may not render if extraction fails or text is missing  \n**Reference:** See \"Robust Data Extraction with Fallbacks\" section above\n\n#### ❌ Anti-Pattern 7: Ignoring wrapTextNodes() Wrapping\n\n```javascript\n// ❌ WRONG - Assumes text is directly in cell\nconst text = textCell?.textContent?.trim() || '';\n\n// ✅ CORRECT - Check for wrapped <p> tag\nlet text = textCell?.textContent?.trim() || '';\nif (!text) {\n  text = textCell?.querySelector?.('p')?.textContent?.trim() || '';\n}\n```\n\n**Impact:** Text extraction may fail if content is wrapped in `<p>` tags by `wrapTextNodes()`  \n**Reference:** See \"Robust Data Extraction with Fallbacks\" section above\n\n**Note:** For detailed explanations and more patterns, see `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Component/Service Patterns and Anti-Patterns section.\n\n### Advanced Frontend Patterns\n\n#### Fragment Loading (Async Blocks)\n\nFor blocks loading external content (header/footer):\n\n```javascript\nimport { loadFragment } from '../fragment/fragment.js';\nimport { loadSections } from '../../scripts/aem.js';\n\nexport default async function decorate(block) {\n  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();\n  try {\n    const fragment = await loadFragment(path);\n    if (fragment) {\n      await loadSections(fragment);\n      block.replaceChildren(...fragment.childNodes);\n    }\n  } catch (error) {\n    console.error(`Failed to load fragment: ${path}`, error);\n  }\n}\n```\n\n#### Event Handlers\n\n**Resize handlers:** Call initially, then add listener. Consider cleanup if block is removed.\n**Click handlers:** Use event delegation on block container.\n\n**Reference:** `blocks/fragment/fragment.js`, `blocks/header/header.js`, `blocks/footer/footer.js`\n\n#### Block Wrapper Classes\n\nAutomatically added by `decorateBlock()`:\n- `<block-name>-wrapper` - On block's parent element\n- `<block-name>-container` - On section containing block\n\n**Reference:** `scripts/aem.js` lines 819-822\n\n---\n\n## Part 3c: CSS Implementation\n\n**One CSS file per block:** Create only `<block-name>.css` (matching the folder name). Never create two CSS files (e.g., `social-promo.css` and `socialpromo.css`).\n\n### CSS File Structure\n\n**Path:** `blocks/<block-name>/<block-name>.css`\n\n**Purpose:** Block-specific styling\n\n**Reference:** `blocks/hero/hero.css`\n\n### Critical: CSS Targets Transformed Structure\n\n**Important:** CSS should style the **final transformed structure** created by JavaScript's `decorate()` function, **not** the initial AEM-generated HTML.\n\n**Why:**\n- Initial AEM HTML is raw data in a predictable structure (based on XWalk model field order)\n- JavaScript transforms this to the final presentation structure\n- CSS should target the transformed elements with classes added by JavaScript\n\n**Workflow:**\n```\nAEM generates HTML (from XWalk model)\n  ↓\nJavaScript decorate() transforms structure\n  ↓\nCSS styles the transformed structure\n```\n\n**Example:**\n\n```javascript\n// JavaScript: Transform and add CSS classes\nexport default function decorate(block) {\n  const container = document.createElement('div');\n  container.classList.add('hero-container');  // ← CSS class for styling\n  \n  const image = document.createElement('img');\n  image.classList.add('hero-image');  // ← CSS class for styling\n  container.appendChild(image);\n  \n  block.replaceChildren(container);\n}\n```\n\n```css\n/* ✅ CORRECT: Style the transformed structure */\n.hero-container {\n  display: flex;\n  flex-direction: column;\n}\n\n.hero-image {\n  width: 100%;\n  height: auto;\n}\n\n/* ❌ WRONG: Don't style initial AEM structure directly */\n/* .hero > div > div { ... } */\n```\n\n### CSS Template\n\n```css\n/* Block container styles */\n.block-name {\n  /* Block styles */\n}\n\n/* Block wrapper (added automatically by decorateBlock) */\n.block-name-wrapper {\n  /* Wrapper styles */\n}\n\n/* Section container (added automatically if block is in section) */\n.block-name-container {\n  /* Container styles */\n}\n\n/* Block elements (BEM-like naming) */\n.block-name__element {\n  /* Element styles */\n}\n\n.block-name__element--modifier {\n  /* Modifier styles */\n}\n\n/* Responsive breakpoints */\n@media (width >= 768px) {\n  /* Tablet styles */\n}\n\n@media (width >= 992px) {\n  /* Desktop styles */\n}\n```\n\n**CSS Naming Conventions:**\n- Use block name as base class (e.g., `.hero`, `.feature`)\n- Use descriptive class names for elements\n- Follow BEM-like patterns for modifiers\n- Keep styles scoped to block to avoid conflicts\n\n**Reference:** `blocks/hero/hero.css`\n\n### Image Sizing and Aspect Ratios\n\n**When design specifies exact image dimensions or aspect ratios, use CSS `aspect-ratio` property:**\n\n```css\n/* ✅ CORRECT: Maintain aspect ratio from design specs */\n.image-wrapper {\n  aspect-ratio: 670 / 746;  /* From Figma design */\n  width: 670px;\n  max-width: 48%;\n}\n\n.image-wrapper img,\n.image-wrapper picture {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n  border-radius: 24px;\n}\n\n/* ❌ WRONG: Using height: auto doesn't enforce aspect ratio */\n.image-wrapper {\n  width: 670px;\n}\n.image-wrapper img {\n  width: 100%;\n  height: auto;  /* May not match design aspect ratio */\n}\n```\n\n**Key Points:**\n- Use `aspect-ratio` CSS property when design specifies exact ratios (e.g., 670/746)\n- Set both `width` and `height: 100%` on image when using aspect-ratio on wrapper\n- Use `object-fit: cover` to maintain aspect ratio while filling container\n- Always verify image dimensions match design specifications (from Figma or design images)\n\n---\n\n## Part 3d: HTML Implementation\n\n### Index-Based HTML Structure (No Data Attributes)\n\n**Standard:** Use **semantic, index-based HTML** only. Do **not** use `data-aue-*`, `data-gen-*`, or other data attributes for structure. The block’s JavaScript must rely solely on **element position (index)** to identify content. This keeps markup clean and aligns with the structure contract.\n\n**Rules:**\n- One meaning per position: e.g. first row = title, second row = description.\n- Use semantic elements (`<p>`, `<h2>`, `<ul>`, `<a>`, etc.) where appropriate.\n- Keep a fixed order of rows and cells so index-based selection is reliable.\n- Document the index contract in the block’s JS (e.g. in the `decorate()` JSDoc).\n\n### Expected DOM Structure Examples\n\n**Note:** These examples show the expected DOM structure as generated by AEM. EDS projects do not use static HTML files.\n\n**Purpose:** Frontend development and visual testing. Structure must match the index contract used in the block’s JS.\n\n**Simple block (two rows: title, description):**\n\n```html\n<div class=\"block-name\">\n  <div>\n    <div>Title Text</div>\n  </div>\n  <div>\n    <div>Description text</div>\n  </div>\n</div>\n```\n\n**With link row (three cells: text, icon, target):**\n\n```html\n<div class=\"block-name\">\n  <div>\n    <div>Title Text</div>\n  </div>\n  <div>\n    <div>Description text</div>\n  </div>\n  <div>\n    <div><a href=\"/path\">Link Text</a></div>\n    <div>icon-name</div>\n    <div>_blank</div>\n  </div>\n</div>\n```\n\n**Block with items (each direct child = one item; cells by index):**\n\n```html\n<div class=\"block-name\">\n  <div>\n    <div>Item 1 Title</div>\n    <div>Item 1 description</div>\n  </div>\n  <div>\n    <div>Item 2 Title</div>\n    <div>Item 2 description</div>\n  </div>\n</div>\n```\n\n**Reference:** Match structure to the index contract documented in the block’s `decorate()` function.\n\n---\n\n## Part 3e: Best Practices and Reference\n\n### Frontend Best Practices\n\n#### ✅ JavaScript Best Practices\n\n- ✅ **DO:** Use ES6+ module syntax, import from `shared-components/`\n- ✅ **DO:** Use **index-based selection only**: access elements by position (e.g. `block.children[0]`, `row.children[1]`). Do not use data attributes for structure or selection.\n- ✅ **DO:** Document the **structure contract** (which index = which content) in the block’s `decorate()` JSDoc.\n- ✅ **DO:** Use optional chaining (`?.`) and nullish coalescing (`??`) for index-based access.\n- ✅ **DO:** Use `moveInstrumentation()` when replacing or moving elements.\n- ✅ **DO:** Make `decorate()` async if loading external resources.\n- ✅ **DO:** Preserve semantic HTML structure.\n\n#### ❌ JavaScript Anti-patterns\n\n- ❌ **DON'T:** Use `data-aue-*` or `data-gen-*` (or any data attributes) for selecting or identifying block content; use index-based access only.\n- ❌ **DON'T:** Use global variables, skip error handling, or mutate shared components.\n- ❌ **DON'T:** Access `children[index]` without null checks or forget `moveInstrumentation()` when transforming DOM.\n- ❌ **DON'T:** Block main thread or use sync operations for external resources.\n\n#### ✅ CSS Best Practices\n\n- ✅ **DO:** Style the **transformed structure** (after JavaScript `decorate()` runs)\n- ✅ **DO:** Use classes added by JavaScript during transformation\n- ✅ **DO:** Use block-specific class names\n- ✅ **DO:** Follow responsive design patterns\n- ✅ **DO:** Use CSS variables for theming\n- ✅ **DO:** Keep styles scoped to block\n\n#### ❌ CSS Anti-patterns\n\n- ❌ **DON'T:** Style the initial AEM-generated HTML structure directly\n- ❌ **DON'T:** Rely on the raw AEM HTML structure (it's just data, not presentation)\n- ❌ **DON'T:** Use overly specific selectors\n- ❌ **DON'T:** Hardcode colors/values\n- ❌ **DON'T:** Skip responsive breakpoints\n\n#### ✅ HTML Best Practices\n\n- ✅ **DO:** Match the **index-based structure contract** (same row/cell order as in the block’s JS).\n- ✅ **DO:** Use **semantic HTML** only; do **not** use data attributes for structure.\n- ✅ **DO:** Keep a fixed, documented order of rows and cells so index-based selection is reliable.\n- ✅ **DO:** Test in local development environment.\n\n---\n\n# Appendices\n\n## Appendix A: EDS Performance & Lighthouse Best Practices\n\nThis section provides EDS-specific performance guidelines to achieve and maintain excellent Lighthouse scores. **Every EDS site can and should achieve a Lighthouse score of 100** when following these best practices.\n\n### Performance Goals\n\n| Metric | Target | Notes |\n|--------|--------|-------|\n| **Lighthouse Score** | 100 (Mobile & Desktop) | EDS architecture is designed for this |\n| **LCP** (Largest Contentful Paint) | < 2.5s | Critical for above-the-fold content |\n| **CLS** (Cumulative Layout Shift) | < 0.1 | Avoid layout shifts during load |\n| **INP** (Interaction to Next Paint) | < 200ms | Responsive user interactions |\n| **Pre-LCP Payload** | < 100kb | Keeps LCP under ~1560ms for PSI 100 |\n\n**Reference:** [Web Performance, Keeping your Lighthouse Score 100](https://aem.live/developer/keeping-it-100) — Adobe's official EDS performance guide\n\n### EDS Architecture Principles\n\n1. **Server-Side Rendering First**\n   - All canonical content is rendered into markup on the server\n   - CSS and DOM are used only for display and accessibility semantics\n   - Client-side rendering (fetch JSON, render on client) is **only** for non-canonical content (e.g., blocks listing other pages, dynamic blocks)\n\n2. **Minimal Redundant Content**\n   - Headers, footers, and fragments used redundantly are **not** in the critical path markup\n   - Redundant content slows LCP and introduces blocking time (TBT → INP)\n\n\n**Reference:** [Keeping It 100](https://aem.live/developer/keeping-it-100) | [PageSpeed Insights](https://pagespeed.web.dev/)\n\n### Three-Phase Loading (E-L-D)\n\nEDS uses a three-phase loading model. **Block development must align with these phases:**\n\n| Phase | Name | Contents | Block Guidelines |\n|-------|------|----------|------------------|\n| **E** | Eager | Everything needed for LCP | Hero/first-section blocks only; keep first section minimal |\n| **L** | Lazy | Remaining sections, blocks, images | Most blocks load here; use `loading=\"lazy\"` for images |\n| **D** | Delayed | Third-party tags, analytics, chat | Start ≥3s after LCP; use `delayed.js` |\n\n**Block-Specific Rules:**\n- **First section blocks:** Minimize JS/CSS payload; LCP candidate (usually first image) must load quickly\n- **Below-fold blocks:** Load in Lazy phase; avoid blocking main thread\n- **Images:** Use `createOptimizedPicture()` and `loading=\"lazy\"` for non-LCP images\n- **Fonts:** Load **after** LCP; use [font fallback](https://www.aem.live/developer/font-fallback) to avoid CLS\n\n**Reference:** [Keeping It 100 - Three-Phase Loading](https://aem.live/developer/keeping-it-100) | [Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks)\n\n### LCP Optimization Guidelines\n\n- **LCP candidate:** Usually the hero image at the top of the page\n- **Payload budget:** Keep aggregate payload before LCP < 100kb (mobile bandwidth-constrained)\n- **Single origin:** Avoid connecting to a second origin before LCP (TLS/DNS adds delay)\n- **LCP in blocks:** If LCP is in a block, ensure block `.js` and `.css` are minimal; fewer blocks in first section = faster LCP\n- **Dual hero images:** If desktop/mobile have different hero images, remove the unnecessary one from DOM to avoid loading both\n\n**Dual hero images snippet** — remove the non-visible image to avoid loading both:\n\n```javascript\n// Hero block with desktop + mobile images: keep only the visible one\nconst isDesktop = window.matchMedia('(min-width: 900px)');\nconst desktopImg = block.querySelector('.hero-image-desktop');\nconst mobileImg = block.querySelector('.hero-image-mobile');\n\nif (isDesktop.matches && mobileImg) {\n  mobileImg.remove();  // Don't load mobile image on desktop\n} else if (!isDesktop.matches && desktopImg) {\n  desktopImg.remove();  // Don't load desktop image on mobile\n}\n```\n\n**Reference:** [Core Web Vitals](https://web.dev/explore/learn-core-web-vitals) | [Lighthouse Performance](https://developer.chrome.com/docs/lighthouse/performance)\n\n### Block Implementation Checklist for Performance\n\n| Practice | Description |\n|----------|-------------|\n| ✅ Use `createOptimizedPicture()` | For all images; provides responsive srcset and optimization |\n| ✅ Add `loading=\"lazy\"` | For images below the fold (non-LCP) |\n| ✅ Keep block JS small | Avoid heavy frameworks; use vanilla JS or lightweight patterns |\n| ✅ Load external content async | Use `async/await`; don't block decorate |\n| ✅ Debounce resize/scroll handlers | Reduce main-thread work |\n| ✅ Use `moveInstrumentation()` | Preserves authoring; no extra DOM cost |\n| ❌ Avoid Early Hints / h2-push / preconnect for LCP | Consumes bandwidth budget; can hurt LCP |\n| ❌ Avoid second-origin requests before LCP | Single origin for critical path |\n| ❌ Avoid blocking scripts | Load third-party in Delayed phase |\n\n### Code Snippets for Each Best Practice\n\n#### ✅ Use `createOptimizedPicture()` for all images\n\n```javascript\nimport { createOptimizedPicture } from '../../scripts/aem.js';\nimport { moveInstrumentation } from '../../scripts/scripts.js';\n\n// In decorate(): replace raw img/picture with optimized version\nconst pictureOrImg = imageCell?.querySelector?.('picture, img');\nif (pictureOrImg) {\n  const img = pictureOrImg.tagName === 'IMG' ? pictureOrImg : pictureOrImg.querySelector('img');\n  if (img) {\n    const optimizedPic = createOptimizedPicture(\n      img.src,\n      altText,\n      false,  // eager=false → loading=\"lazy\" for below-fold\n      [{ width: '440' }, { width: '880' }]\n    );\n    moveInstrumentation(pictureOrImg, optimizedPic);\n    pictureOrImg.replaceWith(optimizedPic);\n  }\n}\n```\n\n#### ✅ Add `loading=\"lazy\"` for non-LCP images\n\n```javascript\n// createOptimizedPicture(src, alt, eager, breakpoints)\n// eager=false → img gets loading=\"lazy\" (default)\n// eager=true  → img gets loading=\"eager\" (use ONLY for LCP hero image)\n\n// Below-fold / card images: use lazy (default)\nconst optimizedPic = createOptimizedPicture(imgSrc, altText, false, [{ width: '750' }]);\n\n// LCP hero image (first section, first image): use eager\nconst heroPic = createOptimizedPicture(heroSrc, heroAlt, true, [{ width: '1440' }, { width: '750' }]);\n```\n\n#### ✅ Load external content async\n\n```javascript\nimport { loadFragment } from '../fragment/fragment.js';\n\nexport default async function decorate(block) {\n  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();\n  try {\n    const fragment = await loadFragment(path);\n    if (fragment) {\n      block.replaceChildren(...fragment.childNodes);\n    }\n  } catch (err) {\n    console.warn(`Failed to load fragment: ${path}`, err);\n  }\n}\n```\n\n#### ✅ Debounce resize/scroll handlers\n\n```javascript\nfunction debounce(fn, delay = 150) {\n  let timeout;\n  return (...args) => {\n    clearTimeout(timeout);\n    timeout = setTimeout(() => fn(...args), delay);\n  };\n}\n\nexport default function decorate(block) {\n  const handleResize = () => { /* update layout */ };\n  const debouncedResize = debounce(handleResize, 150);\n\n  window.addEventListener('resize', debouncedResize);\n  // Or: isDesktop.addEventListener('change', debouncedResize);\n}\n```\n\n#### ✅ Use `moveInstrumentation()` when transforming DOM\n\n```javascript\nimport { moveInstrumentation } from '../../scripts/scripts.js';\n\n// When replacing an element, preserve AEM authoring attributes\nconst newButton = document.createElement('a');\nnewButton.href = ctaLink;\nnewButton.textContent = ctaText;\nmoveInstrumentation(ctaLinkCell, newButton);  // Preserves data-aue-* etc.\nctaLinkCell.replaceWith(newButton);\n\n// When moving children to a new container\nconst container = document.createElement('div');\nmoveInstrumentation(block, container);\nwhile (block.firstElementChild) container.append(block.firstElementChild);\nblock.replaceChildren(container);\n```\n\n#### ✅ Keep block JS small — vanilla JS, no heavy frameworks\n\n```javascript\n// ✅ Good: lightweight, framework-agnostic\nexport default function decorate(block) {\n  const rows = [...block.children];\n  const container = document.createElement('div');\n  rows.forEach((row, i) => {\n    const item = document.createElement('div');\n    item.classList.add(`item-${i}`);\n    moveInstrumentation(row, item);\n    while (row.firstElementChild) item.append(row.firstElementChild);\n    container.appendChild(item);\n  });\n  block.replaceChildren(container);\n}\n\n// ❌ Avoid: heavy framework imports for simple blocks\n// import React from 'react';  // Don't add React/Vue for block logic\n```\n\n#### ❌ Avoid second-origin requests before LCP\n\n```javascript\n// ❌ Bad: fetch from external API before LCP\nexport default async function decorate(block) {\n  const data = await fetch('https://external-api.com/data').then(r => r.json());\n  block.innerHTML = renderFromData(data);\n}\n\n// ✅ Good: use same-origin fragment or server-rendered content\nexport default async function decorate(block) {\n  const path = block.querySelector('a')?.getAttribute('href');\n  const fragment = await loadFragment(path);  // Same origin\n  if (fragment) block.replaceChildren(...fragment.childNodes);\n}\n```\n\n#### ❌ Avoid blocking scripts — load third-party in Delayed phase\n\n```javascript\n// ❌ Bad: blocking script in block\nexport default function decorate(block) {\n  const script = document.createElement('script');\n  script.src = 'https://third-party.com/widget.js';\n  script.async = false;  // Blocking!\n  document.head.appendChild(script);\n}\n\n// ✅ Good: use delayed.js or load after LCP (≥3s delay)\n// In delayed.js:\n// loadScript('https://third-party.com/widget.js');\n```\n\n### Common Performance Anti-Patterns (Avoid)\n\n| Anti-Pattern | Impact | Fix |\n|--------------|--------|-----|\n| Early hints / h2-push / preconnect for non-LCP resources | Consumes 100kb budget; hurts LCP | Remove; load after LCP |\n| Redirects for path resolution | Penalty per redirect | Use canonical URLs; avoid redirect chains |\n| CDN client scripts injection | Blocking before LCP | Disable or load in Delayed phase |\n| Heavy JavaScript frameworks | Increases TBT, hurts INP | Use lightweight, framework-agnostic code |\n| Preloading fonts | Delays LCP | Load fonts after LCP; use font fallback |\n\n**Snippet — avoid font preload in critical path:**\n\n```html\n<!-- ❌ Bad: preload consumes LCP budget -->\n<link rel=\"preload\" href=\"https://fonts.adobe.com/...\" as=\"font\" crossorigin>\n\n<!-- ✅ Good: fonts load after LCP; use font fallback to avoid CLS -->\n<!-- See: https://www.aem.live/developer/font-fallback -->\n```\n\n### Key Reference Links\n\n| Resource | URL |\n|----------|-----|\n| **Keeping It 100** (Adobe EDS performance guide) | https://aem.live/developer/keeping-it-100 |\n| **Core Web Vitals** | https://web.dev/explore/learn-core-web-vitals |\n| **EDS Markup, Sections, Blocks** | https://www.aem.live/developer/markup-sections-blocks |\n| **EDS Font Fallback** | https://www.aem.live/developer/font-fallback |\n| **EDS Developer Tutorial** | https://aem.live/developer/tutorial |\n---\n\n## Appendix B: Adobe FE EDS Recommended Practices (Block Creation)\n\nAdobe recommendations that directly help when creating blocks. **Reference:** [Block Collection](https://aem.live/developer/block-collection), [dev-collab-and-good-practices](https://aem.live/docs/dev-collab-and-good-practices), [Universal Editor Blocks](https://aem.live/developer/universal-editor-blocks)\n\n### Block Technical Principles\n\n| Principle | Description |\n|-----------|-------------|\n| **SEO and A11y** | SEO-friendly and accessible |\n| **Fast** | No negative performance impact |\n| **Localizable** | No hard-coded content; strings from content |\n| **Context Aware** | Inherits CSS context (text, background colors) |\n| **Responsive** | Works across all breakpoints |\n| **Usable** | No dependencies; compatible with boilerplate |\n| **Intuitive** | Content structure that's easy to author |\n\n### Three-Phased Block Development\n\n1. **Implement decoration and styles** for the new block\n2. **Create content** with the new block (in Universal Editor)\n3. **Create definition and model**, review, and bring to production\n\n### CSS for Blocks\n\n| Practice | Description |\n|----------|-------------|\n| **Block isolation** | Every selector in block `.css` applies only within the block |\n| **Prefix private classes** | Prefix block-private classes/variables with block name |\n| **Avoid complex selectors** | Prefer extra classes over complex selectors |\n| **Use ARIA for styling** | Use ARIA attributes (`expanded`, `hidden`) instead of redundant classes |\n| **Mobile first** | Base CSS = mobile; add media queries for larger viewports |\n| **Breakpoints** | Use `600px`, `900px`, `1200px` (min-width) |\n\n### JavaScript for Blocks\n\n| Practice | Description |\n|----------|-------------|\n| **Avoid frameworks for layout** | Keep simple blocks simple; frameworks add LCP/TBT issues |\n| **Load 3rd party via `loadScript()`** | Don't add libs in `head.html`; load in the block that needs it |\n| **IntersectionObserver for heavy libs** | Load large 3rd party libs only when block scrolls into view |\n| **Don't modify `aem.js`** | Keep extensions outside the library |\n\n### Content for Blocks\n\n| Practice | Description |\n|----------|-------------|\n| **Strings from content** | User-facing strings should be authorable (placeholders); no hard-coded literals |\n| **Backwards compatibility** | New content structure changes should not break existing content |\n\n### References\n\n- [Block Collection](https://aem.live/developer/block-collection) | [dev-collab-and-good-practices](https://aem.live/docs/dev-collab-and-good-practices) | [Universal Editor Blocks](https://aem.live/developer/universal-editor-blocks)\n\n**Next step:** [Implementation Checklist](#implementation-checklist) — validate and deploy.\n\n---\n\n## Development Workflow\n\n### Complete Workflow\n\n1. **Requirements Gathering** → Gather design source, story requirements, and design specifications (Pre-Implementation)\n   - Request Figma design URL OR component design images (desktop, tablet, mobile)\n   - Request story/requirements document\n   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications\n   - Analyze design and map to implementation plan\n\n2. **Backend Configuration (Generate First)** → Add definitions/models/filters to block-level JSON, run build (Part 2)\n   - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`\n   - Run `npm run build:json` to update root files\n   - Deploy to AEM/Universal Editor environment\n\n3. **Request User to Provide Semantic HTML (MANDATORY)** → User authors in Universal Editor and provides HTML\n   - **Prompt user:** \"Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output.\"\n   - User adds block to page, configures fields, extracts HTML (view source or DevTools)\n   - User provides the actual Universal Editor–generated HTML to Cursor\n   - Document structure contract from user-provided HTML\n   - **Do NOT generate HTML** — Cursor-generated HTML can differ from Universal Editor output\n\n4. **JavaScript** → Implement block logic (`<block-name>.js`) based on user-provided HTML (Part 3)\n   - Analyze user-provided HTML to document structure contract\n   - Write `decorate()` function using index-based access matching actual DOM\n   - Test with user-provided HTML\n\n5. **CSS** → Style the block (`<block-name>.css`) based on user-provided HTML (Part 3)\n   - Target the transformed structure\n   - Test with user-provided HTML to verify styling\n\n6. **Component Registration** → Verify JSON syntax and configuration (Part 2)\n   - Validate JSON syntax\n   - Verify component registration\n\n7. **AEM/Universal Editor Validation** → Test in authoring interface\n   - Test in AEM/Universal Editor authoring interface\n   - Verify content renders correctly\n\n---\n\n## Implementation Checklist\n\n### Phase 0: Pre-Implementation - Requirements Gathering (MANDATORY)\n- [ ] Request and receive design source: Figma design URL OR component design images (desktop, tablet, mobile)\n- [ ] Request and receive story/requirements document\n- [ ] Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications\n- [ ] Analyze component structure from design (Figma or images)\n- [ ] Extract design tokens (colors, typography, spacing)\n- [ ] Map design elements to HTML structure\n- [ ] Map design styles to CSS properties\n- [ ] Identify content fields needed for XWalk configuration\n- [ ] Identify similar blocks in codebase for reference\n- [ ] Document breakpoint requirements\n- [ ] Document accessibility requirements\n- [ ] Create implementation plan based on design + requirements\n\n### Step 2: User Provides Semantic HTML (MANDATORY)\n\n**Execute this step AFTER Step 1 (Backend) is complete and deployed.**\n\n**See:** [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) (standalone section above) for context.\n\n**Objective:** Obtain the actual HTML structure from Adobe Universal Editor. Do NOT generate HTML — user-provided HTML ensures correct DOM structure.\n\n**Steps:**\n1. **Prerequisite: Backend configuration is complete:**\n   - [ ] Backend files (component-definition.json, component-models.json, component-filters.json) are generated\n   - [ ] Block is deployed to AEM/Universal Editor environment\n\n2. **Request user to provide semantic HTML:**\n   - [ ] Prompt user: \"Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output.\"\n   - [ ] User adds block to page in Universal Editor\n   - [ ] User configures all fields (including empty/optional where relevant)\n   - [ ] User adds multiple items if parent-child block\n   - [ ] User extracts HTML (view source or DevTools) and provides to Cursor\n\n3. **Analyze user-provided HTML:**\n   - [ ] Document structure contract: which fields generate rows vs cells\n   - [ ] Document field indices (0, 1, 2, etc.)\n   - [ ] Document empty field behavior (missing cells vs empty cells)\n   - [ ] Document optional field behavior (parent title, etc.)\n\n4. **Use for frontend development:**\n   - [ ] Generate JavaScript based on user-provided HTML structure\n   - [ ] Generate CSS based on user-provided HTML structure\n   - [ ] Test with user-provided HTML\n\n**Important:**\n- Do NOT generate static HTML — Cursor-generated HTML can differ from Universal Editor output\n- User-provided HTML is the source of truth for DOM structure\n\n### Phase 1: Backend - XWalk Configuration (MANDATORY)\n**Note:** EDS projects do not use static HTML files. HTML is generated automatically by AEM from XWalk configuration.\n- [ ] Use **index-based structure only** (no data attributes); match row/cell order to the block’s structure contract\n- [ ] Use semantic HTML; document index contract in block JS\n- [ ] Test visual appearance\n\n### Phase 2: Backend - XWalk Configuration (MANDATORY)\n- [ ] **Create block-level JSON** — add config to `blocks/<block-name>/_<block-name>.json`\n- [ ] Add component definition (in block-level JSON)\n  - [ ] Set `title`, `id`, `resourceType`, and `template` properties\n- [ ] Add model (in block-level JSON)\n  - [ ] Set `id` to match definition ID\n  - [ ] Add `fields` array with field definitions\n  - [ ] Add validation rules where needed\n- [ ] Add filter (in block-level JSON, if block has nested items)\n  - [ ] Set `id` to match parent block ID\n  - [ ] Set `components` array with allowed child component IDs\n- [ ] **Run `npm run build:json`** to merge block config into root files\n- [ ] Validate JSON syntax (use JSON validator or ESLint)\n- [ ] Ensure field order in model matches expected JavaScript index-based access pattern\n\n### Phase 2: Frontend - JavaScript Implementation\n- [ ] **Use user-provided semantic HTML to validate structure before coding**\n- [ ] Create `blocks/<block-name>/<block-name>.js` (ONE file only — never create two JS files with different naming, e.g., social-promo.js and socialpromo.js)\n- [ ] Export default `decorate(block)` function\n- [ ] Document **structure contract** (index = meaning) in JSDoc based on user-provided HTML\n- [ ] Import shared components as needed\n- [ ] Extract data using **index-based access only** (e.g. `block.children[0]`, `row.children[1]`)\n   - [ ] Use field indices from user-provided HTML (not assumed indices)\n   - [ ] Account for empty fields that don't generate cells\n   - [ ] Handle optional fields (e.g., parent title may not exist)\n- [ ] **For parent-child blocks:** Process parent row (index 0) and child item rows (index 1+) in the same `decorate()` function\n   - [ ] Check if first row is actually title or first item (if title is optional)\n- [ ] Transform to final HTML structure\n- [ ] Use `moveInstrumentation()` when replacing or moving elements\n- [ ] **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification\n- [ ] **Run `npm run build:json`** after adding/updating block config (root files are build outputs)\n- [ ] **NEVER** create separate child block folders or files — see [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder)\n- [ ] **Test with user-provided HTML** to verify extraction logic works correctly\n\n### Phase 3: Frontend - CSS Styling\n- [ ] Create `blocks/<block-name>/<block-name>.css` (ONE file only — never create two CSS files with different naming, e.g., social-promo.css and socialpromo.css)\n- [ ] Style block structure (parent container and child items in same file)\n- [ ] Add responsive breakpoints\n- [ ] **Test with user-provided HTML** to verify styling works correctly\n- [ ] Test in AEM authoring mode\n\n### Phase 4: Integration - Component Registration\n- [ ] Verify component definition appears in `component-definition.json`\n  - [ ] Check JSON syntax is valid\n  - [ ] Verify definition is in the correct group\n- [ ] Verify model appears in `component-models.json`\n  - [ ] Check model ID matches definition ID\n  - [ ] Verify all fields are properly formatted\n- [ ] Verify filters appear in `component-filters.json` (if applicable)\n  - [ ] Check filter ID matches parent block ID\n  - [ ] Verify child component IDs are correct\n\n### Phase 5: Integration - AEM Authoring Validation\n- [ ] Deploy to AEM environment\n- [ ] Test block appears in component browser\n- [ ] Test authoring interface opens correctly\n- [ ] Test field validation works\n- [ ] Test content saves and renders correctly in author mode\n- [ ] Test content renders correctly in publish mode\n- [ ] Verify index-based access works (no reliance on data-aue-* attributes)\n\n### Phase 6: Frontend - Unit Testing (If Applicable)\n- [ ] Create `blocks/<block-name>/<block-name>.test.js`\n- [ ] Test data transformation functions\n- [ ] Test validation logic\n- [ ] Test edge cases\n\n---\n\n## Validation Workflow\n\n### Pre-Implementation\n1. **Gather Requirements** (see Pre-Implementation: Gathering Requirements section)\n   - Request Figma URL OR component design images (desktop, tablet, mobile) and story requirements\n   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications\n   - Analyze design and create implementation plan\n2. Review similar blocks in codebase\n3. Identify reusable components/models\n4. Plan block structure (Part 3)\n5. Plan XWalk field requirements (Part 2)\n\n### During Implementation\n1. Verify XWalk JSON syntax (use ESLint) (Part 2)\n2. Verify field order in XWalk model matches expected JavaScript access pattern (Part 2)\n3. Test JavaScript in browser console (Part 3)\n4. Test CSS in AEM authoring mode (Part 3)\n\n### Post-Implementation\n1. Verify JSON syntax is valid in all three configuration files (Part 2)\n2. Verify component registration (Part 2)\n   - Check definition in `component-definition.json`\n   - Check model in `component-models.json`\n   - Check filter in `component-filters.json` (if applicable)\n3. Test in AEM authoring interface\n4. Verify responsive behavior (Part 3)\n5. Verify accessibility (Part 3)\n\n---\n\n## Appendix D: Common Issues and Solutions\n\n### Frontend Issues\n\n#### Issue 1: Block Not Loading\n**Solution:**\n- Verify block name matches folder name\n- Check `decorate(block)` is default export\n- Verify `loadBlock()` is called\n- Check browser console for errors\n\n#### Issue 4: Styles Not Applying\n**Solution:**\n- Verify CSS file path is correct\n- Check CSS class names match\n- Verify `loadBlock()` loads CSS\n- Test in AEM authoring and publish modes\n\n#### Issue 5: Authoring Attributes Lost\n**Solution:**\n- Use `moveInstrumentation()` when transforming or replacing elements so any authoring instrumentation is preserved on the new structure.\n- **See:** [Anti-Pattern 1: Skipping Instrumentation Preservation](#-anti-pattern-1-skipping-instrumentation-preservation)\n- Reference: `blocks/feature/feature.js` (shows pattern)\n\n#### Issue 6: Async Operations Not Working\n**Solution:**\n- Make `decorate()` function `async` if loading external resources\n- Use `try/catch` for error handling\n- Check if resource exists before processing\n- Reference: `blocks/fragment/fragment.js` (shows async pattern)\n\n#### Issue 7: Event Listeners Causing Memory Leaks\n**Solution:**\n- Use event delegation when possible\n- Remove event listeners if block is removed (consider cleanup)\n- Debounce resize/scroll handlers\n- Reference: `blocks/header/header.js` (shows event handling)\n\n#### Issue 8: Wrong Content or Missing Elements (Index-Based)\n**Solution:**\n- **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification - these are only in author mode and not available in publish mode\n- Use **index-based access only**: `block.children[0]`, `row.children[1]`, etc. (see Part 2: Index-Based Structure and Data Extraction)\n- Use optional chaining (`?.`) and nullish coalescing (`??`) for safe index access\n- **MANDATORY:** Use user-provided HTML from Universal Editor to verify field order and indices\n- Verify XWalk config field order matches actual HTML structure (not assumed structure)\n- Account for empty fields that don't generate cells (may shift indices)\n- Handle optional fields that may not exist (e.g., parent title)\n- Ensure DOM structure order matches the structure contract documented in the block's JS (based on actual HTML)\n\n#### Issue 9: Button Not Rendering\n**Solution:**\n- Check if link extraction handles wrapped elements: `linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a')`\n- Use `.href` as fallback: `linkElement?.getAttribute?.('href') || linkElement?.href || ''`\n- Don't require both link AND text - render button if link exists, use fallback text\n- Check if text extraction handles wrapped `<p>` tags from `wrapTextNodes()`\n- Verify text cell is not empty or extract from link text (but filter out URLs)\n- Reference: See \"Pattern 6: CTA Button with Robust Extraction\" above\n\n#### Issue 10: Image Size Not Matching Design\n**Solution:**\n- Use CSS `aspect-ratio` property when design specifies exact ratios\n- Set `aspect-ratio` on image wrapper, not just width\n- Use `object-fit: cover` to maintain aspect ratio while filling container\n- Verify dimensions match design specifications (from Figma or design images)\n- Reference: See \"Image Sizing and Aspect Ratios\" section above\n\n### Backend/Configuration Issues\n\n#### Issue 2: XWalk Config Not Working\n**Solution:**\n- Verify JSON syntax is valid in all three files (`component-definition.json`, `component-models.json`, `component-filters.json`)\n- Check component definition appears in `component-definition.json` in the correct group\n- Verify model appears in `component-models.json` with matching ID\n- Verify filter appears in `component-filters.json` (if applicable)\n- Verify model ID matches definition ID\n- Check that resource type is correct\n\n#### Issue 3: Fields Not Appearing in AEM\n**Solution:**\n- Verify model is in `component-models.json`\n- Check field component type is valid\n- Verify field names match expected format\n- Check AEM console for errors\n\n#### Issue 11: Parent Block Authoring Fields Not Appearing\n**Symptom:** Parent block appears in AEM authoring interface, but no authoring fields are shown (e.g., section title field is missing).\n\n**Root Cause:** Parent block template is missing `model` property. Parent blocks with authoring fields require BOTH `model` and `filter` in the template.\n\n**Solution:**\n- **CRITICAL:** If parent block has fields defined in `component-models.json`, the parent block template MUST include `model` property\n- Parent blocks with authoring fields need BOTH:\n  - `model: \"parentblock\"` - Enables authoring fields for parent block\n  - `filter: \"parentblock\"` - Allows child items to be nested\n- Parent blocks without authoring fields only need `filter` (no `model`)\n- Verify `model` value matches the `id` in `component-models.json`\n- **Reference:** See \"Block with Items (Parent + Child)\" section above for complete examples\n- **Working Example:** `component-definition.json` lines 325-339 (`projectcards` - has both `model` and `filter`)\n\n**Example Fix:**\n```json\n// ❌ WRONG (missing model):\n\"template\": {\n  \"name\": \"RelatedCards\",\n  \"filter\": \"relatedcards\"\n}\n\n// ✅ CORRECT (has both model and filter):\n\"template\": {\n  \"name\": \"RelatedCards\",\n  \"model\": \"relatedcards\",    // ✅ Required for parent authoring fields\n  \"filter\": \"relatedcards\"     // ✅ Required for child items\n}\n```\n\n---\n\n## Considerations\n\n### UX Considerations\n- Provide clear field labels in XWalk config (Part 2)\n- Use appropriate field types (text, richtext, select) (Part 2)\n- Add helpful validation messages (Part 2)\n- Group related fields using tabs (Part 2)\n\n### Performance Considerations\n- **See:** [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices) for full guidelines\n- Blocks load asynchronously via `loadBlock()` (Part 3)\n- CSS and JS loaded on demand (Part 3)\n- Use `createOptimizedPicture()` and `loading=\"lazy\"` for images (Part 3)\n- Keep pre-LCP payload < 100kb; first section blocks must be minimal (Part 3)\n- Use `async/await` for external resource loading (Part 3)\n- Debounce resize/scroll event handlers when needed (Part 3)\n- Avoid blocking the main thread; align with E-L-D loading phases (Part 3)\n- Run PageSpeed Insights on PRs; target Lighthouse score 100 (Part 3)\n\n### Security Considerations\n- Sanitize HTML input (use `stringToHTML()`) (Part 3)\n- Validate field input via XWalk validation (Part 2)\n- Reference: `shared-components/Utility.js` (sanitizeHTMLString) (Part 3)\n\n### Accessibility Considerations\n- Use semantic HTML elements (Part 3)\n- Provide alt text for images (Part 3)\n- Maintain heading hierarchy (Part 3)\n- Ensure keyboard navigation (Part 3)\n\n---\n\n## Appendix C: Key References\n\n### Primary Documentation (Backend / Content Modeling)\n\n| Document | URL |\n|----------|-----|\n| **Model Definitions, Fields, and Component Types** (Experience League) | https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types |\n| **Content modeling for AEM authoring projects** (AEM.live) | https://www.aem.live/developer/component-model-definitions |\n\n### Content Modeling (AEM Authoring)\n- **[Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types)** — Field types, component types, model linking, loading models\n- **[Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)** — Type inference, field collapse, element grouping, multi-fields, block structure variants\n- **[Block Collection](https://aem.live/developer/block-collection)** — Content models for common UI patterns; reference for semantic content modeling\n- **David's Model** — Content modeling guidance for content-source-agnostic blocks (see Block Collection and AEM authoring docs)\n\n### Performance & Lighthouse (EDS)\n- **[Keeping It 100](https://aem.live/developer/keeping-it-100)** — Adobe's official EDS performance guide\n- **[PageSpeed Insights](https://pagespeed.web.dev/)** — Lab testing for Lighthouse scores\n- **[Core Web Vitals](https://web.dev/explore/learn-core-web-vitals)** — LCP, CLS, INP metrics\n- **[EDS Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks)** — Loading sequence and block structure\n\n### Adobe FE EDS (Block Creation)\n- **[Block Collection](https://aem.live/developer/block-collection)** — Technical principles for blocks\n- **[dev-collab-and-good-practices](https://aem.live/docs/dev-collab-and-good-practices)** — CSS, JS, content guidelines\n- **[Universal Editor Blocks](https://aem.live/developer/universal-editor-blocks)** — Three-phased development\n\n### Example Blocks to Study\n- **Simple:** `blocks/hero/` - Basic structure\n- **Complex:** `blocks/feature/` - Parent with items\n- **Async:** `blocks/fragment/` - External content loading\n- **Interactive:** `blocks/header/` - Event handlers\n\n### Key Files\n\n**Frontend:**\n- `scripts/aem.js` - Block loading mechanism\n- `shared-components/` - Reusable utilities\n- `blocks/<block-name>/<block-name>.js` - Block JavaScript\n- `blocks/<block-name>/<block-name>.css` - Block Styles\n\n**Backend/Configuration:**\n- `blocks/<block-name>/_<block-name>.json` - Block config (edit this; run build to update root files)\n- `component-definition.json` - Component definitions (build output; do not edit directly)\n- `component-models.json` - Field models (build output; do not edit directly)\n- `component-filters.json` - Nesting rules (build output; do not edit directly)\n- `models/` - Reusable field definitions (reference for copying fields)\n\n---\n\n## Next Steps\n\n1. **Review this guide** - Start with Part 1 for backend, Part 2 for frontend\n2. **Gather design source** - Request Figma URL OR component design images (desktop, tablet, mobile); Cursor can generate code from either\n3. **Study similar blocks** - Reference examples provided in each section\n4. **Use AI codebase analysis** - Cursor can analyze existing blocks for patterns\n5. **Follow checklist** - Use the implementation checklist step by step\n6. **Request user to provide semantic HTML** - User authors in Universal Editor and provides HTML; generate JS/CSS based on it (MANDATORY)\n7. **Reference existing code** - Rather than creating from scratch\n\n---\n\n**Document Version:** EDS-2026.1.0  \n**Last Updated:** 2026-02-25  \n**Maintained By:** AI Documentation Engineer  \n**Review Status:** Ready for Use\n\n---\n\n## Summary\n\nThis implementation guide provides comprehensive step-by-step instructions for creating new EDS blocks. Key points:\n\n1. **Two files required per block:** JavaScript and CSS (in `blocks/<block-name>/`)\n   - **CRITICAL:** Even for parent-child blocks, use ONE folder with ONE JS file and ONE CSS file\n   - Parent and child items are processed in the same `decorate()` function\n   - Example: `blocks/cards/` handles both parent container and all child card items\n2. **XWalk configuration:** Add definitions/models/filters to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json` to update:\n   - `component-definition.json` - Component definitions (build output)\n   - `component-models.json` - Field models (build output)\n   - `component-filters.json` - Nesting rules (build output)\n3. **User-provided semantic HTML (MANDATORY):** See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) and [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).\n4. **Index-based implementation:** Use index-based selection only; no data attributes for structure or selection. Document the structure contract in block JS based on actual HTML structure.\n5. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM\n6. **Testing:** Test with user-provided HTML first, then manual testing in browser and AEM authoring interface\n7. **Patterns:** Follow established patterns from existing blocks\n\n**CRITICAL:** \n- Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`). Run `npm run build:json` to update the three root-level files. Do NOT edit root files directly.\n- Do NOT create separate child block folders or files. See [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder).\n- **MANDATORY:** Request user to provide semantic HTML from Universal Editor. See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html). Do NOT generate HTML.\n\n**Overall Confidence Score:** 98%\n"
+  "title": "Block Name",
+  "id": "blockname",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "BlockName",
+          "model": "blockname"
+        }
+      }
     }
-  ],
-  "message": "Download implementation-guide.md to specs/eds-guide/EDS-2026.1.0/creating-eds-block/"
+  }
 }
 ```
 
-For each file in the "files" array, create the file at `{relativePath}` with the given `content`.
+**Where to add:** In `blocks/<block-name>/_<block-name>.json`, add the definition object. The build merges it into `component-definition.json` under the `"Blocks"` group's `components` array.
+
+**Example definition (for block-level JSON):**
+```json
+{
+  "groups": [
+    {
+      "title": "Blocks",
+      "id": "blocks",
+      "components": [
+        {
+          "title": "HeroComponent",
+          "id": "hero",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Hero",
+                  "model": "hero"
+                }
+              }
+            }
+          }
+        }
+        // Add your new block definition here
+      ]
+    }
+  ]
+}
+```
+
+**Reference:** `component-definition.json` lines 145-159 (hero example)
+
+### Block with Items (Parent + Child)
+
+**CRITICAL: Parent Block Configuration**
+
+Parent blocks can have two configurations depending on whether they have authoring fields:
+
+1. **Parent Block WITHOUT Authoring Fields** (container only):
+   - Only needs `filter` to define which child components can be nested
+   - Example: `cards` block (no parent fields, only contains child `card` items)
+
+2. **Parent Block WITH Authoring Fields** (has configurable fields):
+   - **MUST have BOTH `model` AND `filter`**
+   - `model` enables authoring fields for the parent block
+   - `filter` defines which child components can be nested
+   - Example: `projectcards` block (has parent fields: classes, title, heading, description)
+
+**Parent Block Definition (WITH Authoring Fields):**
+```json
+{
+  "title": "Parent Block",
+  "id": "parentblock",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "ParentBlock",
+          "model": "parentblock",    // ✅ REQUIRED if parent has authoring fields
+          "filter": "parentblock"     // ✅ REQUIRED to allow child items
+        }
+      }
+    }
+  }
+}
+```
+
+**Parent Block Definition (WITHOUT Authoring Fields):**
+```json
+{
+  "title": "Parent Block",
+  "id": "parentblock",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "ParentBlock",
+          "filter": "parentblock"     // ✅ Only filter needed (no model)
+        }
+      }
+    }
+  }
+}
+```
+
+**Child Item Definition:**
+```json
+{
+  "title": "Item",
+  "id": "item",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block/item",
+        "template": {
+          "name": "Item",
+          "model": "item"             // ✅ REQUIRED for child items (defines fields)
+        }
+      }
+    }
+  }
+}
+```
+
+**Both definitions go in the same `components` array**
+
+**Key Points:**
+- If parent block has fields in `component-models.json`, it **MUST** have `model` in template
+- If parent block has no fields, it only needs `filter` (no `model`)
+- Child items always need `model` (they always have fields)
+- The `model` value must match the `id` in `component-models.json`
+
+---
+
+## Field Configuration
+
+### Field Definition Basics
+
+Every field object supports these key properties. The `component` and `name` properties are required; others are optional.
+
+| Property | Purpose |
+|----------|---------|
+| `component` | Defines what kind of UI control to render (see [Field Component Types](#field-component-types) below) |
+| `name` | Where the data is stored; must match the structure contract for index-based access |
+| `label` | Title shown to the author in the properties panel |
+| `description` | Optional description or help text for the author |
+| `value` | Default or placeholder value |
+| `valueType` | Type of data: `string`, `number`, `boolean`, etc. |
+| `required` | When true, field must have a value before save |
+| `readOnly` | When true, field is displayed but not editable |
+| `hidden` | When true, field is hidden from the author |
+| `multi` | When true, allows multiple values (e.g., `reference` for multiple assets) |
+| `validation` | Rules for user input (see [Validation Patterns](#validation-patterns) below) |
+
+**Note:** Underscores (`_`) are not allowed in field names for some plugins. Use camelCase (e.g., `imageAlt` not `image_alt`).
+
+**Reference:** [Adobe Experience League — Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types)
+
+### Field Component Types
+
+These define how the field is rendered in the Universal Editor properties panel. Each type may offer additional configuration options (e.g., `options` for select, `rootPath` for reference).
+
+| Component Type | Purpose |
+|----------------|---------|
+| `text` | Single-line text input |
+| `richtext` | Rich text editor (bold, links, etc.) |
+| `number` | Numeric input |
+| `boolean` | True/false toggle (checkbox) |
+| `select` | Dropdown with single selection |
+| `multiselect` | Dropdown with multiple selection |
+| `radio-group` | Single choice among multiple options (radio buttons) |
+| `checkbox-group` | Multiple checkboxes |
+| `reference` | Asset picker (images, documents, etc.) |
+| `aem-content` | Picks any AEM content (pages, assets) |
+| `aem-tag` | Tag picker UI |
+| `aem-content-fragment` | Content Fragment picker |
+| `aem-experience-fragment` | Experience Fragment picker |
+| `date-time` | Date and/or time input |
+| `container` | Groups nested fields; supports multifields |
+| `tab` | Separates fields into tabbed sections in the UI |
+| `custom-asset-namespace:custom-asset` | DAM asset picker (project-specific) |
+
+**Commonly used in EDS blocks:** `text`, `richtext`, `reference`, `aem-content`, `select`, `multiselect`, `boolean`, `tab`, `container`
+
+**Reference:** `component-models.json` (comprehensive examples)
+
+### Validation Patterns
+
+```json
+{
+  "component": "text",
+  "name": "fieldName",
+  "label": "Field Label",
+  "validation": {
+    "maxLength": 100,
+    "customErrorMsg": "Error message"
+  }
+}
+```
+
+**Validation Types:**
+- `maxLength` - Character limit
+- `maxSize` - Size limit (for text fields)
+- `minLength` - Minimum length
+- `regExp` - Regular expression
+- `customErrorMsg` - Custom error message
+- `rootPath` - Asset path restriction (for custom-asset)
+
+**Reference:** `component-models.json` lines 159, 1156, 1166, 911
+
+### Adding Model to Block-Level JSON
+
+**Location:** Add the model to your block's `blocks/<block-name>/_<block-name>.json` file. The build merges it into `component-models.json`.
+
+**Critical: Field Order Determines HTML Structure**
+
+See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Field at index N → `block.children[N]` in generated HTML. Plan field order to match the index-based access pattern in `decorate()`; document the structure contract in code.
+
+**Critical: Validate Field Order with User-Provided HTML**
+
+See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Obtain user-provided HTML from Universal Editor before frontend work. Do not assume structure matches the model.
+
+**Common Issues to Watch For:**
+- **Empty fields may not generate cells:** If a field is empty, AEM may skip generating a cell for it, shifting subsequent field indices
+- **Optional fields may not exist:** If a parent block has an optional title field and it's empty, there may be no title row at all
+- **Field order may differ:** The actual HTML structure may differ from your model if fields are conditionally rendered
+
+**Example:** If `imageAlt` field is empty, AEM might not generate a cell for it, so:
+- Expected: `cells[0]=image, cells[1]=imageAlt, cells[2]=badge`
+- Actual: `cells[0]=image, cells[1]=badge` (imageAlt cell missing)
+
+**Solution:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Also: [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).
+
+**Model Structure:**
+
+```json
+{
+  "id": "blockname",
+  "fields": [
+    {
+      "component": "text",
+      "name": "title",
+      "label": "Title",
+      "valueType": "string"
+    },
+    {
+      "component": "richtext",
+      "name": "text",
+      "label": "Text",
+      "value": "",
+      "valueType": "string"
+    }
+  ]
+}
+```
+
+**Where to add:** In your block's `_<block-name>.json` file. The build merges the model into `component-models.json`.
+
+**Example from codebase:**
+```json
+[
+  {
+    "id": "page-metadata",
+    "fields": [...]
+  },
+  {
+    "id": "hero",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "value": "",
+        "label": "Text",
+        "valueType": "string"
+      }
+    ]
+  }
+  // Add your new model here
+]
+```
+
+**Important:** The `id` field must match the `model` value in the definition's `template.model` property.
+
+**Reference:** `component-models.json` lines 192-217 (hero model example)
+
+### Field Condition Patterns
+
+```json
+{
+  "component": "text",
+  "name": "conditionalField",
+  "label": "Conditional Field",
+  "condition": {
+    "===": [
+      { "var": "otherField" },
+      true
+    ]
+  }
+}
+```
+
+**Reference:** `component-models.json` lines 1197-1204
+
+### Multi-Fields and Composite Multi-Fields
+
+Use `multi: true` to allow multiple values for a field. Use a `container` with `multi: true` and nested fields for structured lists.
+
+**Rendering behavior:**
+- **Single semantic elements** (plain text, links, images): Rendered as `<ul><li>` list
+- **Composite elements** (text + richtext + links): Rendered as flat list with `<hr>` separators
+
+**Examples:**
+- `reference` with `multi: true` → Multiple images or assets
+- `text` with `multi: true` → Keyword list
+- `container` with `multi: true` and nested `reference` + `text` → Image carousel with alt text per item
+
+**Note:** Multi-fields and composite multi-fields may be early-access features. Verify availability in your AEM environment.
+
+**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)
+
+---
+
+## AEM Rendering Mechanics
+
+AEM infers semantics from field values and uses naming conventions to combine fields. Understanding these mechanics helps you design models that produce the expected HTML.
+
+### Type Inference
+
+AEM infers semantic meaning from values:
+
+| Value Type | Inference | Rendered As |
+|------------|-----------|-------------|
+| **Image reference** | MIME type starts with `image/` | `<picture><img src="..."></picture>` |
+| **Link reference** | Non-image ref, or starts with `https?://` or `#` | `<a href="...">...</a>` |
+| **Rich text** | Trimmed value starts with `p`, `ul`, `ol`, `h1`–`h6` | Rendered as HTML |
+| **Class names** | `classes` property | Block options in table header |
+| **Value lists** | Multi-value, first value not above | Comma-separated list |
+| **Other** | — | Plain text |
+
+### Field Collapse
+
+Properties ending with `Title`, `Type`, `MimeType`, `Alt`, or `Text` (case sensitive) are collapsed into the preceding property as attributes:
+
+| Base + Suffix | Result |
+|---------------|--------|
+| `image` + `imageAlt` | Single `<picture>` with `alt` attribute |
+| `link` + `linkTitle` + `linkText` + `linkType` | Single `<a>` with title, text, type |
+| `heading` + `headingType` | Single `<h2>` (or h1–h6) |
+
+**Example:** `image` and `imageAlt` in the same row produce one cell with `<picture><img src="..." alt="..."></picture>`.
+
+### Element Grouping
+
+Use `groupName_fieldName` (underscore) to group multiple fields into a single cell:
+
+- `teaserText_subtitle`, `teaserText_title`, `teaserText_description` → One cell with combined content
+- `classes_background`, `classes_fullwidth` → Block options (e.g., `class="teaser light fullwidth"`)
+
+For block options, `classes` can be boolean (adds property name as class) or text/array.
+
+**Reference:** [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)
+
+---
+
+## Block Structure Variants
+
+### Simple Blocks
+
+One row per field, one or more cells per row. Field order in the model → row order in HTML.
+
+### Key-Value Blocks
+
+Set `key-value: true` for table-like representation (e.g., section metadata). Each row has a key cell and a value cell.
+
+**Example:** Section metadata with `source`, `keywords`, `limit` renders as key-value pairs.
+
+### Container Blocks
+
+Parent block with child items. Parent properties render as rows first; each child is a row with properties as columns.
+
+### Columns Block
+
+**Limitations:** The columns block (`core/franklin/components/columns/v1/columns`) has no content modeling. It only supports `rows`, `columns`, and `classes` (or `classes_*`). You can only add default content (text, title, image, link/button) to cells.
+
+### Sections and Section Metadata
+
+Sections use resource type `core/franklin/components/section/v1/section`. The section model defines section metadata. If the section model is not empty, a key-value metadata block is automatically appended to the section. The default section model ID is `section`; use it to add styles, background image, or other metadata fields.
+
+### Page Metadata
+
+Create a model with ID `page-metadata` for custom page metadata (e.g., theme, custom meta tags). For template-specific metadata, create models named `<template>-metadata` where `template` matches the template metadata property value.
+
+---
+
+## Resource Types
+
+### Available Resource Types
+
+- **`core/franklin/components/block/v1/block`** - Standard block
+- **`core/franklin/components/block/v1/block/item`** - Block item (nested)
+- **`core/franklin/components/section/v1/section`** - Section container
+- **`core/franklin/components/columns/v1/columns`** - Columns layout
+- **`core/franklin/components/button/v1/button`** - Button component
+- **`core/franklin/components/image/v1/image`** - Image component
+
+**Reference:** `component-definition.json`
+
+---
+
+## Filter/Nesting Rules
+
+### Adding Filters to Block-Level JSON
+
+**Location:** Add the filter to your block's `blocks/<block-name>/_<block-name>.json` file. The build merges it into `component-filters.json`.
+
+**Filter Configuration:**
+
+```json
+{
+  "id": "parentblock",
+  "components": ["item", "linkField"]
+}
+```
+
+**Where to add:** In your block's `_<block-name>.json` file. The build merges the filter into `component-filters.json`.
+
+**Example from codebase:**
+```json
+[
+  {
+    "id": "main",
+    "components": ["section"]
+  },
+  {
+    "id": "section",
+    "components": ["text", "image", "button", "title", "hero", "cards", "columns", "fragment"]
+  },
+  {
+    "id": "cards",
+    "components": ["card"]
+  }
+  // Add your new filter here
+]
+```
+
+**Reference:** `component-filters.json` lines 21-26 (cards filter example)
+
+---
+
+## Reusable Models
+
+**Location:** `models/`
+
+- **`_button.json`** - Button field definition
+- **`_image.json`** - Image field definition
+- **`_title.json`** - Title field definition
+- **`_text.json`** - Text field definition
+- **`_section.json`** - Section field definition
+
+**Usage:** Reference in XWalk config using JSON pointer or include fields directly
+
+**Reference:** `models/_button.json`, `models/_image.json`
+
+---
+
+## XWalk Configuration Template
+
+### Complete Configuration Example
+
+Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`. Structure may vary by project; the build merges these into the root files.
+
+**Definition (merged into component-definition.json):**
+
+```json
+{
+  "title": "Block Name",
+  "id": "blockname",
+  "plugins": {
+    "xwalk": {
+      "page": {
+        "resourceType": "core/franklin/components/block/v1/block",
+        "template": {
+          "name": "BlockName",
+          "model": "blockname"
+        }
+      }
+    }
+  }
+}
+```
+
+**Model (merged into component-models.json):**
+
+```json
+{
+  "id": "blockname",
+  "fields": [
+    {
+      "component": "text",
+      "name": "title",
+      "label": "Title",
+      "valueType": "string"
+    },
+    {
+      "component": "richtext",
+      "name": "text",
+      "label": "Text",
+      "value": "",
+      "valueType": "string"
+    }
+  ]
+}
+```
+
+**Filter (merged into component-filters.json, if block has nested items):**
+
+```json
+{
+  "id": "blockname",
+  "components": ["item"]
+}
+```
+
+**After adding config:** Run `npm run build:json` to update the root files.
+
+**Reference:** Check existing blocks for the exact block-level JSON structure used in your project.
+
+---
+
+## Configuration Best Practices
+
+### ✅ XWalk Configuration Best Practices
+
+- ✅ **DO:** Add definitions, models, and filters to block-level JSON (`blocks/<block-name>/_<block-name>.json`)
+- ✅ **DO:** Run `npm run build:json` after adding or updating block config
+- ✅ **DO:** Use consistent naming between definition ID and model ID
+- ✅ **DO:** Add validation rules for user input
+- ✅ **DO:** Use reusable models from `models/` directory when possible (copy fields)
+- ✅ **DO:** Set appropriate resource types
+- ✅ **DO:** Keep JSON syntax valid (use a JSON validator)
+
+### ❌ XWalk Configuration Anti-patterns
+
+- ❌ **DON'T:** Edit `component-definition.json`, `component-models.json`, or `component-filters.json` directly — use block-level JSON and run build
+- ❌ **DON'T:** Skip validation rules
+- ❌ **DON'T:** Use inconsistent naming between definition ID and model ID
+- ❌ **DON'T:** Mix resource types incorrectly
+- ❌ **DON'T:** Forget to add all three parts (definition, model, filter if needed)
+
+**Next step:** [Part 3: Frontend Code Generation](#part-3-frontend-code-generation) — generate JavaScript and CSS based on user-provided HTML (after Step 2 is complete).
+
+---
+
+# Part 3: Frontend Code Generation
+
+This section covers all frontend implementation aspects: JavaScript and CSS. HTML is generated automatically by AEM from XWalk configuration. **Do this after Step 2 (user provides semantic HTML).**
+
+**Prerequisites:** [Part 2 (Backend)](#part-2-backend-code-generation) complete; [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) — user must provide actual HTML from Universal Editor.
+
+---
+
+## Part 3a: Core Concepts
+
+### Frontend Overview
+
+### Block Types Supported
+
+1. **Simple Blocks** - Single content blocks
+   - Example: `hero`, `fragment`, `textsection`
+   - See: `blocks/hero/`, `blocks/fragment/` in codebase
+
+2. **Complex Blocks with Items** - Parent block with nested items
+   - Example: `feature` → `featureItem`, `cards` → `card`
+   - See: `blocks/feature/`, `blocks/cards/` in codebase
+
+3. **Section-Level Blocks** - Section containers with nested blocks
+   - Example: `section`, `tabs`, `columns`
+   - See: `blocks/section/`, `blocks/tabs/` in codebase
+
+### Frontend Tech Stack
+
+- **JavaScript:** ES6+ modules
+- **CSS:** Standard CSS (no preprocessor)
+- **HTML:** Generated by AEM from XWalk configuration (no static HTML files); **index-based structure only** (no data attributes for selection)
+
+### Index-Based Implementation Standard
+
+All block HTML and JavaScript must use **index-based implementation**: elements are identified by their **position (index)** in the DOM (e.g. `block.children[0]`, `row.children[1]`). Do **not** use `data-*` attributes for structure or for selecting content. Document the structure contract (which index means which content) in the block's code.
+
+---
+
+## Understanding the Structure Contract: How CSS/JS Work Without Static HTML
+
+### The Core Question: How Can You Write CSS/JS Without Knowing HTML Structure?
+
+Since EDS blocks have **no static HTML** (HTML is generated at runtime by AEM), you might wonder: *How can you write CSS and JavaScript without knowing the actual HTML structure?*
+
+**Answer:** The structure is determined by the **XWalk model field order**, and CSS targets the **transformed structure** created by JavaScript, not the initial AEM-generated HTML.
+
+### How XWalk Model Determines HTML Structure
+
+**Critical:** The order of fields in your `component-models.json` directly determines the HTML structure that AEM generates at runtime.
+
+**Mapping Rule:**
+- Each field in the model → One row (`<div>`) in generated HTML
+- Field order in model → Row order in HTML (index 0, 1, 2...)
+- Field values → Cells within that row
+
+**Example:**
+
+```json
+// component-models.json
+{
+  "id": "hero",
+  "fields": [
+    {
+      "component": "reference",
+      "name": "image"
+    },      // → block.children[0] (first row)
+    {
+      "component": "text",
+      "name": "imageAlt"
+    },     // → block.children[0].children[1] (first row, second cell)
+    {
+      "component": "richtext",
+      "name": "text"
+    }      // → block.children[1] (second row)
+  ]
+}
+```
+
+**Generated HTML (at runtime by AEM):**
+
+```html
+<div class="hero">
+  <div>                    <!-- block.children[0] = image row -->
+    <div>image-url</div>   <!-- cell 0 = image value -->
+    <div>alt-text</div>    <!-- cell 1 = imageAlt value -->
+  </div>
+  <div>                    <!-- block.children[1] = text row -->
+    <div>Rich text...</div> <!-- cell 0 = text value -->
+  </div>
+</div>
+```
+
+**Key Point:** The field order in your XWalk model **is** the structure contract. You know the structure because you define it in the model.
+
+### CSS and JavaScript Development Strategy
+
+#### JavaScript (`decorate()` function) Workflow:
+
+1. **Receives** the AEM-generated HTML structure (based on XWalk model field order)
+2. **Extracts** data using index-based access (knowing the field order from the model)
+3. **Transforms** to the final desired structure
+4. **Adds CSS classes** to the transformed elements for styling
+
+**Example:**
+
+```javascript
+export default function decorate(block) {
+  // Structure contract: field[0] = image, field[1] = text
+  const imageRow = block.children[0];        // First field = image
+  const textRow = block.children[1];         // Second field = text
+  
+  const imageSrc = imageRow?.children?.[0]?.textContent?.trim();
+  const text = textRow?.children?.[0]?.textContent?.trim();
+  
+  // Transform to final structure
+  const container = document.createElement('div');
+  container.classList.add('hero-container');  // CSS class for styling
+  
+  if (imageSrc) {
+    const img = document.createElement('img');
+    img.src = imageSrc;
+    img.classList.add('hero-image');  // CSS class for styling
+    container.appendChild(img);
+  }
+  
+  if (text) {
+    const textDiv = document.createElement('div');
+    textDiv.classList.add('hero-text');  // CSS class for styling
+    textDiv.textContent = text;
+    container.appendChild(textDiv);
+  }
+  
+  block.innerHTML = '';
+  block.appendChild(container);
+}
+```
+
+#### CSS Development Strategy:
+
+**Critical:** CSS should style the **final transformed structure** (after `decorate()` runs), **not** the initial AEM-generated HTML.
+
+**Why:** The initial AEM HTML is just raw data in a predictable structure. JavaScript transforms it into the final presentation structure, and that's what CSS should target.
+
+**Example:**
+
+```css
+/* ✅ CORRECT: Style the transformed structure */
+.hero-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+}
+
+.hero-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+/* ❌ WRONG: Don't style the initial AEM structure */
+/* .hero > div > div { ... } */
+```
+
+### Complete Development Workflow
+
+```
+1. Plan Structure Contract
+   ↓
+   Define field order in XWalk model
+   Document: "field[0] = image, field[1] = text"
+   ↓
+2. AEM Generates HTML (Runtime)
+   ↓
+   HTML structure matches field order
+   block.children[0] = first field
+   block.children[1] = second field
+   ↓
+3. JavaScript Transforms
+   ↓
+   decorate(block) receives AEM HTML
+   Extracts data by index (knowing field order)
+   Transforms to final structure
+   Adds CSS classes
+   ↓
+4. CSS Styles Final Structure
+   ↓
+   Targets transformed elements
+   Uses classes added by JavaScript
+   Styles the final DOM, not initial HTML
+```
+
+### Development Process Checklist
+
+1. **Generate Backend Configuration First:**
+   - [ ] Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json` (plan field order — this becomes structure contract)
+   - [ ] Run `npm run build:json`
+   - [ ] Deploy to AEM/Universal Editor
+
+2. **Request User to Provide Semantic HTML (MANDATORY):**
+   - [ ] Ask user to author the block in Adobe Universal Editor
+   - [ ] User provides the actual generated HTML (from view source or DevTools)
+   - [ ] Document structure contract from user-provided HTML (field indices, empty field behavior, etc.)
+   - [ ] Do NOT generate HTML — user provides it from Universal Editor
+
+3. **Write JavaScript (based on user-provided HTML):**
+   - [ ] Document structure contract in JSDoc (based on user-provided HTML)
+   - [ ] Access elements by index based on actual field order from user-provided HTML
+   - [ ] Transform to final structure
+   - [ ] Add CSS classes to transformed elements
+   - [ ] Test with user-provided HTML
+
+4. **Write CSS (based on user-provided HTML):**
+   - [ ] Target the transformed structure (after `decorate()` runs)
+   - [ ] Use classes added by JavaScript
+   - [ ] Test with user-provided HTML to verify styling
+   - [ ] Do NOT style the initial AEM-generated HTML structure
+
+### Key Takeaways
+
+- ✅ **You DO know the structure** - it's defined by your XWalk model field order
+- ✅ **JavaScript transforms** the AEM HTML to the final structure
+- ✅ **CSS targets** the transformed structure, not the initial HTML
+- ✅ **Field order = Structure contract** - document it clearly
+- ❌ **Don't style** the initial AEM-generated HTML directly
+- ❌ **Don't rely** on data attributes for structure (use index-based access)
+
+---
+
+## Frontend File Structure
+
+### Block Files
+
+```
+blocks/<block-name>/
+├── <block-name>.js              # Block JavaScript (FRONTEND)
+└── <block-name>.css             # Block Styles (FRONTEND)
+```
+
+**Critical: One JS and One CSS per Block — No Duplicates**
+
+Generate **exactly one** JavaScript file and **exactly one** CSS file per block. The file names must match the block folder name exactly (e.g., for `blocks/social-promo/`, use `social-promo.js` and `social-promo.css`).
+
+- ✅ **Correct:** One `social-promo.js` and one `social-promo.css` in `blocks/social-promo/`
+- ❌ **Wrong:** Creating both `social-promo.js` and `socialpromo.js`, or both `social-promo.css` and `socialpromo.css` — never create two files with different naming (hyphenated vs non-hyphenated).
+
+**Note:** EDS projects do not use static HTML files. HTML is generated automatically by AEM from the XWalk configuration when content is authored.
+
+**Note:** XWalk configuration is added to block-level JSON files; the build updates root-level files (see Part 2):
+- `component-definition.json` - Component definitions
+- `component-models.json` - Field models
+- `component-filters.json` - Nesting rules
+
+### Critical: Parent-Child Blocks Use ONE Folder
+
+**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`, `relatedarticles` → `relatedarticle`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.
+
+**Pattern:**
+- **XWalk Config (Backend):** Parent block definition + Child block definition (two separate definitions in JSON)
+- **Frontend Files:** ONE folder `blocks/<parent-name>/` with ONE `decorate()` function that handles both parent and child items
+
+**Example:**
+- `blocks/cards/` - ONE folder
+  - `cards.js` - Handles parent container AND all child card items in one `decorate()` function
+  - `cards.css` - Styles for parent container AND all child card items
+- `blocks/relatedarticles/` - ONE folder
+  - `relatedarticles.js` - Handles section title (parent) AND all article items (children) in one `decorate()` function
+  - `relatedarticles.css` - Styles for section title AND all article items
+
+**Why:** The parent block's `decorate()` function receives all child items as `block.children`, so it processes everything in one place. There is no separate child block folder or files.
+
+**Reference:** `blocks/cards/cards.js`, `blocks/relatedarticles/relatedarticles.js`
+
+### Shared Resources
+
+```
+shared-components/               # Reusable frontend utilities
+    ├── Heading.js
+    ├── ImageComponent.js
+    ├── ButtonCTA.js
+├── SvgIcon.js
+    └── Utility.js
+```
+
+---
+
+## Part 3b: JavaScript Implementation
+
+**One JS file per block:** Create only `<block-name>.js` (matching the folder name). Never create two JS files (e.g., `social-promo.js` and `socialpromo.js`).
+
+### Block Initialization Flow
+
+```
+1. Page Load
+   ↓
+2. decorateSections() - Scans for sections
+   ↓
+3. decorateBlock() - Marks block as 'initialized'
+   - Adds 'block' class and block metadata
+   - Calls wrapTextNodes() - Wraps text content in <p> tags
+   ↓
+4. loadBlock() - Async loading
+   - Loads CSS: <block-name>.css
+   - Imports JS: <block-name>.js
+   - Calls default export: decorate(block)
+   ↓
+5. Block Status: 'loaded'
+```
+
+**Critical:** `wrapTextNodes()` runs BEFORE `decorate()` and wraps text content in `<p>` tags. Your extraction logic must account for this:
+- Links may be wrapped: `<div><p><a href="...">`
+- Text may be wrapped: `<div><p>Text content</p></div>`
+- Always check for both direct children and wrapped elements when extracting
+
+**Reference:** `scripts/aem.js` lines 777-826, `scripts/aem.js` lines 378-425 (wrapTextNodes function)
+
+### Block Status Lifecycle
+
+Blocks progress through: `initialized` → `loading` → `loaded`. Check `block.dataset.blockStatus` before operations that should run once.
+
+**Reference:** `scripts/aem.js` lines 777-826
+
+### Index-Based Structure and Data Extraction
+
+**Standard:** Use **index-based implementation** only. Do not rely on data attributes for structure or selection. All elements are identified by their **position (index)** in the DOM. This keeps HTML semantic, avoids brittle attribute coupling, and follows a clear structure contract.
+
+#### Structure Contract (Index Convention)
+
+Define a fixed order of direct children so that index = meaning. Document this contract in the block’s comment or README.
+
+**Simple block (single row of cells):**
+- `block.children[0]` = first row (often title or primary content)
+- `block.children[0].children[0]` = first cell, `block.children[0].children[1]` = second cell, etc.
+
+**Multi-row block (rows as direct children):**
+- `block.children[0]` = row 1 (e.g. title row)
+- `block.children[1]` = row 2 (e.g. description row)
+- `block.children[2]` = row 3 (e.g. CTA row)
+- Each row’s cells: `row.children[0]`, `row.children[1]`, …
+
+**Block with items (each row = one item):**
+- `block.children` = list of item rows
+- For each row: `row.children[0]` = field 1, `row.children[1]` = field 2, etc.
+
+#### Index-Based Data Extraction Patterns
+
+```javascript
+// Simple block: first row, first cell = title
+const firstRow = block.children[0];
+const titleElement = firstRow?.children?.[0];
+const title = titleElement?.textContent?.trim() || '';
+
+// Multi-row: row index = meaning (document in block comment)
+const rows = [...block.children];
+const title = rows[0]?.children?.[0]?.textContent?.trim() || '';
+const description = rows[1]?.children?.[0]?.textContent?.trim() || '';
+
+// Items: each direct child is one item; cells by index
+const items = Array.from(block.children).map((row) => ({
+  title: row.children?.[0]?.textContent?.trim() ?? '',
+  description: row.children?.[1]?.textContent?.trim() ?? '',
+  link: row.children?.[2]?.querySelector?.('a')?.getAttribute?.('href') ?? ''
+}));
+
+// Link row: 3 cells = text, icon, target (by index)
+const linkRow = block.children[2];
+if (linkRow?.children?.length >= 3) {
+  const [linkCell, iconCell, targetCell] = linkRow.children;
+  const linkData = {
+    text: linkCell?.textContent?.trim(),
+    url: linkCell?.querySelector?.('a')?.getAttribute?.('href'),
+    icon: iconCell?.textContent?.trim()?.replace('-', ''),
+    target: targetCell?.textContent?.trim()
+  };
+}
+
+// Image: first cell = image (anchor or img), second cell = alt text
+const imageRow = block.children[0];
+const imageCell = imageRow?.children?.[0];
+const altCell = imageRow?.children?.[1];
+const imageSrc = imageCell?.querySelector?.('img')?.getAttribute?.('src')
+  || imageCell?.querySelector?.('a')?.getAttribute?.('href');
+const altText = altCell?.textContent?.trim() || '';
+
+// Safe access with fallbacks
+const value = element?.textContent?.trim() ?? 'default';
+```
+
+**Best practice:** Use optional chaining (`?.`) and nullish coalescing (`??`) for index-based access. Document the index contract at the top of the block's `decorate()` function.
+
+#### Robust Data Extraction with Fallbacks
+
+**Critical:** After `decorateBlock()` runs, `wrapTextNodes()` wraps text content in `<p>` tags. Always account for wrapped elements when extracting data.
+
+**Link Extraction with Fallbacks:**
+```javascript
+// ✅ CORRECT: Handle wrapped links and use .href as fallback
+const linkCell = row?.children?.[0];
+// Check for link in direct children OR wrapped in <p>
+const linkElement = linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a');
+// Use .href as fallback (resolves relative URLs)
+const linkUrl = linkElement?.getAttribute?.('href') || linkElement?.href || '';
+```
+
+**Text Extraction with Fallbacks:**
+```javascript
+// ✅ CORRECT: Extract text from cell or wrapped <p> tag
+const textCell = row?.children?.[0];
+// Try direct textContent first, then check for wrapped <p>
+let text = textCell?.textContent?.trim() || '';
+if (!text) {
+  text = textCell?.querySelector?.('p')?.textContent?.trim() || '';
+}
+```
+
+**CTA Extraction Pattern (with Multiple Fallbacks):**
+```javascript
+// CTA row: link cell, text cell, target cell
+const ctaRow = rows[3];
+const ctaLinkCell = ctaRow?.children?.[0];
+const ctaTextCell = ctaRow?.children?.[1];
+const ctaTargetCell = ctaRow?.children?.[2];
+
+// Extract link - handle wrapped elements and use .href fallback
+const ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');
+const ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';
+
+// Extract text - try text cell first, then fallback to link text (if not a URL)
+let ctaText = ctaTextCell?.textContent?.trim() || 
+              ctaTextCell?.querySelector?.('p')?.textContent?.trim() || '';
+if (!ctaText && ctaLinkElement) {
+  const linkText = ctaLinkElement.textContent?.trim() || '';
+  // Only use link text if it's not a URL (avoid using "/path/to/page" as button text)
+  ctaText = (linkText.startsWith('/') || linkText.includes('http')) ? '' : linkText;
+}
+
+const ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';
+
+// Render button if link exists (text is optional with fallbacks)
+if (ctaLink) {
+  const button = document.createElement('a');
+  button.href = ctaLink;
+  button.textContent = ctaText || 'Learn more';  // Final fallback
+  button.target = ctaTarget;
+  // ...
+}
+```
+
+**Why Fallbacks Matter:**
+- `wrapTextNodes()` wraps content in `<p>` tags before `decorate()` runs
+- `getAttribute('href')` may return empty string; `.href` resolves relative URLs
+- Text cells may be empty; link text can serve as fallback (but filter out URLs)
+- Always render if link exists; text can have multiple fallback levels
+
+### Reusable Frontend Components
+
+**Location:** `shared-components/`
+
+1. **Heading.js** - Dynamic heading generator
+   - Usage: `Heading({ level: 2, text: "Title", className: "class" })`
+   - Reference: `shared-components/Heading.js`
+
+2. **ImageComponent.js** - Responsive image component
+   - Usage: `ImageComponent({ src, alt, className, breakpoints })`
+   - Reference: `shared-components/ImageComponent.js`
+
+3. **ButtonCTA.js** - CTA button component
+   - Usage: `ButtonCTA({ link, text, type, target })`
+   - Reference: `shared-components/ButtonCTA.js`
+
+4. **Utility.js** - Utility functions
+   - `stringToHTML()` - Convert string to DOM element (sanitizes HTML)
+   - `isMobile()` - Mobile detection
+   - Reference: `shared-components/Utility.js`
+
+5. **SvgIcon.js** - SVG icon component
+   - Reference: `shared-components/SvgIcon.js`
+   - **Icons source:** Fetch SVG markup from Figma via Figma MCP; save as `icons/<name>.svg` using the inline SVG format (see [Using Figma MCP Tools](#using-figma-mcp-tools) → Fetch SVG Icons from Figma)
+
+### Frontend Utility Functions
+
+**From `scripts/aem.js`:**
+- `createOptimizedPicture()` - Optimized image creation
+- `loadBlock()` - Block loading mechanism
+- `loadSections()` - Load sections asynchronously (for fragments)
+- `getMetadata()` - Extract metadata from page
+
+**From `scripts/scripts.js`:**
+- `moveInstrumentation(from, to)` - **Critical:** When transforming DOM, use when moving or replacing elements so that any authoring instrumentation (e.g. from AEM) is preserved on the new structure. Always use when replacing elements.
+
+**Reference:** `scripts/aem.js`, `scripts/scripts.js` lines 45-53
+
+### JavaScript Templates
+
+#### Synchronous Block Template (Index-Based)
+
+```javascript
+import Heading from '../../shared-components/Heading.js';
+import ImageComponent from '../../shared-components/ImageComponent.js';
+import { moveInstrumentation } from '../../scripts/scripts.js';
+import stringToHTML from '../../shared-components/Utility.js';
+
+/**
+ * Structure contract: block.children[0] = title row, block.children[1] = content row.
+ * @param {Element} block The block element
+ */
+export default function decorate(block) {
+  // Index-based extraction: first row, first cell = title
+  const firstRow = block.children[0];
+  const titleElement = firstRow?.children?.[0];
+  const title = titleElement?.textContent?.trim() || '';
+
+  const container = document.createElement('div');
+  container.classList.add('container');
+
+  if (title && titleElement) {
+    const heading = Heading({ level: 2, text: title, className: 'title' });
+    const parsedHeading = stringToHTML(heading);
+    moveInstrumentation(titleElement, parsedHeading);
+    container.appendChild(parsedHeading);
+  }
+
+  block.innerHTML = '';
+  block.appendChild(container);
+}
+```
+
+**Reference:** `blocks/hero/hero.js`, `blocks/feature/feature.js`
+
+#### Async Block Template (for External Resources)
+
+```javascript
+import { loadFragment } from '../fragment/fragment.js';
+import { loadSections } from '../../scripts/aem.js';
+
+/**
+ * Decorates the block (async for loading external content)
+ * @param {Element} block The block element
+ */
+export default async function decorate(block) {
+  const link = block.querySelector('a');
+  const path = link ? link.getAttribute('href') : block.textContent.trim();
+  
+  try {
+    const fragment = await loadFragment(path);
+    if (fragment) {
+      const fragmentSection = fragment.querySelector(':scope .section');
+      if (fragmentSection) {
+        block.classList.add(...fragmentSection.classList);
+        block.replaceChildren(...fragmentSection.childNodes);
+      }
+    }
+  } catch (error) {
+    // Handle error gracefully
+    console.error(`Failed to load fragment: ${path}`, error);
+  }
+}
+```
+
+## Recommended Patterns and Anti-Patterns
+
+**Reference:** See `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` for detailed patterns and anti-patterns.
+
+### Recommended Patterns
+
+#### Pattern 1: Standard Block Decoration (Index-Based)
+
+**Use Case:** Simple content blocks (hero, text sections)
+
+```javascript
+// Structure: block.children[0] = title row, block.children[1] = content row
+export default function decorate(block) {
+  const rows = [...block.children];
+  const title = rows[0]?.children?.[0]?.textContent?.trim();
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'blockname-wrapper';
+  // ... build structure using index-based data
+
+  moveInstrumentation(block, wrapper);
+  block.replaceChildren(wrapper);
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 1
+
+#### Pattern 2: Complex Block with Nested Items
+
+**Use Case:** Parent block with child items (cards → card)
+
+**Important:** Even though XWalk has parent-child definitions, the frontend uses ONE folder with ONE JS file. The `decorate()` function processes both parent and child items.
+
+```javascript
+/**
+ * Cards Block
+ * 
+ * Structure contract (index-based):
+ * - block.children[0+] = Card item rows (each row = one card item)
+ * 
+ * For each card item row:
+ * - row.children[0] = Image cell
+ * - row.children[1] = Text cell
+ * 
+ * @param {Element} block The block element
+ */
+export default function decorate(block) {
+  const ul = document.createElement('ul');
+  [...block.children].forEach((row) => {
+    const li = document.createElement('li');
+    moveInstrumentation(row, li);  // CRITICAL
+    // ... transform row content (child item)
+    ul.append(li);
+  });
+  block.replaceChildren(ul);
+}
+```
+
+**Example with Parent Title + Child Items:**
+
+```javascript
+/**
+ * Related Articles Block
+ * 
+ * Structure contract (index-based):
+ * - block.children[0] = Section title row (parent)
+ * - block.children[1+] = Article item rows (children)
+ * 
+ * @param {Element} block The block element
+ */
+export default function decorate(block) {
+  const rows = [...block.children];
+  
+  // Process parent: section title (first row)
+  const titleRow = rows[0];
+  const title = titleRow?.children?.[0]?.textContent?.trim() || '';
+  
+  // Process children: article items (remaining rows)
+  const articleRows = rows.slice(1);
+  
+  // Build container with title
+  const container = document.createElement('div');
+  if (title) {
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    container.appendChild(heading);
+  }
+  
+  // Process all child items
+  const articlesWrapper = document.createElement('div');
+  articleRows.forEach((row) => {
+    // Transform each child item row
+    const card = document.createElement('a');
+    // ... extract data and build card structure
+    articlesWrapper.appendChild(card);
+  });
+  
+  container.appendChild(articlesWrapper);
+  block.replaceChildren(container);
+}
+```
+
+**Key Points:**
+- ONE folder: `blocks/<parent-name>/`
+- ONE JS file: `<parent-name>.js` with ONE `decorate()` function
+- ONE CSS file: `<parent-name>.css` with styles for parent and children
+- Parent and child items are processed in the same `decorate()` function
+- Child items are accessed via `block.children[1+]` (after parent row at index 0)
+
+**See:** [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder) for full details.
+
+**Reference:** 
+- `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2
+- `blocks/cards/cards.js` - Simple parent-child pattern
+- `blocks/relatedarticles/relatedarticles.js` - Parent title + child items pattern
+
+#### Pattern 3: Async Block with External Content
+
+**Use Case:** Blocks loading fragments or external content
+
+```javascript
+export default async function decorate(block) {
+  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();
+  const content = await loadFragment(path);
+  if (content) {
+    block.replaceChildren(...content.childNodes);
+  }
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 3
+
+#### Pattern 4: Interactive Block with Event Handlers
+
+**Use Case:** Blocks with user interaction (navigation, tabs)
+
+```javascript
+export default async function decorate(block) {
+  // Setup DOM
+  // ...
+  
+  // Add event listeners
+  block.querySelector('.button').addEventListener('click', handleClick);
+  
+  // Media query listeners
+  const isDesktop = window.matchMedia('(min-width: 900px)');
+  isDesktop.addEventListener('change', handleResize);
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 4
+
+#### Pattern 5: Image Optimization (Index-Based)
+
+**Use Case:** Blocks displaying images. Assume image row is first row; first cell contains picture/img.
+
+```javascript
+import { createOptimizedPicture } from '../../scripts/aem.js';
+import { moveInstrumentation } from '../../scripts/scripts.js';
+
+// In decorate function: image in first row, first cell
+const imageRow = block.children[0];
+const imageCell = imageRow?.children?.[0];
+const altCell = imageRow?.children?.[1];
+const altText = altCell?.textContent?.trim() || '';
+
+// Extract image source - handle wrapped elements
+const pictureOrImg = imageCell?.querySelector?.('picture, img');
+if (pictureOrImg) {
+  const img = pictureOrImg.tagName === 'IMG' ? pictureOrImg : pictureOrImg.querySelector('img');
+  if (img) {
+    const optimizedPic = createOptimizedPicture(
+      img.src, 
+      altText, 
+      false, 
+      [{ width: '750' }, { width: '1440' }]
+    );
+    moveInstrumentation(pictureOrImg, optimizedPic);
+    pictureOrImg.replaceWith(optimizedPic);
+  }
+}
+```
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 5
+
+#### Pattern 6: CTA Button with Robust Extraction
+
+**Use Case:** Blocks with Call-to-Action buttons requiring link, text, and target fields.
+
+```javascript
+// CTA row: link cell (index 0), text cell (index 1), target cell (index 2)
+const ctaRow = rows[3];
+const ctaLinkCell = ctaRow?.children?.[0];
+const ctaTextCell = ctaRow?.children?.[1];
+const ctaTargetCell = ctaRow?.children?.[2];
+
+// Extract link - handle wrapped elements and use .href fallback
+const ctaLinkElement = ctaLinkCell?.querySelector?.('a') || ctaLinkCell?.querySelector?.('p a');
+const ctaLink = ctaLinkElement?.getAttribute?.('href') || ctaLinkElement?.href || '';
+
+// Extract text with multiple fallbacks
+let ctaText = ctaTextCell?.textContent?.trim() || 
+              ctaTextCell?.querySelector?.('p')?.textContent?.trim() || '';
+if (!ctaText && ctaLinkElement) {
+  const linkText = ctaLinkElement.textContent?.trim() || '';
+  // Only use link text if it's not a URL
+  ctaText = (linkText.startsWith('/') || linkText.includes('http')) ? '' : linkText;
+}
+
+const ctaTarget = ctaTargetCell?.textContent?.trim() || '_self';
+
+// Render button if link exists (text has fallbacks)
+if (ctaLink) {
+  const ctaButton = document.createElement('a');
+  ctaButton.href = ctaLink;
+  ctaButton.textContent = ctaText || 'Learn more';  // Final fallback
+  ctaButton.target = ctaTarget;
+  if (ctaTarget === '_blank') {
+    ctaButton.rel = 'noopener noreferrer';
+  }
+  if (ctaLinkCell) {
+    moveInstrumentation(ctaLinkCell, ctaButton);
+  }
+  // Append to container...
+}
+```
+
+**Key Points:**
+- Always use `.href` as fallback for `getAttribute('href')` (resolves relative URLs)
+- Check for wrapped `<p>` tags when extracting text
+- Use link text as fallback only if it's not a URL
+- Render button if link exists; text is optional with fallbacks
+- Always use `moveInstrumentation()` when replacing elements
+
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 6
+
+#### Pattern 7: Carousel Block with Swiper
+
+**Use Case:** Blocks with carousel/slider behavior (cards, images, testimonials). Uses Swiper JS loaded via `loadScript()`/`loadCSS()` per EDS practice — no jQuery required.
+
+**EDS-specific requirements:**
+- Load Swiper in the block that needs it via `loadScript()`/`loadCSS()` from `scripts/aem.js` — do not add to `head.html`
+- Use `moveInstrumentation()` when transforming DOM (preserves AEM authoring)
+- Use index-based structure; document structure contract in JSDoc
+- Use `createOptimizedPicture()` for images in slides
+
+```javascript
+import {
+  createOptimizedPicture,
+  loadCSS,
+  loadScript,
+} from '../../scripts/aem.js';
+import { moveInstrumentation } from '../../scripts/scripts.js';
+
+const SWIPER_CSS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+const SWIPER_JS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
+
+/**
+ * Structure contract (index-based):
+ * - block.children[0+] = Slide item rows (each row = one slide)
+ * Each slide row: row.children[0] = image, row.children[1] = title, row.children[2] = description
+ *
+ * @param {Element} block The block element
+ */
+export default async function decorate(block) {
+  const rows = [...block.children];
+  if (rows.length < 2) return;
+
+  const swiperWrap = document.createElement('div');
+  swiperWrap.className = 'swiper blockname-swiper';
+  swiperWrap.innerHTML = `
+    <div class="swiper-wrapper"></div>
+    <button type="button" class="swiper-button-prev blockname-prev" aria-label="Previous slide"></button>
+    <button type="button" class="swiper-button-next blockname-next" aria-label="Next slide"></button>
+    <div class="blockname-pagination swiper-pagination"></div>
+  `;
+  const swiperWrapper = swiperWrap.querySelector('.swiper-wrapper');
+  const prevButton = swiperWrap.querySelector('.blockname-prev');
+  const nextButton = swiperWrap.querySelector('.blockname-next');
+  const paginationEl = swiperWrap.querySelector('.blockname-pagination');
+
+  rows.forEach((row) => {
+    const slide = document.createElement('div');
+    slide.className = 'swiper-slide blockname-slide';
+    const imgCell = row?.children?.[0]?.querySelector?.('picture, img');
+    const img = imgCell?.tagName === 'IMG' ? imgCell : imgCell?.querySelector?.('img');
+    const src = img?.src || img?.getAttribute?.('src') || '';
+    const alt = img?.alt || img?.getAttribute?.('alt') || '';
+    const title = row?.children?.[1]?.textContent?.trim() ?? '';
+    const desc = row?.children?.[2]?.textContent?.trim() ?? '';
+    if (src) {
+      const pic = createOptimizedPicture(src, alt, false, [{ width: '440' }, { width: '880' }]);
+      slide.appendChild(pic);
+    }
+    if (title) {
+      const h3 = document.createElement('h3');
+      h3.className = 'blockname-slide-title';
+      h3.textContent = title;
+      slide.appendChild(h3);
+    }
+    if (desc) {
+      const p = document.createElement('p');
+      p.className = 'blockname-slide-desc';
+      p.textContent = desc;
+      slide.appendChild(p);
+    }
+    moveInstrumentation(row, slide);
+    swiperWrapper.appendChild(slide);
+  });
+
+  moveInstrumentation(block, swiperWrap);
+  block.replaceChildren(swiperWrap);
+
+  await Promise.all([
+    loadCSS(SWIPER_CSS),
+    loadScript(SWIPER_JS),
+  ]);
+
+  const Swiper = globalThis.Swiper;
+  if (!Swiper) return;
+
+  const swiper = new Swiper(swiperWrap, {
+    grabCursor: true,
+    spaceBetween: 24,
+    navigation: {
+      nextEl: nextButton,
+      prevEl: prevButton,
+    },
+    pagination: {
+      el: paginationEl,
+      type: 'fraction',
+      clickable: true,
+    },
+    breakpoints: {
+      390: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 16 },
+      768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
+      1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
+      1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
+    },
+  });
+}
+```
+
+**Key Points:**
+- Load Swiper via `loadScript()`/`loadCSS()` in the block — EDS pattern for third-party libs
+- Swiper is vanilla JS (no jQuery required)
+- Use `moveInstrumentation()` when transforming DOM
+- Responsive breakpoints match common EDS viewports (390, 768, 1280, 1920)
+- Use `createOptimizedPicture()` for slide images (EDS performance)
+
+**Reference:** `blocks/featurecardscarousel/featurecardscarousel.js`
+
+### Carousel Component Snippets (Swiper)
+
+Reusable Swiper configuration snippets for EDS carousel blocks. Adapt to your block structure and naming.
+
+#### Snippet: Load Swiper (EDS Pattern)
+
+```javascript
+import { loadCSS, loadScript } from '../../scripts/aem.js';
+
+const SWIPER_CSS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+const SWIPER_JS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
+
+// In decorate():
+await Promise.all([
+  loadCSS(SWIPER_CSS),
+  loadScript(SWIPER_JS),
+]);
+
+const Swiper = globalThis.Swiper;
+if (!Swiper) return;
+```
+
+#### Snippet: Swiper Config (EDS Breakpoints)
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  grabCursor: true,
+  spaceBetween: 24,
+  navigation: {
+    nextEl: nextButton,
+    prevEl: prevButton,
+  },
+  pagination: {
+    el: paginationEl,
+    type: 'fraction',
+    clickable: true,
+  },
+  breakpoints: {
+    390: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 16 },
+    768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
+    1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
+    1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
+  },
+});
+```
+
+#### Snippet: Swiper HTML Structure (EDS)
+
+```html
+<!-- Build in JS; Swiper expects this structure -->
+<div class="swiper blockname-swiper">
+  <div class="swiper-wrapper">
+    <div class="swiper-slide blockname-slide">...</div>
+    <div class="swiper-slide blockname-slide">...</div>
+  </div>
+  <button type="button" class="swiper-button-prev blockname-prev" aria-label="Previous slide"></button>
+  <button type="button" class="swiper-button-next blockname-next" aria-label="Next slide"></button>
+  <div class="blockname-pagination swiper-pagination"></div>
+</div>
+```
+
+#### Snippet: Slide Change Handler (Sync Content)
+
+For blocks that sync content (e.g. center image) when slide changes:
+
+```javascript
+swiper.on('slideChange', () => {
+  const idx = swiper.activeIndex;
+  const slide = swiper.slides[idx];
+  const img = centerImageWrap.querySelector('img');
+  if (slide?.dataset?.centerImage && img) {
+    img.src = slide.dataset.centerImage;
+    img.alt = slide.dataset.centerImageAlt || '';
+  }
+});
+
+// Click on slide to go to
+swiperWrap.querySelectorAll('.blockname-slide').forEach((el, idx) => {
+  el.addEventListener('click', () => swiper.slideTo(idx));
+});
+```
+
+#### Snippet: Autoplay (Configurable Delay)
+
+```javascript
+// carouselLagSec from authoring (e.g. 1–5, default 4)
+const carouselLagSec = Math.min(5, Math.max(1, Number.parseInt(getText(rows[9]?.children?.[0]) || '4', 10) || 4));
+
+const swiper = new Swiper(swiperWrap, {
+  // ... other options
+  autoplay: {
+    delay: carouselLagSec * 1000,
+    disableOnInteraction: false,
+  },
+});
+```
+
+### Anti-Patterns to Avoid
+
+#### ❌ Anti-Pattern 1: Skipping Instrumentation Preservation
+
+```javascript
+// ❌ WRONG - Loses AEM authoring attributes
+const newElement = document.createElement('div');
+newElement.innerHTML = block.innerHTML;
+block.replaceChildren(newElement);
+
+// ✅ CORRECT - Preserves AEM authoring attributes
+const newElement = document.createElement('div');
+moveInstrumentation(block, newElement);
+while (block.firstElementChild) newElement.append(block.firstElementChild);
+block.replaceChildren(newElement);
+```
+
+**Impact:** AEM authoring interface will not work correctly  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 1
+
+#### ❌ Anti-Pattern 2: Hardcoding Breakpoints
+
+```javascript
+// ❌ WRONG
+if (window.innerWidth >= 1024) { ... }
+
+// ✅ CORRECT - Use consistent breakpoint
+const isDesktop = window.matchMedia('(min-width: 900px)');
+if (isDesktop.matches) { ... }
+```
+
+**Impact:** Inconsistent responsive behavior  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 2
+
+#### ❌ Anti-Pattern 3: Missing XWalk Configuration
+
+**Issue:** Block works but cannot be authored in AEM because XWalk configuration is missing.
+
+**Solution:** Add block definition, model, and filter to `blocks/<block-name>/_<block-name>.json`, then run `npm run build:json`.
+
+**Impact:** Block cannot be configured in AEM authoring interface  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 3
+
+#### ❌ Anti-Pattern 4: Using innerHTML with User Content
+
+```javascript
+// ❌ WRONG - XSS risk
+element.innerHTML = userContent;
+
+// ✅ CORRECT - Safe
+element.textContent = userContent;
+// OR use sanitization utility if HTML needed
+import stringToHTML from '../../shared-components/Utility.js';
+const safeHTML = stringToHTML(userContent);
+```
+
+**Impact:** Security vulnerability  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 4
+
+#### ❌ Anti-Pattern 5: Not Running Build Command
+
+```bash
+# After adding XWalk config, must run:
+npm run build:json
+# Otherwise component-*.json files won't be updated
+```
+
+**Impact:** AEM won't recognize new block (if project uses build pipeline)  
+**Reference:** `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Anti-Pattern 5
+
+#### ❌ Anti-Pattern 6: Incomplete Link Extraction
+
+```javascript
+// ❌ WRONG - May fail if link is wrapped or getAttribute returns empty
+const link = linkCell?.querySelector?.('a')?.getAttribute?.('href') || '';
+if (link && text) {  // Too strict - requires both
+  // render button
+}
+
+// ✅ CORRECT - Handle wrapped elements and use .href fallback
+const linkElement = linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a');
+const link = linkElement?.getAttribute?.('href') || linkElement?.href || '';
+if (link) {  // Only require link, text has fallbacks
+  // render button with fallback text
+}
+```
+
+**Impact:** Buttons may not render if extraction fails or text is missing  
+**Reference:** See "Robust Data Extraction with Fallbacks" section above
+
+#### ❌ Anti-Pattern 7: Ignoring wrapTextNodes() Wrapping
+
+```javascript
+// ❌ WRONG - Assumes text is directly in cell
+const text = textCell?.textContent?.trim() || '';
+
+// ✅ CORRECT - Check for wrapped <p> tag
+let text = textCell?.textContent?.trim() || '';
+if (!text) {
+  text = textCell?.querySelector?.('p')?.textContent?.trim() || '';
+}
+```
+
+**Impact:** Text extraction may fail if content is wrapped in `<p>` tags by `wrapTextNodes()`  
+**Reference:** See "Robust Data Extraction with Fallbacks" section above
+
+**Note:** For detailed explanations and more patterns, see `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Component/Service Patterns and Anti-Patterns section.
+
+### Advanced Frontend Patterns
+
+#### Fragment Loading (Async Blocks)
+
+For blocks loading external content (header/footer):
+
+```javascript
+import { loadFragment } from '../fragment/fragment.js';
+import { loadSections } from '../../scripts/aem.js';
+
+export default async function decorate(block) {
+  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();
+  try {
+    const fragment = await loadFragment(path);
+    if (fragment) {
+      await loadSections(fragment);
+      block.replaceChildren(...fragment.childNodes);
+    }
+  } catch (error) {
+    console.error(`Failed to load fragment: ${path}`, error);
+  }
+}
+```
+
+#### Event Handlers
+
+**Resize handlers:** Call initially, then add listener. Consider cleanup if block is removed.
+**Click handlers:** Use event delegation on block container.
+
+**Reference:** `blocks/fragment/fragment.js`, `blocks/header/header.js`, `blocks/footer/footer.js`
+
+#### Block Wrapper Classes
+
+Automatically added by `decorateBlock()`:
+- `<block-name>-wrapper` - On block's parent element
+- `<block-name>-container` - On section containing block
+
+**Reference:** `scripts/aem.js` lines 819-822
+
+---
+
+## Part 3c: CSS Implementation
+
+**One CSS file per block:** Create only `<block-name>.css` (matching the folder name). Never create two CSS files (e.g., `social-promo.css` and `socialpromo.css`).
+
+### CSS File Structure
+
+**Path:** `blocks/<block-name>/<block-name>.css`
+
+**Purpose:** Block-specific styling
+
+**Reference:** `blocks/hero/hero.css`
+
+### Critical: CSS Targets Transformed Structure
+
+**Important:** CSS should style the **final transformed structure** created by JavaScript's `decorate()` function, **not** the initial AEM-generated HTML.
+
+**Why:**
+- Initial AEM HTML is raw data in a predictable structure (based on XWalk model field order)
+- JavaScript transforms this to the final presentation structure
+- CSS should target the transformed elements with classes added by JavaScript
+
+**Workflow:**
+```
+AEM generates HTML (from XWalk model)
+  ↓
+JavaScript decorate() transforms structure
+  ↓
+CSS styles the transformed structure
+```
+
+**Example:**
+
+```javascript
+// JavaScript: Transform and add CSS classes
+export default function decorate(block) {
+  const container = document.createElement('div');
+  container.classList.add('hero-container');  // ← CSS class for styling
+  
+  const image = document.createElement('img');
+  image.classList.add('hero-image');  // ← CSS class for styling
+  container.appendChild(image);
+  
+  block.replaceChildren(container);
+}
+```
+
+```css
+/* ✅ CORRECT: Style the transformed structure */
+.hero-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+}
+
+/* ❌ WRONG: Don't style initial AEM structure directly */
+/* .hero > div > div { ... } */
+```
+
+### CSS Template
+
+```css
+/* Block container styles */
+.block-name {
+  /* Block styles */
+}
+
+/* Block wrapper (added automatically by decorateBlock) */
+.block-name-wrapper {
+  /* Wrapper styles */
+}
+
+/* Section container (added automatically if block is in section) */
+.block-name-container {
+  /* Container styles */
+}
+
+/* Block elements (BEM-like naming) */
+.block-name__element {
+  /* Element styles */
+}
+
+.block-name__element--modifier {
+  /* Modifier styles */
+}
+
+/* Responsive breakpoints */
+@media (width >= 768px) {
+  /* Tablet styles */
+}
+
+@media (width >= 992px) {
+  /* Desktop styles */
+}
+```
+
+**CSS Naming Conventions:**
+- Use block name as base class (e.g., `.hero`, `.feature`)
+- Use descriptive class names for elements
+- Follow BEM-like patterns for modifiers
+- Keep styles scoped to block to avoid conflicts
+
+**Reference:** `blocks/hero/hero.css`
+
+### Image Sizing and Aspect Ratios
+
+**When design specifies exact image dimensions or aspect ratios, use CSS `aspect-ratio` property:**
+
+```css
+/* ✅ CORRECT: Maintain aspect ratio from design specs */
+.image-wrapper {
+  aspect-ratio: 670 / 746;  /* From Figma design */
+  width: 670px;
+  max-width: 48%;
+}
+
+.image-wrapper img,
+.image-wrapper picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+/* ❌ WRONG: Using height: auto doesn't enforce aspect ratio */
+.image-wrapper {
+  width: 670px;
+}
+.image-wrapper img {
+  width: 100%;
+  height: auto;  /* May not match design aspect ratio */
+}
+```
+
+**Key Points:**
+- Use `aspect-ratio` CSS property when design specifies exact ratios (e.g., 670/746)
+- Set both `width` and `height: 100%` on image when using aspect-ratio on wrapper
+- Use `object-fit: cover` to maintain aspect ratio while filling container
+- Always verify image dimensions match design specifications (from Figma or design images)
+
+---
+
+## Part 3d: HTML Implementation
+
+### Index-Based HTML Structure (No Data Attributes)
+
+**Standard:** Use **semantic, index-based HTML** only. Do **not** use `data-aue-*`, `data-gen-*`, or other data attributes for structure. The block’s JavaScript must rely solely on **element position (index)** to identify content. This keeps markup clean and aligns with the structure contract.
+
+**Rules:**
+- One meaning per position: e.g. first row = title, second row = description.
+- Use semantic elements (`<p>`, `<h2>`, `<ul>`, `<a>`, etc.) where appropriate.
+- Keep a fixed order of rows and cells so index-based selection is reliable.
+- Document the index contract in the block’s JS (e.g. in the `decorate()` JSDoc).
+
+### Expected DOM Structure Examples
+
+**Note:** These examples show the expected DOM structure as generated by AEM. EDS projects do not use static HTML files.
+
+**Purpose:** Frontend development and visual testing. Structure must match the index contract used in the block’s JS.
+
+**Simple block (two rows: title, description):**
+
+```html
+<div class="block-name">
+  <div>
+    <div>Title Text</div>
+  </div>
+  <div>
+    <div>Description text</div>
+  </div>
+</div>
+```
+
+**With link row (three cells: text, icon, target):**
+
+```html
+<div class="block-name">
+  <div>
+    <div>Title Text</div>
+  </div>
+  <div>
+    <div>Description text</div>
+  </div>
+  <div>
+    <div><a href="/path">Link Text</a></div>
+    <div>icon-name</div>
+    <div>_blank</div>
+  </div>
+</div>
+```
+
+**Block with items (each direct child = one item; cells by index):**
+
+```html
+<div class="block-name">
+  <div>
+    <div>Item 1 Title</div>
+    <div>Item 1 description</div>
+  </div>
+  <div>
+    <div>Item 2 Title</div>
+    <div>Item 2 description</div>
+  </div>
+</div>
+```
+
+**Reference:** Match structure to the index contract documented in the block’s `decorate()` function.
+
+---
+
+## Part 3e: Best Practices and Reference
+
+### Frontend Best Practices
+
+#### ✅ JavaScript Best Practices
+
+- ✅ **DO:** Use ES6+ module syntax, import from `shared-components/`
+- ✅ **DO:** Use **index-based selection only**: access elements by position (e.g. `block.children[0]`, `row.children[1]`). Do not use data attributes for structure or selection.
+- ✅ **DO:** Document the **structure contract** (which index = which content) in the block’s `decorate()` JSDoc.
+- ✅ **DO:** Use optional chaining (`?.`) and nullish coalescing (`??`) for index-based access.
+- ✅ **DO:** Use `moveInstrumentation()` when replacing or moving elements.
+- ✅ **DO:** Make `decorate()` async if loading external resources.
+- ✅ **DO:** Preserve semantic HTML structure.
+
+#### ❌ JavaScript Anti-patterns
+
+- ❌ **DON'T:** Use `data-aue-*` or `data-gen-*` (or any data attributes) for selecting or identifying block content; use index-based access only.
+- ❌ **DON'T:** Use global variables, skip error handling, or mutate shared components.
+- ❌ **DON'T:** Access `children[index]` without null checks or forget `moveInstrumentation()` when transforming DOM.
+- ❌ **DON'T:** Block main thread or use sync operations for external resources.
+
+#### ✅ CSS Best Practices
+
+- ✅ **DO:** Style the **transformed structure** (after JavaScript `decorate()` runs)
+- ✅ **DO:** Use classes added by JavaScript during transformation
+- ✅ **DO:** Use block-specific class names
+- ✅ **DO:** Follow responsive design patterns
+- ✅ **DO:** Use CSS variables for theming
+- ✅ **DO:** Keep styles scoped to block
+
+#### ❌ CSS Anti-patterns
+
+- ❌ **DON'T:** Style the initial AEM-generated HTML structure directly
+- ❌ **DON'T:** Rely on the raw AEM HTML structure (it's just data, not presentation)
+- ❌ **DON'T:** Use overly specific selectors
+- ❌ **DON'T:** Hardcode colors/values
+- ❌ **DON'T:** Skip responsive breakpoints
+
+#### ✅ HTML Best Practices
+
+- ✅ **DO:** Match the **index-based structure contract** (same row/cell order as in the block’s JS).
+- ✅ **DO:** Use **semantic HTML** only; do **not** use data attributes for structure.
+- ✅ **DO:** Keep a fixed, documented order of rows and cells so index-based selection is reliable.
+- ✅ **DO:** Test in local development environment.
+
+---
+
+# Appendices
+
+## Appendix A: EDS Performance & Lighthouse Best Practices
+
+This section provides EDS-specific performance guidelines to achieve and maintain excellent Lighthouse scores. **Every EDS site can and should achieve a Lighthouse score of 100** when following these best practices.
+
+### Performance Goals
+
+| Metric | Target | Notes |
+|--------|--------|-------|
+| **Lighthouse Score** | 100 (Mobile & Desktop) | EDS architecture is designed for this |
+| **LCP** (Largest Contentful Paint) | < 2.5s | Critical for above-the-fold content |
+| **CLS** (Cumulative Layout Shift) | < 0.1 | Avoid layout shifts during load |
+| **INP** (Interaction to Next Paint) | < 200ms | Responsive user interactions |
+| **Pre-LCP Payload** | < 100kb | Keeps LCP under ~1560ms for PSI 100 |
+
+**Reference:** [Web Performance, Keeping your Lighthouse Score 100](https://aem.live/developer/keeping-it-100) — Adobe's official EDS performance guide
+
+### EDS Architecture Principles
+
+1. **Server-Side Rendering First**
+   - All canonical content is rendered into markup on the server
+   - CSS and DOM are used only for display and accessibility semantics
+   - Client-side rendering (fetch JSON, render on client) is **only** for non-canonical content (e.g., blocks listing other pages, dynamic blocks)
+
+2. **Minimal Redundant Content**
+   - Headers, footers, and fragments used redundantly are **not** in the critical path markup
+   - Redundant content slows LCP and introduces blocking time (TBT → INP)
+
+
+**Reference:** [Keeping It 100](https://aem.live/developer/keeping-it-100) | [PageSpeed Insights](https://pagespeed.web.dev/)
+
+### Three-Phase Loading (E-L-D)
+
+EDS uses a three-phase loading model. **Block development must align with these phases:**
+
+| Phase | Name | Contents | Block Guidelines |
+|-------|------|----------|------------------|
+| **E** | Eager | Everything needed for LCP | Hero/first-section blocks only; keep first section minimal |
+| **L** | Lazy | Remaining sections, blocks, images | Most blocks load here; use `loading="lazy"` for images |
+| **D** | Delayed | Third-party tags, analytics, chat | Start ≥3s after LCP; use `delayed.js` |
+
+**Block-Specific Rules:**
+- **First section blocks:** Minimize JS/CSS payload; LCP candidate (usually first image) must load quickly
+- **Below-fold blocks:** Load in Lazy phase; avoid blocking main thread
+- **Images:** Use `createOptimizedPicture()` and `loading="lazy"` for non-LCP images
+- **Fonts:** Load **after** LCP; use [font fallback](https://www.aem.live/developer/font-fallback) to avoid CLS
+
+**Reference:** [Keeping It 100 - Three-Phase Loading](https://aem.live/developer/keeping-it-100) | [Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks)
+
+### LCP Optimization Guidelines
+
+- **LCP candidate:** Usually the hero image at the top of the page
+- **Payload budget:** Keep aggregate payload before LCP < 100kb (mobile bandwidth-constrained)
+- **Single origin:** Avoid connecting to a second origin before LCP (TLS/DNS adds delay)
+- **LCP in blocks:** If LCP is in a block, ensure block `.js` and `.css` are minimal; fewer blocks in first section = faster LCP
+- **Dual hero images:** If desktop/mobile have different hero images, remove the unnecessary one from DOM to avoid loading both
+
+**Dual hero images snippet** — remove the non-visible image to avoid loading both:
+
+```javascript
+// Hero block with desktop + mobile images: keep only the visible one
+const isDesktop = window.matchMedia('(min-width: 900px)');
+const desktopImg = block.querySelector('.hero-image-desktop');
+const mobileImg = block.querySelector('.hero-image-mobile');
+
+if (isDesktop.matches && mobileImg) {
+  mobileImg.remove();  // Don't load mobile image on desktop
+} else if (!isDesktop.matches && desktopImg) {
+  desktopImg.remove();  // Don't load desktop image on mobile
+}
+```
+
+**Reference:** [Core Web Vitals](https://web.dev/explore/learn-core-web-vitals) | [Lighthouse Performance](https://developer.chrome.com/docs/lighthouse/performance)
+
+### Block Implementation Checklist for Performance
+
+| Practice | Description |
+|----------|-------------|
+| ✅ Use `createOptimizedPicture()` | For all images; provides responsive srcset and optimization |
+| ✅ Add `loading="lazy"` | For images below the fold (non-LCP) |
+| ✅ Keep block JS small | Avoid heavy frameworks; use vanilla JS or lightweight patterns |
+| ✅ Load external content async | Use `async/await`; don't block decorate |
+| ✅ Debounce resize/scroll handlers | Reduce main-thread work |
+| ✅ Use `moveInstrumentation()` | Preserves authoring; no extra DOM cost |
+| ❌ Avoid Early Hints / h2-push / preconnect for LCP | Consumes bandwidth budget; can hurt LCP |
+| ❌ Avoid second-origin requests before LCP | Single origin for critical path |
+| ❌ Avoid blocking scripts | Load third-party in Delayed phase |
+
+### Code Snippets for Each Best Practice
+
+#### ✅ Use `createOptimizedPicture()` for all images
+
+```javascript
+import { createOptimizedPicture } from '../../scripts/aem.js';
+import { moveInstrumentation } from '../../scripts/scripts.js';
+
+// In decorate(): replace raw img/picture with optimized version
+const pictureOrImg = imageCell?.querySelector?.('picture, img');
+if (pictureOrImg) {
+  const img = pictureOrImg.tagName === 'IMG' ? pictureOrImg : pictureOrImg.querySelector('img');
+  if (img) {
+    const optimizedPic = createOptimizedPicture(
+      img.src,
+      altText,
+      false,  // eager=false → loading="lazy" for below-fold
+      [{ width: '440' }, { width: '880' }]
+    );
+    moveInstrumentation(pictureOrImg, optimizedPic);
+    pictureOrImg.replaceWith(optimizedPic);
+  }
+}
+```
+
+#### ✅ Add `loading="lazy"` for non-LCP images
+
+```javascript
+// createOptimizedPicture(src, alt, eager, breakpoints)
+// eager=false → img gets loading="lazy" (default)
+// eager=true  → img gets loading="eager" (use ONLY for LCP hero image)
+
+// Below-fold / card images: use lazy (default)
+const optimizedPic = createOptimizedPicture(imgSrc, altText, false, [{ width: '750' }]);
+
+// LCP hero image (first section, first image): use eager
+const heroPic = createOptimizedPicture(heroSrc, heroAlt, true, [{ width: '1440' }, { width: '750' }]);
+```
+
+#### ✅ Load external content async
+
+```javascript
+import { loadFragment } from '../fragment/fragment.js';
+
+export default async function decorate(block) {
+  const path = block.querySelector('a')?.getAttribute('href') || block.textContent.trim();
+  try {
+    const fragment = await loadFragment(path);
+    if (fragment) {
+      block.replaceChildren(...fragment.childNodes);
+    }
+  } catch (err) {
+    console.warn(`Failed to load fragment: ${path}`, err);
+  }
+}
+```
+
+#### ✅ Debounce resize/scroll handlers
+
+```javascript
+function debounce(fn, delay = 150) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
+
+export default function decorate(block) {
+  const handleResize = () => { /* update layout */ };
+  const debouncedResize = debounce(handleResize, 150);
+
+  window.addEventListener('resize', debouncedResize);
+  // Or: isDesktop.addEventListener('change', debouncedResize);
+}
+```
+
+#### ✅ Use `moveInstrumentation()` when transforming DOM
+
+```javascript
+import { moveInstrumentation } from '../../scripts/scripts.js';
+
+// When replacing an element, preserve AEM authoring attributes
+const newButton = document.createElement('a');
+newButton.href = ctaLink;
+newButton.textContent = ctaText;
+moveInstrumentation(ctaLinkCell, newButton);  // Preserves data-aue-* etc.
+ctaLinkCell.replaceWith(newButton);
+
+// When moving children to a new container
+const container = document.createElement('div');
+moveInstrumentation(block, container);
+while (block.firstElementChild) container.append(block.firstElementChild);
+block.replaceChildren(container);
+```
+
+#### ✅ Keep block JS small — vanilla JS, no heavy frameworks
+
+```javascript
+// ✅ Good: lightweight, framework-agnostic
+export default function decorate(block) {
+  const rows = [...block.children];
+  const container = document.createElement('div');
+  rows.forEach((row, i) => {
+    const item = document.createElement('div');
+    item.classList.add(`item-${i}`);
+    moveInstrumentation(row, item);
+    while (row.firstElementChild) item.append(row.firstElementChild);
+    container.appendChild(item);
+  });
+  block.replaceChildren(container);
+}
+
+// ❌ Avoid: heavy framework imports for simple blocks
+// import React from 'react';  // Don't add React/Vue for block logic
+```
+
+#### ❌ Avoid second-origin requests before LCP
+
+```javascript
+// ❌ Bad: fetch from external API before LCP
+export default async function decorate(block) {
+  const data = await fetch('https://external-api.com/data').then(r => r.json());
+  block.innerHTML = renderFromData(data);
+}
+
+// ✅ Good: use same-origin fragment or server-rendered content
+export default async function decorate(block) {
+  const path = block.querySelector('a')?.getAttribute('href');
+  const fragment = await loadFragment(path);  // Same origin
+  if (fragment) block.replaceChildren(...fragment.childNodes);
+}
+```
+
+#### ❌ Avoid blocking scripts — load third-party in Delayed phase
+
+```javascript
+// ❌ Bad: blocking script in block
+export default function decorate(block) {
+  const script = document.createElement('script');
+  script.src = 'https://third-party.com/widget.js';
+  script.async = false;  // Blocking!
+  document.head.appendChild(script);
+}
+
+// ✅ Good: use delayed.js or load after LCP (≥3s delay)
+// In delayed.js:
+// loadScript('https://third-party.com/widget.js');
+```
+
+### Common Performance Anti-Patterns (Avoid)
+
+| Anti-Pattern | Impact | Fix |
+|--------------|--------|-----|
+| Early hints / h2-push / preconnect for non-LCP resources | Consumes 100kb budget; hurts LCP | Remove; load after LCP |
+| Redirects for path resolution | Penalty per redirect | Use canonical URLs; avoid redirect chains |
+| CDN client scripts injection | Blocking before LCP | Disable or load in Delayed phase |
+| Heavy JavaScript frameworks | Increases TBT, hurts INP | Use lightweight, framework-agnostic code |
+| Preloading fonts | Delays LCP | Load fonts after LCP; use font fallback |
+
+**Snippet — avoid font preload in critical path:**
+
+```html
+<!-- ❌ Bad: preload consumes LCP budget -->
+<link rel="preload" href="https://fonts.adobe.com/..." as="font" crossorigin>
+
+<!-- ✅ Good: fonts load after LCP; use font fallback to avoid CLS -->
+<!-- See: https://www.aem.live/developer/font-fallback -->
+```
+
+### Key Reference Links
+
+| Resource | URL |
+|----------|-----|
+| **Keeping It 100** (Adobe EDS performance guide) | https://aem.live/developer/keeping-it-100 |
+| **Core Web Vitals** | https://web.dev/explore/learn-core-web-vitals |
+| **EDS Markup, Sections, Blocks** | https://www.aem.live/developer/markup-sections-blocks |
+| **EDS Font Fallback** | https://www.aem.live/developer/font-fallback |
+| **EDS Developer Tutorial** | https://aem.live/developer/tutorial |
+---
+
+## Appendix B: Adobe FE EDS Recommended Practices (Block Creation)
+
+Adobe recommendations that directly help when creating blocks. **Reference:** [Block Collection](https://aem.live/developer/block-collection), [dev-collab-and-good-practices](https://aem.live/docs/dev-collab-and-good-practices), [Universal Editor Blocks](https://aem.live/developer/universal-editor-blocks)
+
+### Block Technical Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **SEO and A11y** | SEO-friendly and accessible |
+| **Fast** | No negative performance impact |
+| **Localizable** | No hard-coded content; strings from content |
+| **Context Aware** | Inherits CSS context (text, background colors) |
+| **Responsive** | Works across all breakpoints |
+| **Usable** | No dependencies; compatible with boilerplate |
+| **Intuitive** | Content structure that's easy to author |
+
+### Three-Phased Block Development
+
+1. **Implement decoration and styles** for the new block
+2. **Create content** with the new block (in Universal Editor)
+3. **Create definition and model**, review, and bring to production
+
+### CSS for Blocks
+
+| Practice | Description |
+|----------|-------------|
+| **Block isolation** | Every selector in block `.css` applies only within the block |
+| **Prefix private classes** | Prefix block-private classes/variables with block name |
+| **Avoid complex selectors** | Prefer extra classes over complex selectors |
+| **Use ARIA for styling** | Use ARIA attributes (`expanded`, `hidden`) instead of redundant classes |
+| **Mobile first** | Base CSS = mobile; add media queries for larger viewports |
+| **Breakpoints** | Use `600px`, `900px`, `1200px` (min-width) |
+
+### JavaScript for Blocks
+
+| Practice | Description |
+|----------|-------------|
+| **Avoid frameworks for layout** | Keep simple blocks simple; frameworks add LCP/TBT issues |
+| **Load 3rd party via `loadScript()`** | Don't add libs in `head.html`; load in the block that needs it |
+| **IntersectionObserver for heavy libs** | Load large 3rd party libs only when block scrolls into view |
+| **Don't modify `aem.js`** | Keep extensions outside the library |
+
+### Content for Blocks
+
+| Practice | Description |
+|----------|-------------|
+| **Strings from content** | User-facing strings should be authorable (placeholders); no hard-coded literals |
+| **Backwards compatibility** | New content structure changes should not break existing content |
+
+### References
+
+- [Block Collection](https://aem.live/developer/block-collection) | [dev-collab-and-good-practices](https://aem.live/docs/dev-collab-and-good-practices) | [Universal Editor Blocks](https://aem.live/developer/universal-editor-blocks)
+
+**Next step:** [Implementation Checklist](#implementation-checklist) — validate and deploy.
+
+---
+
+## Development Workflow
+
+### Complete Workflow
+
+1. **Requirements Gathering** → Gather design source, story requirements, and design specifications (Pre-Implementation)
+   - Request Figma design URL OR component design images (desktop, tablet, mobile)
+   - Request story/requirements document
+   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
+   - Analyze design and map to implementation plan
+
+2. **Backend Configuration (Generate First)** → Add definitions/models/filters to block-level JSON, run build (Part 2)
+   - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`
+   - Run `npm run build:json` to update root files
+   - Deploy to AEM/Universal Editor environment
+
+3. **Request User to Provide Semantic HTML (MANDATORY)** → User authors in Universal Editor and provides HTML
+   - **Prompt user:** "Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output."
+   - User adds block to page, configures fields, extracts HTML (view source or DevTools)
+   - User provides the actual Universal Editor–generated HTML to Cursor
+   - Document structure contract from user-provided HTML
+   - **Do NOT generate HTML** — Cursor-generated HTML can differ from Universal Editor output
+
+4. **JavaScript** → Implement block logic (`<block-name>.js`) based on user-provided HTML (Part 3)
+   - Analyze user-provided HTML to document structure contract
+   - Write `decorate()` function using index-based access matching actual DOM
+   - Test with user-provided HTML
+
+5. **CSS** → Style the block (`<block-name>.css`) based on user-provided HTML (Part 3)
+   - Target the transformed structure
+   - Test with user-provided HTML to verify styling
+
+6. **Component Registration** → Verify JSON syntax and configuration (Part 2)
+   - Validate JSON syntax
+   - Verify component registration
+
+7. **AEM/Universal Editor Validation** → Test in authoring interface
+   - Test in AEM/Universal Editor authoring interface
+   - Verify content renders correctly
+
+---
+
+## Implementation Checklist
+
+### Phase 0: Pre-Implementation - Requirements Gathering (MANDATORY)
+- [ ] Request and receive design source: Figma design URL OR component design images (desktop, tablet, mobile)
+- [ ] Request and receive story/requirements document
+- [ ] Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
+- [ ] Analyze component structure from design (Figma or images)
+- [ ] Extract design tokens (colors, typography, spacing)
+- [ ] Map design elements to HTML structure
+- [ ] Map design styles to CSS properties
+- [ ] Identify content fields needed for XWalk configuration
+- [ ] Identify similar blocks in codebase for reference
+- [ ] Document breakpoint requirements
+- [ ] Document accessibility requirements
+- [ ] Create implementation plan based on design + requirements
+
+### Step 2: User Provides Semantic HTML (MANDATORY)
+
+**Execute this step AFTER Step 1 (Backend) is complete and deployed.**
+
+**See:** [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) (standalone section above) for context.
+
+**Objective:** Obtain the actual HTML structure from Adobe Universal Editor. Do NOT generate HTML — user-provided HTML ensures correct DOM structure.
+
+**Steps:**
+1. **Prerequisite: Backend configuration is complete:**
+   - [ ] Backend files (component-definition.json, component-models.json, component-filters.json) are generated
+   - [ ] Block is deployed to AEM/Universal Editor environment
+
+2. **Request user to provide semantic HTML:**
+   - [ ] Prompt user: "Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output."
+   - [ ] User adds block to page in Universal Editor
+   - [ ] User configures all fields (including empty/optional where relevant)
+   - [ ] User adds multiple items if parent-child block
+   - [ ] User extracts HTML (view source or DevTools) and provides to Cursor
+
+3. **Analyze user-provided HTML:**
+   - [ ] Document structure contract: which fields generate rows vs cells
+   - [ ] Document field indices (0, 1, 2, etc.)
+   - [ ] Document empty field behavior (missing cells vs empty cells)
+   - [ ] Document optional field behavior (parent title, etc.)
+
+4. **Use for frontend development:**
+   - [ ] Generate JavaScript based on user-provided HTML structure
+   - [ ] Generate CSS based on user-provided HTML structure
+   - [ ] Test with user-provided HTML
+
+**Important:**
+- Do NOT generate static HTML — Cursor-generated HTML can differ from Universal Editor output
+- User-provided HTML is the source of truth for DOM structure
+
+### Phase 1: Backend - XWalk Configuration (MANDATORY)
+**Note:** EDS projects do not use static HTML files. HTML is generated automatically by AEM from XWalk configuration.
+- [ ] Use **index-based structure only** (no data attributes); match row/cell order to the block’s structure contract
+- [ ] Use semantic HTML; document index contract in block JS
+- [ ] Test visual appearance
+
+### Phase 2: Backend - XWalk Configuration (MANDATORY)
+- [ ] **Create block-level JSON** — add config to `blocks/<block-name>/_<block-name>.json`
+- [ ] Add component definition (in block-level JSON)
+  - [ ] Set `title`, `id`, `resourceType`, and `template` properties
+- [ ] Add model (in block-level JSON)
+  - [ ] Set `id` to match definition ID
+  - [ ] Add `fields` array with field definitions
+  - [ ] Add validation rules where needed
+- [ ] Add filter (in block-level JSON, if block has nested items)
+  - [ ] Set `id` to match parent block ID
+  - [ ] Set `components` array with allowed child component IDs
+- [ ] **Run `npm run build:json`** to merge block config into root files
+- [ ] Validate JSON syntax (use JSON validator or ESLint)
+- [ ] Ensure field order in model matches expected JavaScript index-based access pattern
+
+### Phase 2: Frontend - JavaScript Implementation
+- [ ] **Use user-provided semantic HTML to validate structure before coding**
+- [ ] Create `blocks/<block-name>/<block-name>.js` (ONE file only — never create two JS files with different naming, e.g., social-promo.js and socialpromo.js)
+- [ ] Export default `decorate(block)` function
+- [ ] Document **structure contract** (index = meaning) in JSDoc based on user-provided HTML
+- [ ] Import shared components as needed
+- [ ] Extract data using **index-based access only** (e.g. `block.children[0]`, `row.children[1]`)
+   - [ ] Use field indices from user-provided HTML (not assumed indices)
+   - [ ] Account for empty fields that don't generate cells
+   - [ ] Handle optional fields (e.g., parent title may not exist)
+- [ ] **For parent-child blocks:** Process parent row (index 0) and child item rows (index 1+) in the same `decorate()` function
+   - [ ] Check if first row is actually title or first item (if title is optional)
+- [ ] Transform to final HTML structure
+- [ ] Use `moveInstrumentation()` when replacing or moving elements
+- [ ] **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification
+- [ ] **Run `npm run build:json`** after adding/updating block config (root files are build outputs)
+- [ ] **NEVER** create separate child block folders or files — see [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder)
+- [ ] **Test with user-provided HTML** to verify extraction logic works correctly
+
+### Phase 3: Frontend - CSS Styling
+- [ ] Create `blocks/<block-name>/<block-name>.css` (ONE file only — never create two CSS files with different naming, e.g., social-promo.css and socialpromo.css)
+- [ ] Style block structure (parent container and child items in same file)
+- [ ] Add responsive breakpoints
+- [ ] **Test with user-provided HTML** to verify styling works correctly
+- [ ] Test in AEM authoring mode
+
+### Phase 4: Integration - Component Registration
+- [ ] Verify component definition appears in `component-definition.json`
+  - [ ] Check JSON syntax is valid
+  - [ ] Verify definition is in the correct group
+- [ ] Verify model appears in `component-models.json`
+  - [ ] Check model ID matches definition ID
+  - [ ] Verify all fields are properly formatted
+- [ ] Verify filters appear in `component-filters.json` (if applicable)
+  - [ ] Check filter ID matches parent block ID
+  - [ ] Verify child component IDs are correct
+
+### Phase 5: Integration - AEM Authoring Validation
+- [ ] Deploy to AEM environment
+- [ ] Test block appears in component browser
+- [ ] Test authoring interface opens correctly
+- [ ] Test field validation works
+- [ ] Test content saves and renders correctly in author mode
+- [ ] Test content renders correctly in publish mode
+- [ ] Verify index-based access works (no reliance on data-aue-* attributes)
+
+### Phase 6: Frontend - Unit Testing (If Applicable)
+- [ ] Create `blocks/<block-name>/<block-name>.test.js`
+- [ ] Test data transformation functions
+- [ ] Test validation logic
+- [ ] Test edge cases
+
+---
+
+## Validation Workflow
+
+### Pre-Implementation
+1. **Gather Requirements** (see Pre-Implementation: Gathering Requirements section)
+   - Request Figma URL OR component design images (desktop, tablet, mobile) and story requirements
+   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
+   - Analyze design and create implementation plan
+2. Review similar blocks in codebase
+3. Identify reusable components/models
+4. Plan block structure (Part 3)
+5. Plan XWalk field requirements (Part 2)
+
+### During Implementation
+1. Verify XWalk JSON syntax (use ESLint) (Part 2)
+2. Verify field order in XWalk model matches expected JavaScript access pattern (Part 2)
+3. Test JavaScript in browser console (Part 3)
+4. Test CSS in AEM authoring mode (Part 3)
+
+### Post-Implementation
+1. Verify JSON syntax is valid in all three configuration files (Part 2)
+2. Verify component registration (Part 2)
+   - Check definition in `component-definition.json`
+   - Check model in `component-models.json`
+   - Check filter in `component-filters.json` (if applicable)
+3. Test in AEM authoring interface
+4. Verify responsive behavior (Part 3)
+5. Verify accessibility (Part 3)
+
+---
+
+## Appendix D: Common Issues and Solutions
+
+### Frontend Issues
+
+#### Issue 1: Block Not Loading
+**Solution:**
+- Verify block name matches folder name
+- Check `decorate(block)` is default export
+- Verify `loadBlock()` is called
+- Check browser console for errors
+
+#### Issue 4: Styles Not Applying
+**Solution:**
+- Verify CSS file path is correct
+- Check CSS class names match
+- Verify `loadBlock()` loads CSS
+- Test in AEM authoring and publish modes
+
+#### Issue 5: Authoring Attributes Lost
+**Solution:**
+- Use `moveInstrumentation()` when transforming or replacing elements so any authoring instrumentation is preserved on the new structure.
+- **See:** [Anti-Pattern 1: Skipping Instrumentation Preservation](#-anti-pattern-1-skipping-instrumentation-preservation)
+- Reference: `blocks/feature/feature.js` (shows pattern)
+
+#### Issue 6: Async Operations Not Working
+**Solution:**
+- Make `decorate()` function `async` if loading external resources
+- Use `try/catch` for error handling
+- Check if resource exists before processing
+- Reference: `blocks/fragment/fragment.js` (shows async pattern)
+
+#### Issue 7: Event Listeners Causing Memory Leaks
+**Solution:**
+- Use event delegation when possible
+- Remove event listeners if block is removed (consider cleanup)
+- Debounce resize/scroll handlers
+- Reference: `blocks/header/header.js` (shows event handling)
+
+#### Issue 8: Wrong Content or Missing Elements (Index-Based)
+**Solution:**
+- **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification - these are only in author mode and not available in publish mode
+- Use **index-based access only**: `block.children[0]`, `row.children[1]`, etc. (see Part 2: Index-Based Structure and Data Extraction)
+- Use optional chaining (`?.`) and nullish coalescing (`??`) for safe index access
+- **MANDATORY:** Use user-provided HTML from Universal Editor to verify field order and indices
+- Verify XWalk config field order matches actual HTML structure (not assumed structure)
+- Account for empty fields that don't generate cells (may shift indices)
+- Handle optional fields that may not exist (e.g., parent title)
+- Ensure DOM structure order matches the structure contract documented in the block's JS (based on actual HTML)
+
+#### Issue 9: Button Not Rendering
+**Solution:**
+- Check if link extraction handles wrapped elements: `linkCell?.querySelector?.('a') || linkCell?.querySelector?.('p a')`
+- Use `.href` as fallback: `linkElement?.getAttribute?.('href') || linkElement?.href || ''`
+- Don't require both link AND text - render button if link exists, use fallback text
+- Check if text extraction handles wrapped `<p>` tags from `wrapTextNodes()`
+- Verify text cell is not empty or extract from link text (but filter out URLs)
+- Reference: See "Pattern 6: CTA Button with Robust Extraction" above
+
+#### Issue 10: Image Size Not Matching Design
+**Solution:**
+- Use CSS `aspect-ratio` property when design specifies exact ratios
+- Set `aspect-ratio` on image wrapper, not just width
+- Use `object-fit: cover` to maintain aspect ratio while filling container
+- Verify dimensions match design specifications (from Figma or design images)
+- Reference: See "Image Sizing and Aspect Ratios" section above
+
+### Backend/Configuration Issues
+
+#### Issue 2: XWalk Config Not Working
+**Solution:**
+- Verify JSON syntax is valid in all three files (`component-definition.json`, `component-models.json`, `component-filters.json`)
+- Check component definition appears in `component-definition.json` in the correct group
+- Verify model appears in `component-models.json` with matching ID
+- Verify filter appears in `component-filters.json` (if applicable)
+- Verify model ID matches definition ID
+- Check that resource type is correct
+
+#### Issue 3: Fields Not Appearing in AEM
+**Solution:**
+- Verify model is in `component-models.json`
+- Check field component type is valid
+- Verify field names match expected format
+- Check AEM console for errors
+
+#### Issue 11: Parent Block Authoring Fields Not Appearing
+**Symptom:** Parent block appears in AEM authoring interface, but no authoring fields are shown (e.g., section title field is missing).
+
+**Root Cause:** Parent block template is missing `model` property. Parent blocks with authoring fields require BOTH `model` and `filter` in the template.
+
+**Solution:**
+- **CRITICAL:** If parent block has fields defined in `component-models.json`, the parent block template MUST include `model` property
+- Parent blocks with authoring fields need BOTH:
+  - `model: "parentblock"` - Enables authoring fields for parent block
+  - `filter: "parentblock"` - Allows child items to be nested
+- Parent blocks without authoring fields only need `filter` (no `model`)
+- Verify `model` value matches the `id` in `component-models.json`
+- **Reference:** See "Block with Items (Parent + Child)" section above for complete examples
+- **Working Example:** `component-definition.json` lines 325-339 (`projectcards` - has both `model` and `filter`)
+
+**Example Fix:**
+```json
+// ❌ WRONG (missing model):
+"template": {
+  "name": "RelatedCards",
+  "filter": "relatedcards"
+}
+
+// ✅ CORRECT (has both model and filter):
+"template": {
+  "name": "RelatedCards",
+  "model": "relatedcards",    // ✅ Required for parent authoring fields
+  "filter": "relatedcards"     // ✅ Required for child items
+}
+```
+
+---
+
+## Considerations
+
+### UX Considerations
+- Provide clear field labels in XWalk config (Part 2)
+- Use appropriate field types (text, richtext, select) (Part 2)
+- Add helpful validation messages (Part 2)
+- Group related fields using tabs (Part 2)
+
+### Performance Considerations
+- **See:** [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices) for full guidelines
+- Blocks load asynchronously via `loadBlock()` (Part 3)
+- CSS and JS loaded on demand (Part 3)
+- Use `createOptimizedPicture()` and `loading="lazy"` for images (Part 3)
+- Keep pre-LCP payload < 100kb; first section blocks must be minimal (Part 3)
+- Use `async/await` for external resource loading (Part 3)
+- Debounce resize/scroll event handlers when needed (Part 3)
+- Avoid blocking the main thread; align with E-L-D loading phases (Part 3)
+- Run PageSpeed Insights on PRs; target Lighthouse score 100 (Part 3)
+
+### Security Considerations
+- Sanitize HTML input (use `stringToHTML()`) (Part 3)
+- Validate field input via XWalk validation (Part 2)
+- Reference: `shared-components/Utility.js` (sanitizeHTMLString) (Part 3)
+
+### Accessibility Considerations
+- Use semantic HTML elements (Part 3)
+- Provide alt text for images (Part 3)
+- Maintain heading hierarchy (Part 3)
+- Ensure keyboard navigation (Part 3)
+
+---
+
+## Appendix C: Key References
+
+### Primary Documentation (Backend / Content Modeling)
+
+| Document | URL |
+|----------|-----|
+| **Model Definitions, Fields, and Component Types** (Experience League) | https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types |
+| **Content modeling for AEM authoring projects** (AEM.live) | https://www.aem.live/developer/component-model-definitions |
+
+### Content Modeling (AEM Authoring)
+- **[Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types)** — Field types, component types, model linking, loading models
+- **[Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions)** — Type inference, field collapse, element grouping, multi-fields, block structure variants
+- **[Block Collection](https://aem.live/developer/block-collection)** — Content models for common UI patterns; reference for semantic content modeling
+- **David's Model** — Content modeling guidance for content-source-agnostic blocks (see Block Collection and AEM authoring docs)
+
+### Performance & Lighthouse (EDS)
+- **[Keeping It 100](https://aem.live/developer/keeping-it-100)** — Adobe's official EDS performance guide
+- **[PageSpeed Insights](https://pagespeed.web.dev/)** — Lab testing for Lighthouse scores
+- **[Core Web Vitals](https://web.dev/explore/learn-core-web-vitals)** — LCP, CLS, INP metrics
+- **[EDS Markup, Sections, Blocks](https://www.aem.live/developer/markup-sections-blocks)** — Loading sequence and block structure
+
+### Adobe FE EDS (Block Creation)
+- **[Block Collection](https://aem.live/developer/block-collection)** — Technical principles for blocks
+- **[dev-collab-and-good-practices](https://aem.live/docs/dev-collab-and-good-practices)** — CSS, JS, content guidelines
+- **[Universal Editor Blocks](https://aem.live/developer/universal-editor-blocks)** — Three-phased development
+
+### Example Blocks to Study
+- **Simple:** `blocks/hero/` - Basic structure
+- **Complex:** `blocks/feature/` - Parent with items
+- **Async:** `blocks/fragment/` - External content loading
+- **Interactive:** `blocks/header/` - Event handlers
+
+### Key Files
+
+**Frontend:**
+- `scripts/aem.js` - Block loading mechanism
+- `shared-components/` - Reusable utilities
+- `blocks/<block-name>/<block-name>.js` - Block JavaScript
+- `blocks/<block-name>/<block-name>.css` - Block Styles
+
+**Backend/Configuration:**
+- `blocks/<block-name>/_<block-name>.json` - Block config (edit this; run build to update root files)
+- `component-definition.json` - Component definitions (build output; do not edit directly)
+- `component-models.json` - Field models (build output; do not edit directly)
+- `component-filters.json` - Nesting rules (build output; do not edit directly)
+- `models/` - Reusable field definitions (reference for copying fields)
+
+---
+
+## Next Steps
+
+1. **Review this guide** - Start with Part 1 for backend, Part 2 for frontend
+2. **Gather design source** - Request Figma URL OR component design images (desktop, tablet, mobile); Cursor can generate code from either
+3. **Study similar blocks** - Reference examples provided in each section
+4. **Use AI codebase analysis** - Cursor can analyze existing blocks for patterns
+5. **Follow checklist** - Use the implementation checklist step by step
+6. **Request user to provide semantic HTML** - User authors in Universal Editor and provides HTML; generate JS/CSS based on it (MANDATORY)
+7. **Reference existing code** - Rather than creating from scratch
+
+---
+
+**Document Version:** EDS-2026.1.0  
+**Last Updated:** 2026-02-25  
+**Maintained By:** AI Documentation Engineer  
+**Review Status:** Ready for Use
+
+---
+
+## Summary
+
+This implementation guide provides comprehensive step-by-step instructions for creating new EDS blocks. Key points:
+
+1. **Two files required per block:** JavaScript and CSS (in `blocks/<block-name>/`)
+   - **CRITICAL:** Even for parent-child blocks, use ONE folder with ONE JS file and ONE CSS file
+   - Parent and child items are processed in the same `decorate()` function
+   - Example: `blocks/cards/` handles both parent container and all child card items
+2. **XWalk configuration:** Add definitions/models/filters to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json` to update:
+   - `component-definition.json` - Component definitions (build output)
+   - `component-models.json` - Field models (build output)
+   - `component-filters.json` - Nesting rules (build output)
+3. **User-provided semantic HTML (MANDATORY):** See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) and [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).
+4. **Index-based implementation:** Use index-based selection only; no data attributes for structure or selection. Document the structure contract in block JS based on actual HTML structure.
+5. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM
+6. **Testing:** Test with user-provided HTML first, then manual testing in browser and AEM authoring interface
+7. **Patterns:** Follow established patterns from existing blocks
+
+**CRITICAL:** 
+- Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`). Run `npm run build:json` to update the three root-level files. Do NOT edit root files directly.
+- Do NOT create separate child block folders or files. See [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder).
+- **MANDATORY:** Request user to provide semantic HTML from Universal Editor. See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html). Do NOT generate HTML.
+
+**Overall Confidence Score:** 98%
