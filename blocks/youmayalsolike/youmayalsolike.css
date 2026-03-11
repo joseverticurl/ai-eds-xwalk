@@ -93,13 +93,13 @@
   z-index: 1;
 }
 
-/* Content: above overlay, at bottom of card */
+/* Content: above overlay, at bottom of card (static so badge can anchor to card-inner) */
 .youmayalsolike-card-content {
-  position: relative;
+  position: static;
   z-index: 2;
 }
 
-/* Badge: top-left of image, light green bg, white text */
+/* Badge: top of card container, top-left, light green bg, white text */
 .youmayalsolike-card-badge {
   position: absolute;
   top: 12px;
