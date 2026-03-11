@@ -1,6 +1,5 @@
-body {
-  margin: 0;
-  min-height: 100vh;
+/* Outer wrapper: gradient background for the section */
+.youmayalsolike-wrapper {
   background: linear-gradient(
     135deg,
     #FFF8E1 0%,
@@ -10,16 +9,15 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.youmayalsolike {
+/* Inner content wrapper (inside .youmayalsolike.block): padding and max-width */
+.youmayalsolike.block > .youmayalsolike-wrapper {
   padding: 50px 24px 60px;
   max-width: 1360px;
   margin: 0 auto;
-  display: grid;
-  gap: 24px;
 }
 
-/* Section title: "You may also like" */
-.youmayalsolike > div:first-child div {
+/* Section title */
+.youmayalsolike-title {
   font-size: 38px;
   font-weight: 700;
   line-height: 1.2;
@@ -29,50 +27,59 @@ body {
   margin: 0 0 40px;
 }
 
-/* Hide aura-creative wrapper from layout if needed */
-.youmayalsolike > div:nth-child(2) {
-  display: none;
+/* Cards container: grid layout */
+.youmayalsolike-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
-/* CARDS WRAPPER: 3 cards in a row on desktop */
-.youmayalsolike > div:nth-child(n+3) {
+/* Card: anchor, block layout, rounded, shadow */
+.youmayalsolike-card {
   position: relative;
+  display: block;
   border-radius: 18px;
   overflow: hidden;
   min-height: 360px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  text-decoration: none;
+  color: inherit;
   background: #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.youmayalsolike > div:nth-child(n+3):hover {
+.youmayalsolike-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
-.youmayalsolike > div:nth-child(n+3) {
-  grid-column: span 1;
+/* Card inner: flex column, content at bottom */
+.youmayalsolike-card-inner {
+  position: relative;
+  min-height: 360px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
-/* IMAGE container - covers card, behind content */
-.youmayalsolike > div:nth-child(n+3) > div:first-child {
+/* Image container: full-bleed behind content */
+.youmayalsolike-card-image {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
-.youmayalsolike > div:nth-child(n+3) > div:first-child img {
+.youmayalsolike-card-image picture,
+.youmayalsolike-card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-/* Image overlay: dark gradient on bottom third/half for text readability */
-.youmayalsolike > div:nth-child(n+3) > div:first-child::after {
+/* Dark gradient overlay on image for text readability */
+.youmayalsolike-card-image::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -85,17 +92,14 @@ body {
   z-index: 1;
 }
 
-/* Card content wrapper - above overlay */
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(2),
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(3),
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(4),
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(5) {
+/* Card content: above overlay */
+.youmayalsolike-card-content {
   position: relative;
   z-index: 2;
 }
 
-/* Pill badge (e.g. "Sustainability") - top-left of card */
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(2) {
+/* Pill badge */
+.youmayalsolike-card-badge {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
@@ -106,11 +110,10 @@ body {
   border-radius: 999px;
   width: fit-content;
   margin-bottom: auto;
-  margin-top: 0;
 }
 
-/* Card title - white on gradient, left-aligned */
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(3) {
+/* Card title (h3) */
+.youmayalsolike-card-title {
   font-size: 19px;
   font-weight: 600;
   line-height: 1.35;
@@ -118,53 +121,51 @@ body {
   margin: 16px 0 0;
 }
 
-/* Hide link wrapper */
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(4) {
-  display: none;
-}
-
-/* Readmore CTA */
-.youmayalsolike > div:nth-child(n+3) > div:nth-child(5) {
+/* CTA text */
+.youmayalsolike-card-cta {
   font-size: 16px;
   font-weight: 600;
   color: #ffffff;
   margin-top: 12px;
   opacity: 0.95;
+  display: block;
 }
 
-/* TABLET: 2 columns */
+/* Tablet: 2 columns */
 @media (min-width: 600px) {
-  .youmayalsolike {
+  .youmayalsolike-cards {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
   }
-
-  .youmayalsolike > div:first-child,
-  .youmayalsolike > div:nth-child(2) {
-    grid-column: 1 / -1;
-  }
 }
 
-/* DESKTOP: 3 cards in a row, centered */
+/* Desktop: 3 columns, larger title and cards */
 @media (min-width: 900px) {
-  .youmayalsolike {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
+  .youmayalsolike.block > .youmayalsolike-wrapper {
     padding: 60px 24px 80px;
   }
 
-  .youmayalsolike > div:first-child div {
+  .youmayalsolike-title {
     font-size: 40px;
     margin-bottom: 48px;
   }
 
-  .youmayalsolike > div:nth-child(n+3) {
+  .youmayalsolike-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+
+  .youmayalsolike-card {
     min-height: 400px;
-    padding: 24px;
     border-radius: 20px;
   }
 
-  .youmayalsolike > div:nth-child(n+3) > div:nth-child(3) {
+  .youmayalsolike-card-inner {
+    min-height: 400px;
+    padding: 24px;
+  }
+
+  .youmayalsolike-card-title {
     font-size: 20px;
   }
 }
