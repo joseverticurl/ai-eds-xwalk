@@ -1,99 +1,142 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #FFF8E1 0%,
+    #E8F5E9 50%,
+    #E0F7FA 100%
+  );
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 .youmayalsolike {
-  padding: 50px 24px;
+  padding: 50px 24px 60px;
   max-width: 1360px;
   margin: 0 auto;
+  display: grid;
+  gap: 24px;
 }
 
-/* TITLE */
+/* Section title: "You may also like" */
 .youmayalsolike > div:first-child div {
-  font-size: 34px;
-  font-weight: 600;
+  font-size: 38px;
+  font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.68px;
+  letter-spacing: -0.02em;
+  color: #000000;
   text-align: center;
-  margin: 0 0 30px;
+  margin: 0 0 40px;
 }
 
-/* CARDS WRAPPER */
+/* Hide aura-creative wrapper from layout if needed */
+.youmayalsolike > div:nth-child(2) {
+  display: none;
+}
+
+/* CARDS WRAPPER: 3 cards in a row on desktop */
 .youmayalsolike > div:nth-child(n+3) {
   position: relative;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   min-height: 360px;
-  padding: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-/* GRID */
-.youmayalsolike {
-  display: grid;
-  gap: 20px;
+.youmayalsolike > div:nth-child(n+3):hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-/* MOBILE */
 .youmayalsolike > div:nth-child(n+3) {
   grid-column: span 1;
 }
 
-/* IMAGE */
+/* IMAGE container - covers card, behind content */
 .youmayalsolike > div:nth-child(n+3) > div:first-child {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
 }
 
-.youmayalsolike > div:nth-child(n+3) img {
+.youmayalsolike > div:nth-child(n+3) > div:first-child img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* IMAGE OVERLAY */
+/* Image overlay: dark gradient on bottom third/half for text readability */
 .youmayalsolike > div:nth-child(n+3) > div:first-child::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0),
-    rgba(0,0,0,0.6)
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.35) 50%,
+    rgba(0, 0, 0, 0) 100%
   );
+  z-index: 1;
 }
 
-/* BADGE */
+/* Card content wrapper - above overlay */
+.youmayalsolike > div:nth-child(n+3) > div:nth-child(2),
+.youmayalsolike > div:nth-child(n+3) > div:nth-child(3),
+.youmayalsolike > div:nth-child(n+3) > div:nth-child(4),
+.youmayalsolike > div:nth-child(n+3) > div:nth-child(5) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Pill badge (e.g. "Sustainability") - top-left of card */
 .youmayalsolike > div:nth-child(n+3) > div:nth-child(2) {
   display: inline-flex;
-  padding: 11px 12px;
-  height: 30px;
+  align-items: center;
+  padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
-  background: #fff;
-  border-radius: 50px;
+  color: #212121;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
   width: fit-content;
+  margin-bottom: auto;
+  margin-top: 0;
 }
 
-/* TITLE */
+/* Card title - white on gradient, left-aligned */
 .youmayalsolike > div:nth-child(n+3) > div:nth-child(3) {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 600;
-  color: #fff;
-  margin-top: 20px;
+  line-height: 1.35;
+  color: #ffffff;
+  margin: 16px 0 0;
 }
 
-/* CTA */
+/* Hide link wrapper */
+.youmayalsolike > div:nth-child(n+3) > div:nth-child(4) {
+  display: none;
+}
+
+/* Readmore CTA */
 .youmayalsolike > div:nth-child(n+3) > div:nth-child(5) {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
-  margin-top: 20px;
+  color: #ffffff;
+  margin-top: 12px;
+  opacity: 0.95;
 }
 
-/* TABLET */
+/* TABLET: 2 columns */
 @media (min-width: 600px) {
   .youmayalsolike {
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
   }
 
   .youmayalsolike > div:first-child,
@@ -102,25 +145,26 @@
   }
 }
 
-/* DESKTOP */
+/* DESKTOP: 3 cards in a row, centered */
 @media (min-width: 900px) {
   .youmayalsolike {
-    grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    padding: 60px 24px 80px;
   }
 
   .youmayalsolike > div:first-child div {
-    font-size: 64px;
-    letter-spacing: -1.92px;
-    margin-bottom: 50px;
+    font-size: 40px;
+    margin-bottom: 48px;
   }
 
   .youmayalsolike > div:nth-child(n+3) {
     min-height: 400px;
-    padding: 30px;
-    border-radius: 24px;
+    padding: 24px;
+    border-radius: 20px;
   }
 
   .youmayalsolike > div:nth-child(n+3) > div:nth-child(3) {
-    font-size: 26px;
+    font-size: 20px;
   }
 }
