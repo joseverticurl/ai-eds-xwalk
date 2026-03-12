@@ -71,7 +71,9 @@ export default async function decorate(block) {
   const rows = [...block.children];
 
   // Parent fields (indices 0-5)
-  const sectionHeadline = getText(rows[0]?.children?.[0]);
+  const sectionHeadlineCell = rows[0]?.children?.[0];
+  const sectionHeadlineHtml = sectionHeadlineCell?.innerHTML ?? '';
+  const sectionHeadline = getText(sectionHeadlineCell);
   const transitionDuration = Math.min(10, Math.max(1, Number.parseInt(getText(rows[1]?.children?.[0]) || '5', 10) || 5));
   const autoplay = getText(rows[2]?.children?.[0]) !== 'false';
   const loopSlides = getText(rows[3]?.children?.[0]) !== 'false';
@@ -141,17 +143,25 @@ export default async function decorate(block) {
   const layout = document.createElement('div');
   layout.className = 'homepagecarousel-layout';
 
-  if (sectionHeadline) {
+  if (sectionHeadlineHtml || sectionHeadline) {
     const headlineSection = document.createElement('div');
     headlineSection.className = 'homepagecarousel-headline-section';
-    const lines = sectionHeadline.split(/\n/).filter(Boolean);
-    lines.forEach((line, idx) => {
-      const p = document.createElement('p');
-      p.className = `homepagecarousel-headline-line homepagecarousel-headline-line--${idx % 3 === 0 ? 'left' : idx % 3 === 1 ? 'right' : 'center'}`;
-      p.textContent = line.trim();
-      headlineSection.appendChild(p);
-    });
-    layout.appendChild(headlineSection);
+    if (sectionHeadlineHtml && sectionHeadlineHtml.trim().match(/<[a-zA-Z]/)) {
+      headlineSection.innerHTML = sectionHeadlineHtml;
+      headlineSection.querySelectorAll('p, h1, h2, h3, div').forEach((el, idx) => {
+        el.classList.add('homepagecarousel-headline-line', `homepagecarousel-headline-line--${idx % 3 === 0 ? 'left' : idx % 3 === 1 ? 'right' : 'center'}`);
+      });
+    } else {
+      const lines = sectionHeadline.split(/\n/).filter(Boolean);
+      lines.forEach((line, idx) => {
+        const p = document.createElement('p');
+        p.className = `homepagecarousel-headline-line homepagecarousel-headline-line--${idx % 3 === 0 ? 'left' : idx % 3 === 1 ? 'right' : 'center'}`;
+        p.textContent = line.trim();
+        headlineSection.appendChild(p);
+      });
+    }
+    if (sectionHeadlineCell) moveInstrumentation(sectionHeadlineCell, headlineSection);
+    if (headlineSection.textContent?.trim() || headlineSection.innerHTML?.trim()) layout.appendChild(headlineSection);
   }
 
   const carouselSection = document.createElement('div');

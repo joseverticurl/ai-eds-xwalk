@@ -55,7 +55,7 @@ Implement an EDS block **homepagecarousel** — a hero carousel for the homepage
 
 | Index | Field Name | Component | Label | Notes |
 |-------|------------|-----------|-------|-------|
-| 0 | sectionHeadline | text | Section Headline | Desktop left column headline |
+| 0 | sectionHeadline | richtext | Section Headline | Desktop left column headline |
 | 1 | transitionDuration | number | Transition Duration (sec) | Slide duration, e.g. 3–5, default 5 |
 | 2 | autoplay | select | Autoplay | yes/no, default yes |
 | 3 | loopSlides | select | Loop Slides | yes/no, default yes |

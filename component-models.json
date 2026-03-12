@@ -360,11 +360,11 @@
     "id": "homepagecarousel",
     "fields": [
       {
-        "component": "text",
-        "valueType": "string",
+        "component": "richtext",
         "name": "sectionHeadline",
         "label": "Section Headline",
         "value": "",
+        "valueType": "string",
         "description": "Desktop left column headline"
       },
       {
