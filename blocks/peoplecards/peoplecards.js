@@ -130,10 +130,18 @@ export default async function decorate(block) {
     <button type="button" class="swiper-button-next peoplecards-next" aria-label="Next slide"></button>
     <div class="peoplecards-drag" aria-hidden="true"><span class="peoplecards-drag-arrow"><img src="${codeBasePath}/icons/arrow-left.svg" alt="" width="16" height="16"></span> Drag <span class="peoplecards-drag-arrow"><img src="${codeBasePath}/icons/arrow-right.svg" alt="" width="16" height="16"></span></div>
   `;
+  const navMobile = document.createElement('div');
+  navMobile.className = 'peoplecards-nav-mobile';
+  navMobile.innerHTML = `
+    <button type="button" class="peoplecards-nav-btn peoplecards-nav-prev" aria-label="Previous card"><img src="${codeBasePath}/icons/arrow-left.svg" alt="" width="16" height="16"></button>
+    <button type="button" class="peoplecards-nav-btn peoplecards-nav-next" aria-label="Next card"><img src="${codeBasePath}/icons/arrow-right.svg" alt="" width="16" height="16"></button>
+  `;
   const swiperWrapper = swiperWrap.querySelector('.swiper-wrapper');
   const prevBtn = swiperWrap.querySelector('.peoplecards-prev');
   const nextBtn = swiperWrap.querySelector('.peoplecards-next');
   const dragEl = swiperWrap.querySelector('.peoplecards-drag');
+  const navPrevMobile = navMobile.querySelector('.peoplecards-nav-prev');
+  const navNextMobile = navMobile.querySelector('.peoplecards-nav-next');
 
   cards.forEach((card) => {
     const slide = document.createElement('div');
@@ -219,6 +227,7 @@ export default async function decorate(block) {
   });
 
   carouselWrap.appendChild(swiperWrap);
+  carouselWrap.appendChild(navMobile);
   content.appendChild(carouselWrap);
 
   if (ctaLink && (ctaLabelFinal || 'Meet all our leaders')) {
@@ -247,34 +256,49 @@ export default async function decorate(block) {
   const Swiper = globalThis.Swiper;
   if (!Swiper) return;
 
-  const swiper = new Swiper(swiperWrap, {
-    grabCursor: true,
-    spaceBetween: 20,
-    slidesPerView: 1.2,
-    slidesPerGroup: 1,
-    centeredSlides: false,
-    navigation: {
-      nextEl: nextBtn,
-      prevEl: prevBtn,
-    },
-    breakpoints: {
-      375: {
-        slidesPerView: 1.2,
-        spaceBetween: 20,
+  const isMobile = () => window.innerWidth < 900;
+
+  const getSwiperConfig = () => {
+    if (isMobile()) {
+      return {
+        direction: 'vertical',
+        grabCursor: true,
+        spaceBetween: 30,
+        slidesPerView: 1,
+        slidesPerGroup: 1,
+        navigation: {
+          nextEl: navNextMobile || nextBtn,
+          prevEl: navPrevMobile || prevBtn,
+        },
+      };
+    }
+    return {
+      direction: 'horizontal',
+      grabCursor: true,
+      spaceBetween: 20,
+      slidesPerView: 3.2,
+      slidesPerGroup: 1,
+      centeredSlides: true,
+      navigation: { nextEl: nextBtn, prevEl: prevBtn },
+      breakpoints: {
+        1280: { slidesPerView: 4.2, spaceBetween: 20 },
       },
-      600: {
-        slidesPerView: 2.2,
-        spaceBetween: 20,
-      },
-      900: {
-        slidesPerView: 3.2,
-        spaceBetween: 20,
-      },
-      1280: {
-        slidesPerView: 4.2,
-        spaceBetween: 20,
-      },
-    },
+    };
+  };
+
+  let swiper = new Swiper(swiperWrap, getSwiperConfig());
+
+  [navPrevMobile, navNextMobile].filter(Boolean).forEach((btn, i) => {
+    btn?.addEventListener('click', () => (i === 0 ? swiper.slidePrev() : swiper.slideNext()));
+  });
+
+  window.addEventListener('resize', () => {
+    const nowMobile = isMobile();
+    const wasVertical = swiper.params.direction === 'vertical';
+    if ((nowMobile && !wasVertical) || (!nowMobile && wasVertical)) {
+      swiper.destroy(true, true);
+      swiper = new Swiper(swiperWrap, getSwiperConfig());
+    }
   });
 
   if (dragEl) {
