@@ -357,74 +357,148 @@
     ]
   },
   {
-    "id": "textwithimagegif",
+    "id": "homepagecarousel",
     "fields": [
       {
         "component": "text",
-        "name": "sectionTitle",
-        "label": "Section Title",
         "valueType": "string",
-        "description": "Max 42 characters (info only)"
+        "name": "sectionHeadline",
+        "label": "Section Headline",
+        "value": "",
+        "description": "Desktop left column headline"
       },
       {
-        "component": "richtext",
-        "name": "description",
-        "label": "Description/Text",
-        "value": "",
+        "component": "number",
+        "valueType": "number",
+        "name": "transitionDuration",
+        "label": "Transition Duration (sec)",
+        "value": 5,
+        "description": "Slide duration in seconds, e.g. 3 or 5"
+      },
+      {
+        "component": "select",
+        "name": "autoplay",
+        "label": "Autoplay",
         "valueType": "string",
-        "description": "Max 150 characters (info only)"
+        "value": "true",
+        "options": [
+          {
+            "name": "Yes",
+            "value": "true"
+          },
+          {
+            "name": "No",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "name": "loopSlides",
+        "label": "Loop Slides",
+        "valueType": "string",
+        "value": "true",
+        "options": [
+          {
+            "name": "Yes",
+            "value": "true"
+          },
+          {
+            "name": "No",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "name": "enableAuraEffect",
+        "label": "Enable Aura Effect",
+        "valueType": "string",
+        "value": "true",
+        "options": [
+          {
+            "name": "Yes",
+            "value": "true"
+          },
+          {
+            "name": "No",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "auraGradient",
+        "label": "Aura Gradient",
+        "value": "",
+        "description": "Optional CSS gradient string for aura; leave empty for default"
+      }
+    ]
+  },
+  {
+    "id": "homepagecarouselitem",
+    "fields": [
+      {
+        "component": "select",
+        "name": "mediaType",
+        "label": "Media Type",
+        "valueType": "string",
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
       },
       {
         "component": "reference",
         "valueType": "string",
         "name": "image",
-        "label": "Image/GIF",
+        "label": "Background Image",
         "multi": false
       },
       {
         "component": "text",
         "valueType": "string",
         "name": "imageAlt",
-        "label": "Alt",
+        "label": "Image Alt",
         "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "imageBadge",
-        "label": "Image Badge",
-        "value": "",
-        "description": "e.g. Mmmm!, Dunked!"
       },
       {
         "component": "reference",
         "valueType": "string",
-        "name": "backgroundVector",
-        "label": "Background Vector",
-        "multi": false,
-        "description": "Optional rotating shape"
+        "name": "video",
+        "label": "Background Video",
+        "multi": false
       },
       {
         "component": "text",
         "valueType": "string",
-        "name": "tag1",
-        "label": "Tag 1",
+        "name": "videoAlt",
+        "label": "Video Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "categoryTag",
+        "label": "Category Tag",
         "value": "",
-        "description": "Emoji + text (e.g. 🥢 John Doe)"
+        "description": "Optional, e.g. News"
       },
       {
-        "component": "text",
+        "component": "richtext",
+        "name": "paragraphs",
+        "label": "Paragraphs",
+        "value": "",
         "valueType": "string",
-        "name": "tag2",
-        "label": "Tag 2",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "tag3",
-        "label": "Tag 3",
-        "value": ""
+        "description": "Multiple paragraphs; alignment applied via CSS"
       },
       {
         "component": "aem-content",
@@ -434,9 +508,31 @@
       {
         "component": "text",
         "valueType": "string",
-        "name": "ctaText",
-        "label": "CTA Text",
+        "name": "ctaLabel",
+        "label": "CTA Label",
         "value": ""
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "brandIcon",
+        "label": "Brand Icon",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "brandIconAlt",
+        "label": "Brand Icon Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "overlayGradient",
+        "label": "Overlay Gradient",
+        "value": "",
+        "description": "Optional CSS gradient for text readability"
       }
     ]
   },
@@ -610,6 +706,90 @@
             "value": "video"
           }
         ]
+      }
+    ]
+  },
+  {
+    "id": "textwithimagegif",
+    "fields": [
+      {
+        "component": "text",
+        "name": "sectionTitle",
+        "label": "Section Title",
+        "valueType": "string",
+        "description": "Max 42 characters (info only)"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description/Text",
+        "value": "",
+        "valueType": "string",
+        "description": "Max 150 characters (info only)"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image/GIF",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageBadge",
+        "label": "Image Badge",
+        "value": "",
+        "description": "e.g. Mmmm!, Dunked!"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "backgroundVector",
+        "label": "Background Vector",
+        "multi": false,
+        "description": "Optional rotating shape"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag1",
+        "label": "Tag 1",
+        "value": "",
+        "description": "Emoji + text (e.g. 🥢 John Doe)"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag2",
+        "label": "Tag 2",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag3",
+        "label": "Tag 3",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaText",
+        "label": "CTA Text",
+        "value": ""
       }
     ]
   }

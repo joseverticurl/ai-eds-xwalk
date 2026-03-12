@@ -16,10 +16,11 @@
       "cards",
       "columns",
       "fragment",
-      "textwithimagegif",
       "featurecardscarousel",
       "socialpromo",
-      "textwithimage"
+      "textwithimage",
+      "textwithimagegif",
+      "homepagecarousel"
     ]
   },
   {
@@ -47,6 +48,12 @@
     "id": "featurecardscarousel",
     "components": [
       "featurecardscarouselitem"
+    ]
+  },
+  {
+    "id": "homepagecarousel",
+    "components": [
+      "homepagecarouselitem"
     ]
   },
   {
