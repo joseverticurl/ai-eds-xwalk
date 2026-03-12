@@ -166,7 +166,7 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Checkpoint 2.1: Request User HTML
 
-- [ ] **2.1.1** Request from user:
+- [x] **2.1.1** Request from user:
 
 > **Please provide the semantic HTML for the PeopleCards block:**
 >
@@ -177,9 +177,9 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 >
 > Include the block's root element (e.g. `<div class="peoplecards">...</div>`) and its full structure.
 
-- [ ] **2.1.2** **STOP.** Do not proceed to Phase 3 until user provides the HTML.
+- [x] **2.1.2** **STOP.** Do not proceed to Phase 3 until user provides the HTML.
 
-**Human action required:** [ ] User pastes semantic HTML from Universal Editor. AI documents structure contract (field indices, row structure) before proceeding.
+**Human action required:** [x] User pastes semantic HTML from Universal Editor. AI documents structure contract (field indices, row structure) before proceeding.
 
 ---
 
@@ -191,8 +191,8 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Step 3.1: Create Block Files
 
-- [ ] **3.1.1** Create `blocks/peoplecards/peoplecards.js`.
-- [ ] **3.1.2** Create `blocks/peoplecards/peoplecards.css`.
+- [x] **3.1.1** Create `blocks/peoplecards/peoplecards.js`.
+- [x] **3.1.2** Create `blocks/peoplecards/peoplecards.css`.
 
 **Human test:** [ ] Verify files exist and block is loadable (run project, add block to page — may show unstyled content).
 
@@ -200,10 +200,10 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Step 3.2: Implement decorate() — Structure Extraction
 
-- [ ] **3.2.1** Add JSDoc with structure contract (field indices) from user-provided HTML.
-- [ ] **3.2.2** Extract parent fields using index-based access (title, ctaLabel, ctaLink, backgroundStyle).
-- [ ] **3.2.3** Extract card items (indices after parent rows); per card: image, imageAlt, name, title, profileLink.
-- [ ] **3.2.4** Use `getLink()`, `getText()` helpers; use `createOptimizedPicture()` for images per [Pattern 5](../implementation-guide.md#pattern-5-image-optimization-index-based).
+- [x] **3.2.1** Add JSDoc with structure contract (field indices) from user-provided HTML.
+- [x] **3.2.2** Extract parent fields using index-based access (title, ctaLabel, ctaLink, backgroundStyle).
+- [x] **3.2.3** Extract card items (indices after parent rows); per card: image, imageAlt, name, title, profileLink.
+- [x] **3.2.4** Use `getLink()`, `getText()` helpers; use `createOptimizedPicture()` for images per [Pattern 5](../implementation-guide.md#pattern-5-image-optimization-index-based).
 
 **Human test:** [ ] Run block; verify no console errors and DOM transforms without crashing.
 
@@ -211,14 +211,14 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Step 3.3: Build Section and Card Markup
 
-- [ ] **3.3.1** Build section container with optional aura background class when `backgroundStyle === 'aura'`.
-- [ ] **3.3.2** Build headline (title) element.
-- [ ] **3.3.3** Build carousel wrapper with Swiper structure (swiper-wrapper, swiper-slide per card).
-- [ ] **3.3.4** Each card: image with gradient overlay, name, title, profile link button (circular, with arrow icon).
-- [ ] **3.3.5** Fetch arrow icon from Figma (node for right-arrow in card CTA) or use existing `icons/` asset; save as `icons/arrow-right.svg` if new.
-- [ ] **3.3.6** Build CTA button below carousel (link + label).
-- [ ] **3.3.7** Add Swiper navigation (prev/next) and pagination (bullets for mobile).
-- [ ] **3.3.8** Use `moveInstrumentation()` when transforming DOM.
+- [x] **3.3.1** Build section container with optional aura background class when `backgroundStyle === 'aura'`.
+- [x] **3.3.2** Build headline (title) element.
+- [x] **3.3.3** Build carousel wrapper with Swiper structure (swiper-wrapper, swiper-slide per card).
+- [x] **3.3.4** Each card: image with gradient overlay, name, title, profile link button (circular, with arrow icon).
+- [x] **3.3.5** Fetch arrow icon from Figma (node for right-arrow in card CTA) or use existing `icons/` asset; save as `icons/arrow-right.svg` if new.
+- [x] **3.3.6** Build CTA button below carousel (link + label).
+- [x] **3.3.7** Add Swiper navigation (prev/next) and pagination (bullets for mobile).
+- [x] **3.3.8** Use `moveInstrumentation()` when transforming DOM.
 
 **Human test:** [ ] Visually verify block structure: headline, cards, CTA, and background aura (when selected) render.
 
@@ -226,13 +226,13 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Step 3.4: Implement Carousel Logic (Swiper)
 
-- [ ] **3.4.1** Load Swiper via `loadCSS()` and `loadScript()` from `scripts/aem.js` (do not add to head.html).
-- [ ] **3.4.2** Initialize Swiper with breakpoints:
+- [x] **3.4.1** Load Swiper via `loadCSS()` and `loadScript()` from `scripts/aem.js` (do not add to head.html).
+- [x] **3.4.2** Initialize Swiper with breakpoints:
   - Mobile (~375px): `slidesPerView: 1`, `slidesPerGroup: 1`, peek effect via `spaceBetween`, pagination bullets.
   - Desktop (~1280px+): `slidesPerView: 3` or `4`, `slidesPerGroup: 1`, navigation arrows.
-- [ ] **3.4.3** Enable `grabCursor`, touch/swipe (Swiper default).
-- [ ] **3.4.4** No autoplay (manual carousel per requirements).
-- [ ] **3.4.5** Add ARIA labels to nav buttons (`aria-label="Previous slide"`, `aria-label="Next slide"`).
+- [x] **3.4.3** Enable `grabCursor`, touch/swipe (Swiper default).
+- [x] **3.4.4** No autoplay (manual carousel per requirements).
+- [x] **3.4.5** Add ARIA labels to nav buttons (`aria-label="Previous slide"`, `aria-label="Next slide"`).
 
 **Human test:** [ ] Test carousel: drag on desktop, swipe on mobile, prev/next buttons work, pagination updates.
 
@@ -240,13 +240,13 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Step 3.5: Responsive Styling (CSS)
 
-- [ ] **3.5.1** Desktop: card 440×590px (or proportional), rounded 24px, padding 30px, gap 20px.
-- [ ] **3.5.2** Mobile: card ~80–90% width, rounded 16px, padding 24px, partial peek of adjacent cards.
-- [ ] **3.5.3** Typography: headline per Figma (120px desktop, 34px mobile); name 20px/18px, title 14px.
-- [ ] **3.5.4** Background aura: gradient when `backgroundStyle === 'aura'` (reddish-orange to light grey per Figma).
-- [ ] **3.5.5** CTA button: pill shape, black bg, white text.
-- [ ] **3.5.6** Card gradient overlay: `from-[rgba(0,0,0,0)]` to `rgba(0,0,0,0.6)` for text readability.
-- [ ] **3.5.7** Use project design tokens/CSS variables where applicable.
+- [x] **3.5.1** Desktop: card 440×590px (or proportional), rounded 24px, padding 30px, gap 20px.
+- [x] **3.5.2** Mobile: card ~80–90% width, rounded 16px, padding 24px, partial peek of adjacent cards.
+- [x] **3.5.3** Typography: headline per Figma (120px desktop, 34px mobile); name 20px/18px, title 14px.
+- [x] **3.5.4** Background aura: gradient when `backgroundStyle === 'aura'` (reddish-orange to light grey per Figma).
+- [x] **3.5.5** CTA button: pill shape, black bg, white text.
+- [x] **3.5.6** Card gradient overlay: `from-[rgba(0,0,0,0)]` to `rgba(0,0,0,0.6)` for text readability.
+- [x] **3.5.7** Use project design tokens/CSS variables where applicable.
 
 **Human test:** [ ] Compare desktop and mobile layouts to Figma. Verify aura background, card styling, CTA appearance.
 
@@ -254,10 +254,10 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 
 #### Step 3.6: Accessibility
 
-- [ ] **3.6.1** Add alt text to all images (from imageAlt field).
-- [ ] **3.6.2** Ensure keyboard navigation works (Swiper supports it).
-- [ ] **3.6.3** Verify WCAG AA contrast for text on card overlays.
-- [ ] **3.6.4** Add `aria-label` to interactive elements where needed.
+- [x] **3.6.1** Add alt text to all images (from imageAlt field).
+- [x] **3.6.2** Ensure keyboard navigation works (Swiper supports it).
+- [x] **3.6.3** Verify WCAG AA contrast for text on card overlays.
+- [x] **3.6.4** Add `aria-label` to interactive elements where needed.
 
 **Human test:** [ ] Run accessibility audit (browser DevTools, Lighthouse) and keyboard-navigate the carousel.
 
@@ -285,9 +285,9 @@ Implement a **PeopleCards** block that displays leadership profiles in a horizon
 | 1 | ctaLabel | CTA button label row |
 | 2 | ctaLink | CTA link row |
 | 3 | backgroundStyle | Background style row |
-| 4+ | card rows | Each row: image, imageAlt, name, title, profileLink |
+| 4+ | card rows | Per card (3 or 5 cells) |
 
-*Per-card structure will be confirmed from actual HTML.*
+**Per-card structure (3-cell from HTML):** cell 0=picture, 1=title (job), 2=profileLink. **5-cell:** 0=picture, 1=imageAlt, 2=name, 3=title, 4=profileLink.
 
 ---
 
