@@ -79,8 +79,9 @@ Implement an EDS block **homepagecarousel** — a hero carousel for the homepage
 | 10 | brandIconAlt | text | Brand Icon Alt | Alt for brand icon |
 | 11 | overlayGradient | text | Overlay Gradient | Optional; CSS gradient for text readability |
 
-**Structure contract (for JavaScript):**  
-Field order above defines `block.children` indices for parent and child rows. Exact mapping will be documented after user provides HTML in Phase 2.
+**Structure contract (from user-provided [homepagecarousel.html](../../homepagecarousel.html)):**
+- Parent: `block.children[0]` = sectionHeadline, `[1]` = transitionDuration, `[2]` = autoplay, `[3]` = loopSlides, `[4]` = enableAuraEffect, `[5]` = auraGradient
+- Each slide row (`block.children[6+]`): `row.children[0]` = mediaType, `[1]` = image (picture) or video URL (link), `[2]` = video URL (link), `[3]` = categoryTag, `[4]` = paragraphs, `[5]` = ctaLink, `[6]` = ctaLabel, `[7]` = brandIcon (picture), `[8]` = brandIconAlt/overlayGradient (optional)
 
 ---
 
