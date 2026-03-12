@@ -109,9 +109,16 @@ export default async function decorate(block) {
   if (title) {
     const heading = document.createElement('h2');
     heading.className = 'peoplecards-heading';
-    heading.textContent = title;
+    const split = title.split(/ leading /i);
+    if (split.length >= 2) {
+      heading.innerHTML = `<span class="peoplecards-heading-line">${split[0].trim()}</span> <span class="peoplecards-heading-line peoplecards-heading-line--right">leading ${split.slice(1).join(' leading ').trim()}</span>`;
+    } else {
+      heading.textContent = title;
+    }
     content.appendChild(heading);
   }
+
+  const codeBasePath = window.hlx?.codeBasePath || '';
 
   const carouselWrap = document.createElement('div');
   carouselWrap.className = 'peoplecards-carousel';
@@ -121,14 +128,12 @@ export default async function decorate(block) {
     <div class="swiper-wrapper"></div>
     <button type="button" class="swiper-button-prev peoplecards-prev" aria-label="Previous slide"></button>
     <button type="button" class="swiper-button-next peoplecards-next" aria-label="Next slide"></button>
-    <div class="peoplecards-pagination swiper-pagination"></div>
+    <div class="peoplecards-drag" aria-hidden="true"><span class="peoplecards-drag-arrow"><img src="${codeBasePath}/icons/arrow-left.svg" alt="" width="16" height="16"></span> Drag <span class="peoplecards-drag-arrow"><img src="${codeBasePath}/icons/arrow-right.svg" alt="" width="16" height="16"></span></div>
   `;
   const swiperWrapper = swiperWrap.querySelector('.swiper-wrapper');
   const prevBtn = swiperWrap.querySelector('.peoplecards-prev');
   const nextBtn = swiperWrap.querySelector('.peoplecards-next');
-  const paginationEl = swiperWrap.querySelector('.peoplecards-pagination');
-
-  const codeBasePath = window.hlx?.codeBasePath || '';
+  const dragEl = swiperWrap.querySelector('.peoplecards-drag');
 
   cards.forEach((card) => {
     const slide = document.createElement('div');
@@ -245,34 +250,39 @@ export default async function decorate(block) {
   const swiper = new Swiper(swiperWrap, {
     grabCursor: true,
     spaceBetween: 20,
-    slidesPerView: 1.15,
+    slidesPerView: 1.2,
     slidesPerGroup: 1,
+    centeredSlides: false,
     navigation: {
       nextEl: nextBtn,
       prevEl: prevBtn,
     },
-    pagination: {
-      el: paginationEl,
-      clickable: true,
-      type: 'bullets',
-    },
     breakpoints: {
       375: {
-        slidesPerView: 1.15,
-        spaceBetween: 16,
+        slidesPerView: 1.2,
+        spaceBetween: 20,
       },
       600: {
-        slidesPerView: 2,
+        slidesPerView: 2.2,
         spaceBetween: 20,
       },
       900: {
-        slidesPerView: 3,
+        slidesPerView: 3.2,
         spaceBetween: 20,
       },
       1280: {
-        slidesPerView: 4,
+        slidesPerView: 4.2,
         spaceBetween: 20,
       },
     },
   });
+
+  if (dragEl) {
+    const mq = window.matchMedia('(width >= 900px)');
+    const updateDragVisibility = () => {
+      dragEl.style.display = mq.matches ? 'flex' : 'none';
+    };
+    updateDragVisibility();
+    mq.addEventListener('change', updateDragVisibility);
+  }
 }
