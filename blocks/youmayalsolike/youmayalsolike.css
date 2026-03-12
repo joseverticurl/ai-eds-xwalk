@@ -40,7 +40,7 @@
   display: block;
   border-radius: 12px;
   overflow: hidden;
-  min-height: 380px;
+  min-height: 340px;
   text-decoration: none;
   color: inherit;
   background: #ffffff;
@@ -48,9 +48,44 @@
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+/* .youmayalsolike-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  color: none;
+} */
+
+/* gradient overlay */
+.youmayalsolike-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.7) 0%,
+    rgba(0,0,0,0.4) 40%,
+    rgba(0,0,0,0) 70%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 1;
+}
+
+/* show gradient on hover */
+.youmayalsolike-card:hover::after {
+  opacity: 1;
+}
+
+/* keep content above gradient */
+.youmayalsolike-card-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* hover effect */
 .youmayalsolike-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+  color: none;
 }
 
 /* Card inner: content anchored to bottom over image */
