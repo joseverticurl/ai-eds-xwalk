@@ -120,14 +120,13 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.75) 0%,
-    rgba(0, 0, 0, 0.35) 45%,
-    rgba(0, 0, 0, 0) 100%
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   z-index: 1;
+  pointer-events: none;
 }
-
 /* Content: above overlay, at bottom of card (static so badge can anchor to card-inner) */
 .youmayalsolike-card-content {
   position: static;
