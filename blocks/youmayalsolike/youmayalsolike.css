@@ -40,7 +40,7 @@
   display: block;
   border-radius: 12px;
   overflow: hidden;
-  min-height: 340px;
+  min-height: 300px;
   text-decoration: none;
   color: inherit;
   background: #ffffff;
@@ -91,7 +91,7 @@
 /* Card inner: content anchored to bottom over image */
 .youmayalsolike-card-inner {
   position: relative;
-  min-height: 380px;
+  min-height: 300px;
   padding: 20px 24px 24px;
   display: flex;
   flex-direction: column;
