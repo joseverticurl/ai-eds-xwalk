@@ -1,9 +1,9 @@
-/* PeopleCards Block - Design: Mobile top 65px, Desktop top 170px; gradient to white */
+/* PeopleCards Block - Figma: Mobile top 65px, Desktop top 170px */
 .peoplecards-wrapper {
   position: relative;
   overflow: hidden;
-  padding: 65px 20px 56px;
-  background-color: var(--background-off-white, #fff);
+  padding: 65px 20px 48px;
+  background-color: var(--background-off-white, #f2f2f2);
 }
 
 @media (width >= 900px) {
@@ -16,10 +16,10 @@
 .peoplecards-wrapper--aura {
   background: linear-gradient(
     180deg,
-    #f15c3e 0%,
-    #ff8a65 30%,
-    #ffab91 55%,
-    #fff 100%
+    #e85a4f 0%,
+    #e8a598 35%,
+    #e8c9c2 60%,
+    #f2f2f2 100%
   );
 }
 
@@ -27,7 +27,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 48px;
+  gap: 50px;
   max-width: 1440px;
   margin: 0 auto;
   width: 100%;
@@ -36,24 +36,22 @@
 @media (width >= 900px) {
   .peoplecards-content {
     gap: 80px;
-    padding: 0 24px;
+    padding: 0 20px;
   }
 }
 
-/* Heading - Design: centered, large bold, black; generous line height and spacing */
+/* Heading - Figma: Mobile 34px/gap 3px, Desktop 120px/gap 40px, second line right-aligned */
 .peoplecards-heading {
   font-family: var(--headline, 'TCCC-UnityHeadline', sans-serif);
   font-size: 34px;
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: 600;
+  line-height: 1.2;
   letter-spacing: -0.68px;
-  color: #000;
+  color: var(--netural-black, #000);
   margin: 0;
-  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  gap: 3px;
   max-width: 335px;
   width: 100%;
 }
@@ -63,15 +61,14 @@
 }
 
 .peoplecards-heading-line--right {
-  text-align: center;
+  text-align: right;
 }
 
 @media (width >= 900px) {
   .peoplecards-heading {
     font-size: 120px;
-    font-weight: 700;
     letter-spacing: -3.6px;
-    line-height: 1.05;
+    line-height: 1;
     gap: 40px;
     max-width: 1126px;
   }
@@ -118,66 +115,57 @@
   height: auto;
 }
 
-/* Card - Design: full-bleed image, gradient overlay, rounded corners 15–25px, subtle shadow */
+/* Card - Figma Desktop: 440×590px, 24px radius, 30px padding. Mobile: 376px height, 16px radius, 24px padding */
 .peoplecards-card {
   position: relative;
   width: 100%;
   min-width: 0;
   height: 470px;
-  border-radius: 20px;
+  padding: 30px;
+  border-radius: 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
 @media (width >= 900px) {
   .peoplecards-card {
-    width: 100%;
+    width: 440px;
     flex-shrink: 0;
     height: 590px;
-    border-radius: 24px;
   }
 }
 
 @media (width < 900px) {
   .peoplecards-card {
     height: 376px;
+    padding: 24px;
     border-radius: 16px;
   }
 }
 
-/* Full-bleed image fills card */
 .peoplecards-card-image {
   position: absolute;
   inset: 0;
   border-radius: inherit;
 }
 
+.peoplecards-card-image img,
 .peoplecards-card-image picture {
   width: 100%;
   height: 100%;
-  display: block;
-}
-
-.peoplecards-card-image img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
-  display: block;
   border-radius: inherit;
 }
 
-/* Dark gradient overlay from ~mid image to bottom for text readability */
 .peoplecards-card-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0) 45%,
-    rgba(0, 0, 0, 0.3) 70%,
-    rgba(0, 0, 0, 0.65) 100%
+    rgba(0, 0, 0, 0) 50%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   border-radius: inherit;
   pointer-events: none;
@@ -189,37 +177,29 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  padding: 24px;
   z-index: 1;
-}
-
-@media (width >= 900px) {
-  .peoplecards-card-info {
-    padding: 28px 30px 30px;
-  }
 }
 
 .peoplecards-card-profile {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 20px;
   max-width: 242px;
 }
 
-/* White text over gradient - name bold, title regular */
 .peoplecards-card-name {
   font-family: var(--headline, 'TCCC-UnityHeadline', sans-serif);
   font-size: 18px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-weight: 600;
+  line-height: 1.2;
   color: #fff;
   margin: 0;
 }
 
 @media (width >= 900px) {
   .peoplecards-card-name {
-    font-size: 22px;
-    line-height: 1.3;
+    font-size: 20px;
+    line-height: 1.4;
   }
 }
 
@@ -232,37 +212,17 @@
   margin: 0;
 }
 
-@media (width >= 900px) {
-  .peoplecards-card-title {
-    font-size: 15px;
-  }
-}
-
-/* When card has only title (no name), show title as primary text */
-.peoplecards-card-profile:not(:has(.peoplecards-card-name)) .peoplecards-card-title {
-  font-weight: 700;
-  color: #fff;
-  font-size: 18px;
-}
-
-@media (width >= 900px) {
-  .peoplecards-card-profile:not(:has(.peoplecards-card-name)) .peoplecards-card-title {
-    font-size: 22px;
-  }
-}
-
 .peoplecards-card-button-wrap {
   flex-shrink: 0;
 }
 
-/* Nav arrow: white circle, dark icon - Design: bottom right of card */
 .peoplecards-card-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: 99px;
   background-color: #fff;
   color: #000;
   text-decoration: none;
@@ -275,7 +235,7 @@
 }
 
 .peoplecards-card-button:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid #000;
   outline-offset: 2px;
 }
 
@@ -289,16 +249,14 @@
   cursor: default;
   pointer-events: none;
   opacity: 0.9;
-  background-color: #fff;
-  color: #000;
 }
 
-/* CTA Button - Design: pill shape, 64px height, black bg, white text, generous horizontal padding */
+/* CTA Button - Figma: 64px height, black bg, white text, pill shape */
 .peoplecards-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 32px;
+  padding: 0 30px;
   height: 64px;
   font-family: var(--headline, 'TCCC-UnityHeadline', sans-serif);
   font-size: 16px;
@@ -306,7 +264,7 @@
   line-height: 1.2;
   color: #fff;
   background-color: #000;
-  border-radius: 9999px;
+  border-radius: 999px;
   text-decoration: none;
   transition: opacity 0.2s, background-color 0.2s;
   border: none;
@@ -328,14 +286,14 @@
   outline-offset: 2px;
 }
 
-/* Swiper navigation - Mobile: below carousel; Desktop: on sides; black circle, white icon */
+/* Swiper navigation - Mobile: 30px arrows below carousel (Figma), Desktop: on sides */
 .peoplecards-swiper .swiper-button-prev,
 .peoplecards-swiper .swiper-button-next {
-  color: #fff;
-  background: #000;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  color: #000;
+  background: rgba(0, 0, 0, 0.1);
+  width: 30px;
+  height: 30px;
+  border-radius: 99px;
   top: auto;
   bottom: -50px;
   margin-top: 0;
@@ -354,24 +312,22 @@
 
 .peoplecards-swiper .swiper-button-prev::after,
 .peoplecards-swiper .swiper-button-next::after {
-  font-size: 14px;
-  color: #fff;
+  font-size: 12px;
 }
 
 .peoplecards-swiper .swiper-button-prev:hover,
 .peoplecards-swiper .swiper-button-next:hover {
-  background: #333;
-  color: #fff;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 @media (width >= 900px) {
   .peoplecards-swiper .swiper-button-prev,
   .peoplecards-swiper .swiper-button-next {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     top: 50%;
     bottom: auto;
-    margin-top: -24px;
+    margin-top: -20px;
   }
 
   .peoplecards-swiper .swiper-button-prev {
@@ -387,28 +343,27 @@
 
   .peoplecards-swiper .swiper-button-prev::after,
   .peoplecards-swiper .swiper-button-next::after {
-    font-size: 16px;
+    font-size: 18px;
   }
 }
 
-/* Desktop: Drag indicator - Design: black circle ~60–80px, centered; white text + chevrons */
+/* Desktop: Drag button - Figma 160×160px black circle, centered between cards */
 .peoplecards-drag {
   display: none;
-  flex-direction: row;
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
+  width: 160px;
+  height: 160px;
   background: #000;
-  border-radius: 50%;
+  border-radius: 999px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 16px;
   color: #fff;
   font-family: var(--headline, 'TCCC-UnityHeadline', sans-serif);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.4;
   z-index: 10;
@@ -424,7 +379,7 @@
   filter: brightness(0) invert(1);
 }
 
-/* Mobile nav - Design: black circles, white arrows, gap 50px, below carousel */
+/* Mobile nav - Figma: 30px circles, gap 50px, below carousel */
 .peoplecards-nav-mobile {
   display: none;
   gap: 50px;
@@ -436,24 +391,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: #000;
-  color: #fff;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
   cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
+  transition: background 0.2s;
 }
 
 .peoplecards-nav-btn:hover {
-  background: #333;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .peoplecards-nav-btn img {
   display: block;
-  filter: brightness(0) invert(1);
+  filter: brightness(0);
 }
 
 @media (width >= 900px) {
