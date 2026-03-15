@@ -3,7 +3,16 @@
   position: relative;
   overflow: hidden;
   padding: 65px 20px 56px;
-  background-color: var(--background-off-white, #fff);
+  /* background-color: var(--background-off-white, #fff); */
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 0, 0, 0.55) 0%,
+      rgba(255, 80, 60, 0.35) 20%,
+      rgba(255, 120, 100, 0.15) 35%,
+      rgba(255, 255, 255, 0) 55%
+    ),
+    #f7f4f3;
 }
 
 @media (width >= 900px) {
