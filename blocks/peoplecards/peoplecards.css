@@ -90,7 +90,16 @@
     line-height: 100%; /* 120px */
     letter-spacing: -3.6px;
     gap: 40px;
-    max-width: 1126px;
+    max-width: 1200px;
+    display: flex;
+  flex-direction: column;
+  }
+  .peoplecards-heading span:first-child {
+    align-self: flex-start;
+  }
+  
+  .peoplecards-heading span:last-child {
+    align-self: flex-end;
   }
 }
 
