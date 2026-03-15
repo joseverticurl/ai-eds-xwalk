@@ -261,11 +261,12 @@ export default async function decorate(block) {
   const getSwiperConfig = () => {
     if (isMobile()) {
       return {
-        direction: 'vertical',
+        direction: 'horizontal',
         grabCursor: true,
-        spaceBetween: 30,
-        slidesPerView: 1,
+        spaceBetween: 16,
+        slidesPerView: 1.12,
         slidesPerGroup: 1,
+        centeredSlides: true,
         navigation: {
           nextEl: navNextMobile || nextBtn,
           prevEl: navPrevMobile || prevBtn,
@@ -291,8 +292,9 @@ export default async function decorate(block) {
 
   window.addEventListener('resize', () => {
     const nowMobile = isMobile();
-    const wasVertical = swiper.params.direction === 'vertical';
-    if ((nowMobile && !wasVertical) || (!nowMobile && wasVertical)) {
+    const wasHorizontal = swiper.params.direction === 'horizontal';
+    const wasMobile = swiper.params.slidesPerView === 1.12;
+    if ((nowMobile && !wasMobile) || (!nowMobile && wasMobile)) {
       swiper.destroy(true, true);
       swiper = new Swiper(swiperWrap, getSwiperConfig());
     }
