@@ -263,10 +263,11 @@ export default async function decorate(block) {
       return {
         direction: 'horizontal',
         grabCursor: true,
-        spaceBetween: 16,
-        slidesPerView: 1.12,
+        spaceBetween: 0,
+        slidesPerView: 1,
         slidesPerGroup: 1,
         centeredSlides: true,
+        speed: 400,
         navigation: {
           nextEl: navNextMobile || nextBtn,
           prevEl: navPrevMobile || prevBtn,
@@ -293,7 +294,7 @@ export default async function decorate(block) {
   window.addEventListener('resize', () => {
     const nowMobile = isMobile();
     const wasHorizontal = swiper.params.direction === 'horizontal';
-    const wasMobile = swiper.params.slidesPerView === 1.12;
+    const wasMobile = swiper.params.slidesPerView === 1;
     if ((nowMobile && !wasMobile) || (!nowMobile && wasMobile)) {
       swiper.destroy(true, true);
       swiper = new Swiper(swiperWrap, getSwiperConfig());
