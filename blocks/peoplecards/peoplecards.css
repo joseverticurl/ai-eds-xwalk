@@ -137,7 +137,7 @@
 
 @media (width >= 900px) {
   .peoplecards-slide {
-    width: 440px;
+    width: 440px !important;
     flex-shrink: 0;
   }
 }
@@ -495,3 +495,4 @@
     display: none !important;
   }
 }
+
