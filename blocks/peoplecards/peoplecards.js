@@ -276,13 +276,10 @@ export default async function decorate(block) {
       direction: 'horizontal',
       grabCursor: true,
       spaceBetween: 20,
-      slidesPerView: 3.2,
+      slidesPerView: 'auto',
       slidesPerGroup: 1,
-      centeredSlides: true,
+      centeredSlides: false,
       navigation: { nextEl: nextBtn, prevEl: prevBtn },
-      breakpoints: {
-        1280: { slidesPerView: 4.2, spaceBetween: 20 },
-      },
     };
   };
 

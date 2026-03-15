@@ -43,6 +43,10 @@
     gap: 80px;
     padding: 0 24px;
   }
+  /* Carousel full width so cards start from left (with centeredSlides: false in JS) */
+  .peoplecards-content .peoplecards-carousel {
+    width: 100%;
+  }
 }
 
 /* Heading - Design: centered, large bold, black; generous line height and spacing */
@@ -113,6 +117,7 @@
 .peoplecards-swiper {
   height: 100%;
   overflow: visible;
+  margin-left: 0;
 }
 
 .peoplecards-swiper .swiper-wrapper {
@@ -121,6 +126,14 @@
 
 .peoplecards-slide {
   height: auto;
+  width: 100%;
+}
+
+@media (width >= 900px) {
+  .peoplecards-slide {
+    width: 440px;
+    flex-shrink: 0;
+  }
 }
 
 /* Card - Design: full-bleed image, gradient overlay, rounded corners 15–25px, subtle shadow */
@@ -139,7 +152,7 @@
 
 @media (width >= 900px) {
   .peoplecards-card {
-    width: 100%;
+    width: 440px;
     flex-shrink: 0;
     height: 590px;
     border-radius: 24px;
