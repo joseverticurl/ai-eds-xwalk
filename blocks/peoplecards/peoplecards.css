@@ -337,6 +337,7 @@ font-family: unity;
   justify-content: center;
   padding: 0 32px;
   height: 64px;
+  font-family: unity;
   font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
@@ -356,7 +357,8 @@ font-family: unity;
 }
 
 .peoplecards-cta:hover {
-  opacity: 0.9;
+  opacity: 0.8;
+  text-decoration: none;
 }
 
 .peoplecards-cta:focus-visible {
