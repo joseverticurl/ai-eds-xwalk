@@ -2,7 +2,7 @@
 .peoplecards-wrapper {
   position: relative;
   overflow: hidden;
-  padding: 65px 20px 56px;
+  /* padding: 65px 20px 56px; */
   /* background-color: var(--background-off-white, #fff); */
   background:
     radial-gradient(
