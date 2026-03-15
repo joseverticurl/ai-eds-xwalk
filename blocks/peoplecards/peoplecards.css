@@ -83,10 +83,12 @@
 
 @media (width >= 900px) {
   .peoplecards-heading {
+    font-family: unity;
     font-size: 120px;
-    font-weight: 700;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 100%; /* 120px */
     letter-spacing: -3.6px;
-    line-height: 1.05;
     gap: 40px;
     max-width: 1126px;
   }
