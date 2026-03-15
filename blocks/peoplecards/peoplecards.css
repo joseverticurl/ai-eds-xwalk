@@ -264,7 +264,7 @@ font-family: unity;
 .peoplecards-card-title {
   font-size: 14px;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 300;
   line-height: 140%;
   font-family: unity;
   color: #fff;
@@ -273,7 +273,7 @@ font-family: unity;
 
 @media (width >= 900px) {
   .peoplecards-card-title {
-    font-size: 15px;
+    font-size: 14px;
   }
 }
 
