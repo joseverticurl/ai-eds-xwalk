@@ -41,7 +41,7 @@
 @media (width >= 900px) {
   .peoplecards-content {
     gap: 80px;
-    padding: 0 24px;
+    /* padding: 0 24px; */
   }
   /* Carousel full width so multiple cards show in a row with 20px gap */
   .peoplecards-content .peoplecards-carousel {
