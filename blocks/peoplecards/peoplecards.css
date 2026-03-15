@@ -530,7 +530,7 @@ font-family: unity;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.2);
   color: #000;
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s;
