@@ -43,9 +43,15 @@
     gap: 80px;
     padding: 0 24px;
   }
-  /* Carousel full width so cards start from left (with centeredSlides: false in JS) */
+  /* Carousel full width so multiple cards show in a row with 20px gap */
   .peoplecards-content .peoplecards-carousel {
     width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+  }
+  .peoplecards-content .peoplecards-swiper {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
