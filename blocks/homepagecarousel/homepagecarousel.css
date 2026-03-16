@@ -238,7 +238,7 @@ body{
 .homepagecarousel-slide-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 10px;
 }
 
 .homepagecarousel-slide-tag {
@@ -299,6 +299,7 @@ body{
   text-decoration: none;
   border-radius: 999px;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  margin-top: 40px;
 }
 
 .homepagecarousel-slide-cta:hover {
