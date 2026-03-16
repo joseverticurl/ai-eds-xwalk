@@ -122,13 +122,14 @@ body{
   .homepagecarousel-icons {
     position: absolute;
     right: 40px;
-    top: 50%;
-    transform: translateY(-50%);
+    /* top: 50%;
+    transform: translateY(-50%); */
     flex-direction: column;
-    gap: 16px;
+    /* gap: 16px; */
     margin-bottom: 0;
     margin-right: 0;
     z-index: 2;
+    bottom: 40px;
   }
 }
 
