@@ -26,6 +26,9 @@ body{
   flex-direction: column;
   gap: 24px;
 }
+.swiper-pagination{
+  display: none;
+}
 
 @media (width >= 900px) {
   .homepagecarousel-layout {
