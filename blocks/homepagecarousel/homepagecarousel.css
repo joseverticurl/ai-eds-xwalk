@@ -26,7 +26,7 @@ body{
   flex-direction: column;
   gap: 24px;
 }
-.swiper-pagination{
+.swiper-pagination, .swiper-pagination-bullets.swiper-pagination-horizontal{
   display: none;
 }
 
