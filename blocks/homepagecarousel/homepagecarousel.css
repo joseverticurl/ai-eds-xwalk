@@ -301,7 +301,9 @@ body{
 }
 
 .homepagecarousel-slide-cta:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background:#000;
+  color: #fff;
+  border: none;
 }
 
 /* Pagination - progress bullets */
