@@ -47,8 +47,10 @@ body{
     display: flex;
     flex-direction: column;
     gap: 0;
-    flex: 0 0 670px;
-    max-width: 670px;
+    flex: 0 0 510px;
+    max-width: 510px;
+    padding-left: 80px;
+    padding-right: 80px;
   }
 }
 
