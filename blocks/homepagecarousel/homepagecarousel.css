@@ -17,7 +17,6 @@ body{
 }
 
 .homepagecarousel-wrapper--aura {
-  background: var(--homepagecarousel-aura, linear-gradient(135deg, #f0f0f0 0%, rgba(240, 240, 240, 0.9) 50%, #e8e8e8 100%));
 }
 
 .homepagecarousel-layout {
