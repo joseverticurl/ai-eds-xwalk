@@ -29,9 +29,10 @@ body{
 
 @media (width >= 900px) {
   .homepagecarousel-layout {
+    max-width: 1360px; /* 670 + 20 + 670 */
     flex-direction: row;
     align-items: center;
-    gap: 40px;
+    gap: 20px;
     padding: 0 40px;
   }
 }
@@ -46,8 +47,8 @@ body{
     display: flex;
     flex-direction: column;
     gap: 0;
-    flex: 0 0 320px;
-    max-width: 400px;
+    flex: 0 0 670px;
+    max-width: 670px;
   }
 }
 
