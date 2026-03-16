@@ -230,7 +230,7 @@ body{
 
 @media (width >= 900px) {
   .homepagecarousel-slide-overlay {
-    padding: 40px 100px 40px 40px; /* keep content left, clear of right-side logos */
+    padding: 40px 180px 40px 40px; /* keep content left, clear of right-side logos */
   }
 }
 
