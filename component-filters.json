@@ -20,7 +20,8 @@
       "socialpromo",
       "textwithimage",
       "textwithimagegif",
-      "homepagecarousel"
+      "homepagecarousel",
+      "youmayalsolike"
     ]
   },
   {
@@ -60,6 +61,12 @@
     "id": "socialpromo",
     "components": [
       "socialpromo-card"
+    ]
+  },
+  {
+    "id": "youmayalsolike",
+    "components": [
+      "youmayalsolikeitem"
     ]
   }
 ]
