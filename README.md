@@ -33,6 +33,18 @@ npm i
 npm run lint
 ```
 
+## Testing
+
+Unit tests for blocks use [Vitest](https://vitest.dev/) with [happy-dom](https://github.com/capricorn86/happy-dom) for DOM simulation.
+
+```sh
+npm test              # Run tests once
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
+```
+
+Tests live alongside blocks (e.g. `blocks/hero/hero.test.js`). Use `test/helpers.js` for fixtures like `createBlockFromRows()`.
+
 ## Local development
 
 1. Create a new repository based on the `aem-boilerplate` template
