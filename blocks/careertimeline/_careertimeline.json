@@ -1,0 +1,112 @@
+{
+  "definitions": [
+    {
+      "title": "Career Timeline",
+      "id": "careertimeline",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "CareerTimeline",
+              "model": "careertimeline",
+              "filter": "careertimeline"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Career Timeline Item",
+      "id": "careertimelineitem",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "CareerTimelineItem",
+              "model": "careertimelineitem"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "careertimeline",
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Title",
+          "value": "You may also like"
+        },
+        {
+          "component": "select",
+          "name": "aura",
+          "label": "Aura",
+          "options": [
+            { "name": "Creative", "value": "aura-creative" },
+            { "name": "Health", "value": "aura-health" },
+            { "name": "Sustainability", "value": "aura-sustainability" },
+            { "name": "Light", "value": "aura-light" },
+            { "name": "Dark", "value": "aura-dark" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "careertimelineitem",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Image",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "imageAlt",
+          "label": "Image Alt",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "category",
+          "label": "Category",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Title",
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
+          "label": "Link"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "ctaText",
+          "label": "CTA Text",
+          "value": "Read more"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "careertimeline",
+      "components": ["careertimelineitem"]
+    }
+  ]
+}

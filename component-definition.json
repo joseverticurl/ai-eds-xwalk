@@ -113,6 +113,37 @@
           }
         },
         {
+          "title": "Career Timeline",
+          "id": "careertimeline",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "CareerTimeline",
+                  "model": "careertimeline",
+                  "filter": "careertimeline"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Career Timeline Item",
+          "id": "careertimelineitem",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "CareerTimelineItem",
+                  "model": "careertimelineitem"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Columns",
           "id": "columns",
           "plugins": {
@@ -244,37 +275,6 @@
                 "template": {
                   "name": "Text with Image/GIF",
                   "model": "textwithimagegif"
-                }
-              }
-            }
-          }
-        },
-        {
-          "title": "You May Also Like",
-          "id": "youmayalsolike",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block",
-                "template": {
-                  "name": "YouMayAlsoLike",
-                  "model": "youmayalsolike",
-                  "filter": "youmayalsolike"
-                }
-              }
-            }
-          }
-        },
-        {
-          "title": "You May Also Like Item",
-          "id": "youmayalsolikeitem",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block/item",
-                "template": {
-                  "name": "YouMayAlsoLikeItem",
-                  "model": "youmayalsolikeitem"
                 }
               }
             }

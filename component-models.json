@@ -161,6 +161,90 @@
     ]
   },
   {
+    "id": "careertimeline",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": "You may also like"
+      },
+      {
+        "component": "select",
+        "name": "aura",
+        "label": "Aura",
+        "options": [
+          {
+            "name": "Creative",
+            "value": "aura-creative"
+          },
+          {
+            "name": "Health",
+            "value": "aura-health"
+          },
+          {
+            "name": "Sustainability",
+            "value": "aura-sustainability"
+          },
+          {
+            "name": "Light",
+            "value": "aura-light"
+          },
+          {
+            "name": "Dark",
+            "value": "aura-dark"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "careertimelineitem",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Image Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "category",
+        "label": "Category",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaText",
+        "label": "CTA Text",
+        "value": "Read more"
+      }
+    ]
+  },
+  {
     "id": "columns",
     "fields": [
       {
@@ -610,99 +694,6 @@
         "name": "ctaText",
         "label": "CTA Text",
         "value": ""
-      }
-    ]
-  },
-  {
-    "id": "youmayalsolike",
-    "fields": [
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "title",
-        "label": "Title",
-        "value": "",
-        "description": "Section heading, e.g. You may also like"
-      },
-      {
-        "component": "select",
-        "valueType": "string",
-        "name": "aura",
-        "label": "Aura Style",
-        "value": "",
-        "description": "Gradient background applied as CSS class on container",
-        "options": [
-          {
-            "name": "Creative",
-            "value": "aura-creative"
-          },
-          {
-            "name": "Health",
-            "value": "aura-health"
-          },
-          {
-            "name": "Sustainability",
-            "value": "aura-sustainability"
-          },
-          {
-            "name": "Light",
-            "value": "aura-light"
-          },
-          {
-            "name": "Dark",
-            "value": "aura-dark"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "youmayalsolikeitem",
-    "fields": [
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "image",
-        "label": "Image",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "imageAlt",
-        "label": "Alt",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "category",
-        "label": "Category",
-        "value": "",
-        "description": "Badge label, e.g. Sustainability, Career"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "title",
-        "label": "Title",
-        "value": "",
-        "description": "Article title"
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "link",
-        "label": "Link",
-        "description": "Article URL"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "ctaText",
-        "label": "CTA Text",
-        "value": "",
-        "description": "Read more text for mobile (default: Read more)"
       }
     ]
   }

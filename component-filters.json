@@ -30,6 +30,12 @@
     ]
   },
   {
+    "id": "careertimeline",
+    "components": [
+      "careertimelineitem"
+    ]
+  },
+  {
     "id": "columns",
     "components": [
       "column"
@@ -54,12 +60,6 @@
     "id": "socialpromo",
     "components": [
       "socialpromo-card"
-    ]
-  },
-  {
-    "id": "youmayalsolike",
-    "components": [
-      "youmayalsolikeitem"
     ]
   }
 ]

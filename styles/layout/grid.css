@@ -1,0 +1,66 @@
+/* Keep these values in sync with styles/variables/breakpoints.css */
+@media (width >= 768px) {
+  :root {
+    --grid-columns: 6;
+    --grid-margin-x: 44px;
+    --grid-gutter-x: 24px;
+  }
+
+  .container {
+    max-width: calc(100% - (2 * var(--grid-margin-x)));
+  }
+
+  .row-cols-md-6 > * { width: 16.666667%; }
+
+  .col-md { flex: 1 0 0%; }
+  .col-md-auto { flex: 0 0 auto; width: auto; }
+  .col-md-1 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 1)); }
+  .col-md-2 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 2)); }
+  .col-md-3 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 3)); }
+  .col-md-4 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 4)); }
+  .col-md-5 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 5)); }
+  .col-md-6 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 6)); }
+  .col-md-7 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 7)); }
+  .col-md-8 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 8)); }
+  .col-md-9 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 9)); }
+  .col-md-10 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 10)); }
+  .col-md-11 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 11)); }
+  .col-md-12 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 12)); }
+}
+
+@media (width >= 1024px) {
+  :root {
+    --grid-columns: 12;
+    --grid-margin-x: 80px;
+    --grid-gutter-x: 24px;
+  }
+
+  .row-cols-lg-12 > * { width: 8.333333%; }
+
+  .col-lg { flex: 1 0 0%; }
+  .col-lg-auto { flex: 0 0 auto; width: auto; }
+  .col-lg-1 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 1)); }
+  .col-lg-2 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 2)); }
+  .col-lg-3 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 3)); }
+  .col-lg-4 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 4)); }
+  .col-lg-5 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 5)); }
+  .col-lg-6 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 6)); }
+  .col-lg-7 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 7)); }
+  .col-lg-8 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 8)); }
+  .col-lg-9 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 9)); }
+  .col-lg-10 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 10)); }
+  .col-lg-11 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 11)); }
+  .col-lg-12 { flex: 0 0 auto; width: min(100%, calc((100% / var(--grid-columns)) * 12)); }
+}
+
+@media (width >= 1920px) {
+  :root {
+    --grid-columns: 12;
+    --grid-margin-x: 120px;
+    --grid-gutter-x: 32px;
+  }
+
+  .container {
+    max-width: 2000px;
+  }
+}
