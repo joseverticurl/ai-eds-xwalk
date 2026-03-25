@@ -91,7 +91,7 @@ export default function decorate(block) {
     const imageAlt = getImageAlt(imageCell) || category || cardTitle;
 
     const card = document.createElement('a');
-    card.className = 'careertimeline-card col-2 col-md-3 col-lg-4';
+    card.className = 'careertimeline-card col-1 col-md-3 col-lg-4';
     card.href = linkUrl || '#';
     card.setAttribute('aria-label', cardTitle || ctaText);
     if (isExternalLink(card.href)) {
