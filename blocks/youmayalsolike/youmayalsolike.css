@@ -1,0 +1,135 @@
+.youmayalsolike {
+  padding: 48px 0;
+}
+
+.youmayalsolike.aura-creative {
+  background:
+    radial-gradient(circle at 14% 10%, rgb(255 155 89 / 28%), transparent 40%),
+    radial-gradient(circle at 88% 20%, rgb(255 91 141 / 25%), transparent 38%),
+    radial-gradient(circle at 42% 90%, rgb(98 179 255 / 18%), transparent 42%),
+    #f7f8fb;
+}
+
+.youmayalsolike.aura-health {
+  background: linear-gradient(135deg, #e8f7f2 0%, #d5efe9 100%);
+}
+
+.youmayalsolike.aura-sustainability {
+  background: linear-gradient(135deg, #eef7e8 0%, #ddeed0 100%);
+}
+
+.youmayalsolike.aura-light {
+  background: #f7f8fb;
+}
+
+.youmayalsolike.aura-dark {
+  background: #1f2328;
+}
+
+.youmayalsolike-wrapper {
+  width: min(1200px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.youmayalsolike-heading {
+  margin: 0 0 24px;
+  font-size: clamp(1.5rem, 1.15rem + 1vw, 2rem);
+  line-height: 1.2;
+  color: #1c1e21;
+}
+
+.youmayalsolike.aura-dark .youmayalsolike-heading {
+  color: #fff;
+}
+
+.youmayalsolike-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.youmayalsolike-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  min-height: 320px;
+  color: #fff;
+  text-decoration: none;
+  background: #222;
+  display: block;
+}
+
+.youmayalsolike-card-media {
+  position: absolute;
+  inset: 0;
+}
+
+.youmayalsolike-card-media picture,
+.youmayalsolike-card-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.youmayalsolike-card-media img {
+  object-fit: cover;
+}
+
+.youmayalsolike-card-overlay {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  background: linear-gradient(180deg, rgb(0 0 0 / 5%) 35%, rgb(0 0 0 / 65%) 100%);
+}
+
+.youmayalsolike-card-category {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgb(255 255 255 / 90%);
+  color: #1c1e21;
+  font-size: 0.75rem;
+  line-height: 1;
+  margin-bottom: auto;
+}
+
+.youmayalsolike-card-title {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.youmayalsolike-card-cta {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+@media (width >= 768px) {
+  .youmayalsolike {
+    padding: 64px 0;
+  }
+
+  .youmayalsolike-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .youmayalsolike.is-three-cards .youmayalsolike-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .youmayalsolike-card-cta {
+    display: none;
+  }
+}
