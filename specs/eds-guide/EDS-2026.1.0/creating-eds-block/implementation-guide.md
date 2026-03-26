@@ -22,7 +22,6 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - Complex blocks (nested items, containers)
 - XWalk configuration for AEM authoring
 - Frontend JavaScript and CSS
-- Unit testing (if applicable)
 
 **Out of Scope:**
 - OSGi services
@@ -3142,12 +3141,6 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] Test content saves and renders correctly in author mode
 - [ ] Test content renders correctly in publish mode
 - [ ] Verify index-based access works (no reliance on data-aue-* attributes)
-
-### Phase 6: Frontend - Unit Testing (If Applicable)
-- [ ] Create `blocks/<block-name>/<block-name>.test.js`
-- [ ] Test data transformation functions
-- [ ] Test validation logic
-- [ ] Test edge cases
 
 ---
 

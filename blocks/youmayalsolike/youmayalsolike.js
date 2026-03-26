@@ -1,94 +1,125 @@
+import { createOptimizedPicture } from '../../scripts/aem.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
-function getText(el) {
-  return el?.textContent?.trim() ?? '';
+function getText(node) {
+  return node?.textContent?.trim() || '';
 }
 
-function getHref(el) {
-  const link = el?.querySelector?.('a') || el?.querySelector?.('p a');
-  return link?.getAttribute?.('href') || link?.href || '';
+function decodeHtmlEntities(value) {
+  if (!value) return '';
+  return value.replaceAll('&#x26;', '&');
 }
 
-function normalizeCta(text) {
-  return text.replace(/^readmore$/i, 'Read more');
+function getImageData(cell) {
+  const img = cell?.querySelector('img');
+  if (!img) return { src: '', alt: '' };
+  return {
+    src: decodeHtmlEntities(img.getAttribute('src') || img.src || ''),
+    alt: img.getAttribute('alt') || '',
+  };
 }
 
-function createCard(row) {
-  const imageCell = row?.children?.[0];
-  const category = getText(row?.children?.[1]);
-  const title = getText(row?.children?.[2]);
-  const href = getHref(row?.children?.[3]);
-  const ctaText = normalizeCta(getText(row?.children?.[4]) || 'Read more');
-  const picture = imageCell?.querySelector?.('picture');
+function getLink(cell) {
+  const link = cell?.querySelector('a');
+  return decodeHtmlEntities(link?.getAttribute('href') || '');
+}
 
-  if (!picture || !title) return null;
+function buildCard(card, index) {
+  const article = document.createElement('article');
+  article.className = 'youmayalsolike-card';
 
-  const card = document.createElement(href ? 'a' : 'article');
-  card.className = 'youmayalsolike-card';
-  if (href) {
-    card.href = href;
-    card.setAttribute('aria-label', title);
+  const bg = document.createElement('div');
+  bg.className = 'youmayalsolike-card-bg';
+  if (card.image.src) {
+    const pic = createOptimizedPicture(card.image.src, card.image.alt, false, [
+      { media: '(min-width: 600px)', width: '1200' },
+      { width: '750' },
+    ]);
+    bg.appendChild(pic);
   }
-
-  const media = document.createElement('div');
-  media.className = 'youmayalsolike-card-media';
-  media.appendChild(picture.cloneNode(true));
 
   const overlay = document.createElement('div');
-  overlay.className = 'youmayalsolike-card-overlay';
+  overlay.className = 'youmayalsolike-card-content';
 
-  if (category) {
-    const badge = document.createElement('span');
-    badge.className = 'youmayalsolike-card-category';
-    badge.textContent = category;
-    overlay.appendChild(badge);
+  if (card.category) {
+    const category = document.createElement('p');
+    category.className = 'youmayalsolike-card-category';
+    category.textContent = card.category;
+    overlay.appendChild(category);
   }
 
-  const heading = document.createElement('h3');
-  heading.className = 'youmayalsolike-card-title';
-  heading.textContent = title;
-  overlay.appendChild(heading);
+  if (card.title) {
+    const title = document.createElement('h3');
+    title.className = 'youmayalsolike-card-title';
+    title.textContent = card.title;
+    overlay.appendChild(title);
+  }
 
-  const cta = document.createElement('span');
-  cta.className = 'youmayalsolike-card-cta';
-  cta.textContent = ctaText;
-  overlay.appendChild(cta);
+  if (card.mobileCta) {
+    const cta = document.createElement('span');
+    cta.className = 'youmayalsolike-card-mobile-cta';
+    cta.textContent = card.mobileCta;
+    overlay.appendChild(cta);
+  }
 
-  media.appendChild(overlay);
-  card.appendChild(media);
-  moveInstrumentation(row, card);
-  return card;
+  bg.appendChild(overlay);
+  article.appendChild(bg);
+
+  const href = card.link || '#';
+  const clickable = document.createElement('a');
+  clickable.className = 'youmayalsolike-card-link';
+  clickable.href = href;
+  clickable.setAttribute('aria-label', card.title || `Related article ${index + 1}`);
+  clickable.appendChild(article);
+  moveInstrumentation(card.row, clickable);
+
+  return clickable;
 }
 
 export default function decorate(block) {
   const rows = [...block.children];
-  const headingText = getText(rows[0]?.children?.[0]) || 'You may also like';
-  const auraClass = getText(rows[1]?.children?.[0]);
-  const cardRows = rows.slice(2);
-
-  const cards = cardRows.map(createCard).filter(Boolean).slice(0, 3);
-  if (cards.length < 2) {
+  if (rows.length < 4) {
     block.replaceChildren();
     return;
   }
 
-  if (auraClass) block.classList.add(auraClass);
-  block.classList.toggle('is-two-cards', cards.length === 2);
-  block.classList.toggle('is-three-cards', cards.length === 3);
+  const title = getText(rows[0]?.children?.[0]);
+  const auraStyle = getText(rows[1]?.children?.[0]).toLowerCase();
 
-  const wrapper = document.createElement('section');
-  wrapper.className = 'youmayalsolike-wrapper';
+  const rawCards = rows.slice(2).map((row) => ({
+    row,
+    image: getImageData(row.children[0]),
+    category: getText(row.children[1]),
+    title: getText(row.children[2]),
+    link: getLink(row.children[3]),
+    mobileCta: getText(row.children[4]) || 'Read more',
+  }));
 
-  const heading = document.createElement('h2');
-  heading.className = 'youmayalsolike-heading';
-  heading.textContent = headingText;
-  wrapper.appendChild(heading);
+  if (rawCards.length < 2) {
+    block.replaceChildren();
+    return;
+  }
 
-  const grid = document.createElement('div');
-  grid.className = 'youmayalsolike-grid';
-  cards.forEach((card) => grid.appendChild(card));
-  wrapper.appendChild(grid);
+  const cards = rawCards.slice(0, 3);
+  const countClass = cards.length === 2 ? 'is-two-cards' : 'is-three-cards';
 
-  moveInstrumentation(block, wrapper);
+  const wrapper = document.createElement('div');
+  wrapper.className = `youmayalsolike-wrapper ${countClass}`;
+  if (auraStyle) wrapper.classList.add(auraStyle);
+
+  if (title) {
+    const heading = document.createElement('h2');
+    heading.className = 'youmayalsolike-heading';
+    heading.textContent = title;
+    wrapper.appendChild(heading);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'youmayalsolike-cards';
+  cards.forEach((card, index) => {
+    list.appendChild(buildCard(card, index));
+  });
+
+  wrapper.appendChild(list);
   block.replaceChildren(wrapper);
 }

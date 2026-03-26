@@ -1,74 +1,65 @@
 import {
-  describe, it, expect, vi, beforeEach, beforeAll,
+  describe, it, expect, vi, beforeAll,
 } from 'vitest';
 import { createBlockFromRows, createPictureElement } from '../../test/helpers.js';
+
+vi.mock('../../scripts/aem.js', () => ({
+  createOptimizedPicture: (src, alt = '') => {
+    const picture = document.createElement('picture');
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = alt;
+    picture.appendChild(img);
+    return picture;
+  },
+}));
 
 vi.mock('../../scripts/scripts.js', () => ({
   moveInstrumentation: () => {},
 }));
-
 let decorate;
 
-function createCardRow(title = 'Sample title') {
-  return [
-    createPictureElement('/image.jpg', 'Image alt'),
-    'Sustainability',
-    title,
-    '<a href="/article">Article</a>',
-    'Readmore',
+function createRows(cardCount) {
+  const rows = [
+    ['You may also like'],
+    ['aura-creative'],
   ];
+
+  for (let i = 1; i <= cardCount; i += 1) {
+    rows.push([
+      createPictureElement(`/img-${i}.jpg`, `Image ${i}`),
+      `Category ${i}`,
+      `Title ${i}`,
+      `<a href="/article-${i}">Link</a>`,
+      'Readmore',
+    ]);
+  }
+
+  return rows;
 }
 
 describe('youmayalsolike block', () => {
   beforeAll(async () => {
-    ({ default: decorate } = await import('./youmayalsolike.js'));
+    decorate = (await import('./youmayalsolike.js')).default;
   });
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders two-card layout when exactly 2 cards exist', () => {
-    const block = createBlockFromRows('youmayalsolike', [
-      ['You may also like'],
-      ['aura-creative'],
-      createCardRow('Card one'),
-      createCardRow('Card two'),
-    ]);
-
+  it('does not render when fewer than 2 cards', () => {
+    const block = createBlockFromRows('youmayalsolike', createRows(1));
     decorate(block);
-
-    expect(block.classList.contains('aura-creative')).toBe(true);
-    expect(block.classList.contains('is-two-cards')).toBe(true);
-    expect(block.querySelectorAll('.youmayalsolike-card').length).toBe(2);
-  });
-
-  it('caps rendered cards to 3 when more than 3 are authored', () => {
-    const block = createBlockFromRows('youmayalsolike', [
-      ['You may also like'],
-      ['aura-creative'],
-      createCardRow('One'),
-      createCardRow('Two'),
-      createCardRow('Three'),
-      createCardRow('Four'),
-    ]);
-
-    decorate(block);
-
-    expect(block.classList.contains('is-three-cards')).toBe(true);
-    expect(block.querySelectorAll('.youmayalsolike-card').length).toBe(3);
-    expect(block.textContent.includes('Four')).toBe(false);
-  });
-
-  it('does not render when fewer than 2 valid cards are available', () => {
-    const block = createBlockFromRows('youmayalsolike', [
-      ['You may also like'],
-      ['aura-creative'],
-      createCardRow('Only one'),
-    ]);
-
-    decorate(block);
-
     expect(block.children.length).toBe(0);
+  });
+
+  it('renders 2 cards layout class', () => {
+    const block = createBlockFromRows('youmayalsolike', createRows(2));
+    decorate(block);
+    expect(block.querySelector('.youmayalsolike-wrapper.is-two-cards')).toBeTruthy();
+    expect(block.querySelectorAll('.youmayalsolike-card-link')).toHaveLength(2);
+  });
+
+  it('caps cards at 3 and applies three-card class', () => {
+    const block = createBlockFromRows('youmayalsolike', createRows(4));
+    decorate(block);
+    expect(block.querySelector('.youmayalsolike-wrapper.is-three-cards')).toBeTruthy();
+    expect(block.querySelectorAll('.youmayalsolike-card-link')).toHaveLength(3);
   });
 });
