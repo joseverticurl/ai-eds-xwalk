@@ -13,8 +13,9 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 
 **Development Process (in order):**
 1. **Generate backend code first** — block-level JSON (`blocks/<block-name>/_<block-name>.json`), then run `npm run build:json`
-2. **User provides semantic HTML** — User authors the block in Adobe Universal Editor and provides the generated HTML to Cursor (do NOT generate HTML — Cursor output can differ from Universal Editor)
-3. **Generate styling and scripting** — JavaScript and CSS based on the user-provided semantic HTML
+2. **Styles decision first (before HTML)** — ask whether to update shared grid/breakpoints (`styles/layout/*.css`) and design token variable files (`styles/variables/*.css`) from the project requirements; if yes, use the provided Figma to update those shared styles
+3. **User provides semantic HTML** — User authors the block in Adobe Universal Editor and provides the generated HTML to Cursor (do NOT generate HTML — Cursor output can differ from Universal Editor)
+4. **Generate styling and scripting** — JavaScript and CSS based on the user-provided semantic HTML
 
 **Scope Includes:**
 - Simple blocks (single content blocks)
@@ -34,8 +35,9 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 
 **Development order (follow in sequence):**
 1. **Backend first** — Add XWalk config to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json`
-2. **User provides semantic HTML** — Author block in Adobe Universal Editor, then provide the generated HTML (do NOT generate HTML — Cursor output can differ from Universal Editor)
-3. **Frontend** — Generate JavaScript and CSS based on user-provided HTML
+2. **Styles decision** — Ask whether to update shared grid/breakpoints (`styles/layout/*.css`) and token variable files (`styles/variables/*.css`); if yes, use Figma to apply design tokens + grid specs
+3. **User provides semantic HTML** — Author block in Adobe Universal Editor, then provide the generated HTML (do NOT generate HTML — Cursor output can differ from Universal Editor)
+4. **Frontend** — Generate JavaScript and CSS based on user-provided HTML
 
 **Critical rules:**
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`); run build command to update root files
@@ -45,12 +47,11 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).
 
 **Jump to:**
-- [Part 1: Process Flow (3 Steps)](#part-1-process-flow-3-steps)
-- [Part 2: Backend Code Generation](#part-2-backend-code-generation)
-- [Part 3: Frontend Code Generation](#part-3-frontend-code-generation)
+- [Part 1: Process Flow (4 Steps)](#part-1-process-flow-4-steps)
+- [Development Workflow: Backend First, Then Styles Decision, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-styles-decision-then-user-provided-semantic-html)
 - [Implementation Checklist](#implementation-checklist) — full phase-by-phase checklist
 
-**Checklist at a glance:** Prerequisites → Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend) → Validation
+**Checklist at a glance:** Prerequisites → Step 1 (Backend) → Step 2 (Styles Grid/Tokens Decision) → Step 3 (User HTML) → Step 4 (Frontend) → Validation
 
 **Key documentation:**
 - [Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) (Experience League)
@@ -62,11 +63,11 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 
 This guide is organized into three parts:
 
-1. **Part 1: Process Flow (3 Steps)** - The 3-step process, Step 2 (User Provides HTML), validation, checklist, and end-to-end workflow
+1. **Part 1: Process Flow (4 Steps)** - The 4-step process, Step 2 (Styles Grid/Tokens Decision), Step 3 (User Provides HTML), validation, checklist, and end-to-end workflow
 2. **Part 2: Backend Code Generation** - XWalk JSON configuration (block-level JSON, build step)
 3. **Part 3: Frontend Code Generation** - JavaScript, CSS, and HTML implementation
 
-**Development Order:** Step 1 (Backend) → Step 2 (User HTML) → Step 3 (Frontend)
+**Development Order:** Step 1 (Backend) → Step 2 (Styles Grid/Tokens Decision) → Step 3 (User HTML) → Step 4 (Frontend)
 
 ---
 
@@ -74,12 +75,13 @@ This guide is organized into three parts:
 
 **Pre-Implementation**
 - [Requirements Gathering](#pre-implementation-gathering-requirements)
-- [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
+- [Development Workflow: Backend First, Then Styles Decision, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-styles-decision-then-user-provided-semantic-html)
 
-**Part 1: Process Flow (3 Steps)**
+**Part 1: Process Flow (4 Steps)**
 - [AI Governance Rules (Process)](#ai-governance-rules-process)
-- [The 3-Step Process](#the-3-step-process)
-- [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html)
+- [The 4-Step Process](#the-4-step-process)
+- [Step 2: Styles.css Grid and Color Variables Decision](#step-2-stylescss-grid-and-color-variables-decision)
+- [Step 3: User Provides Semantic HTML](#step-3-user-provides-semantic-html)
 - [End-to-End Flow](#end-to-end-flow)
 - [Development Workflow](#development-workflow)
 - [Implementation Checklist](#implementation-checklist)
@@ -162,7 +164,11 @@ When creating a component implementation plan, **always ask for**:
    - Use Figma MCP to fetch the design file
    - Extract component structure, layout, and hierarchy
    - Identify colors, typography, spacing, and sizing
+   - Extract exact spacing values (padding and margin) for each key element/container
+   - Extract font-family (including fallback stack if defined) and match the Figma typography as closely as possible
+   - Identify complex background treatments (especially layered/radial gradients) and capture the exact stop colors, positions, and opacities
    - Extract responsive breakpoints and variants
+   - Extract grid system specs per breakpoint (column count, side margins, and gutters) and map them to shared grid utilities in `styles/styles.css` (for example: mobile `4 col / 20 margin / 20 gutter`, tablet `6 col / 44 margin / 24 gutter`, desktop `12 col / 80 margin / 24 gutter`, large desktop `12 col / 120 margin / 32 gutter`)
    - Identify interactive states (hover, active, disabled, etc.)
 
 2. **Analyze Design Elements:**
@@ -193,8 +199,35 @@ When creating a component implementation plan, **always ask for**:
    - Create a design analysis summary
    - Map Figma elements to HTML structure
    - Map Figma styles to CSS properties
+   - For multi-layer Figma gradients, preserve the layering order in CSS (first gradient on top, final color/gradient as base)
    - Identify reusable components from `shared-components/`
    - Note any design tokens or CSS variables needed
+
+**Gradient Implementation Note (Figma -> CSS):**
+- If a Figma component uses a soft, multi-blob radial gradient background, implement it as a layered `background` value instead of flattening to a single color.
+- Keep each radial layer as a separate `radial-gradient(...)` entry and include the neutral base color as the final background layer.
+- Example pattern:
+
+```css
+background:
+  radial-gradient(circle at 15% 20%, rgba(255, 210, 90, 0.55), transparent 45%),
+  radial-gradient(circle at 45% 50%, rgba(150, 190, 120, 0.45), transparent 50%),
+  radial-gradient(circle at 85% 35%, rgba(150, 185, 210, 0.45), transparent 50%),
+  #e6e6e6;
+```
+
+- Prompt snippet for implementation requests:
+
+```text
+If the Figma component uses a multi-layer radial gradient background, preserve it as layered CSS `background` values (do not flatten). Keep layer order exactly as designed and include the base fallback color as the last layer, e.g.:
+background:
+  radial-gradient(circle at 15% 20%, rgba(255, 210, 90, 0.55), transparent 45%),
+  radial-gradient(circle at 45% 50%, rgba(150, 190, 120, 0.45), transparent 50%),
+  radial-gradient(circle at 85% 35%, rgba(150, 185, 210, 0.45), transparent 50%),
+  #e6e6e6;
+Also extract and apply exact Figma spacing and typography values: padding, margin, and font-family must match the provided Figma design (desktop/tablet/mobile variants where applicable).
+If Figma defines a grid system, implement those exact breakpoints, column counts, margins, and gutters in shared grid utilities and use those utilities in block markup/decoration instead of hardcoded per-block layout math.
+```
 
 **Example Workflow:**
 ```
@@ -261,13 +294,16 @@ Before starting implementation, ensure you have:
 
 **Note:** If Figma URL is not available, request component design images (desktop, tablet, mobile) instead. Cursor can generate code from design images. Ensure story requirements are provided before proceeding. Accurate requirements prevent rework and ensure the component meets design and functional specifications.
 
-### Development Workflow: Backend First, Then User-Provided Semantic HTML
+### Development Workflow: Backend First, Then Styles Decision, Then User-Provided Semantic HTML
 
 **Critical:** To avoid DOM structure mismatches, the development process follows this order:
 
 1. **Generate backend code first** (block-level JSON, then `npm run build:json`)
-2. **User provides semantic HTML** — The user authors the block in Adobe Universal Editor and provides the actual generated HTML to Cursor
-3. **Generate styling and scripting** based on the user-provided semantic HTML
+2. **Ask user whether to update shared style foundations** based on project requirements
+   - If **Yes**: ask for Figma URL, extract grid + design token values, update layout grid rules in `styles/layout/*.css` and token variables in `styles/variables/*.css`
+   - If **No**: skip this update and continue to next step
+3. **User provides semantic HTML** — The user authors the block in Adobe Universal Editor and provides the actual generated HTML to Cursor
+4. **Generate styling and scripting** based on the user-provided semantic HTML
 
 **Why User-Provided HTML is Essential:**
 - Cursor-generated HTML can differ from actual Adobe Universal Editor output
@@ -283,7 +319,17 @@ Before starting implementation, ensure you have:
    - Run `npm run build:json` to update root files
    - Deploy to AEM/Universal Editor environment
 
-2. **Request User to Provide Semantic HTML:**
+2. **Decision: Update Shared Grid Breakpoints and Design Token Variables**
+   - **Prompt the user:** "Do you want to update shared grid layout files (`styles/layout/*.css`) and token variable files (`styles/variables/*.css`) based on project requirements?"
+   - **If user says Yes:**
+     - Request Figma URL for grid system and design tokens
+    - Use Figma MCP tools to extract breakpoint grid details (columns, margins, gutters) and design token values
+    - Update shared layout grid files (`styles/layout/*.css`)
+    - Update token variable files (`styles/variables/*.css`) for colors, fonts, and typography scale
+   - **If user says No:**
+     - Skip this step and continue
+
+3. **Request User to Provide Semantic HTML:**
    - **Prompt the user:** "Please author the block in Adobe Universal Editor with sample content, then provide the semantic HTML output."
    - **User actions:**
      - Add the block to a page in Universal Editor
@@ -296,7 +342,7 @@ Before starting implementation, ensure you have:
      - With/without optional fields (e.g., section title)
      - Multiple child items for parent-child blocks
 
-3. **Generate JavaScript and CSS:**
+4. **Generate JavaScript and CSS:**
    - Analyze the user-provided HTML to document the structure contract
    - Write `decorate()` function using index-based access matching the actual DOM
    - Write CSS targeting the transformed structure
@@ -330,34 +376,53 @@ Include the block's root element (e.g., <div class="blockname">...</div>) and it
 
 ---
 
-# Part 1: Process Flow (3 Steps)
+# Part 1: Process Flow (4 Steps)
 
-**Purpose:** This part enforces deterministic AI-driven block generation by formalizing the structure contract between XWalk model configuration and runtime DOM output. The strict Backend → User HTML → Frontend sequence prevents structural hallucination and DOM mismatch.
+**Purpose:** This part enforces deterministic AI-driven block generation by formalizing the structure contract between XWalk model configuration and runtime DOM output. The strict Backend → Styles Decision → User HTML → Frontend sequence prevents structural hallucination and DOM mismatch.
 
 ## AI Governance Rules (Process)
 
 Rules for Cursor AI when generating EDS blocks:
 
 - **Never generate HTML** — Wait for user-provided HTML from Universal Editor; Cursor output can differ from AEM output
-- **Follow sequence strictly** — Backend first, then user provides HTML, then frontend
+- **Follow sequence strictly** — Backend first, then styles decision, then user provides HTML, then frontend
 - **Document structure contract** — After receiving user HTML, document field indices and empty/optional field behavior before coding
 - **Index-based only** — No `data-*` attributes for structure or selection; use position-based access
 
-## The 3-Step Process
+## The 4-Step Process
 
 | Step | Action | Details |
 |------|--------|---------|
 | **Step 1** | Backend | Add block-level JSON, run `npm run build:json`. See [Part 2: Backend Code Generation](#part-2-backend-code-generation). |
-| **Step 2** | User Provides Semantic HTML | User authors block in Universal Editor and provides the generated HTML. Cursor must not generate HTML ([AI Governance Rules](#ai-governance-rules-process)). Details: [Step 2](#step-2-user-provides-semantic-html) below. |
-| **Step 3** | Frontend | Generate JavaScript and CSS based on user-provided HTML. See [Part 3: Frontend Code Generation](#part-3-frontend-code-generation). |
+| **Step 2** | Styles.css Grid and Variables Decision | Ask whether shared grid layout files in `styles/layout/*.css` and shared token files in `styles/variables/*.css` should be updated to match project requirements. If yes, request Figma URL for grid and design tokens, extract details via Figma MCP, then update shared styles. If no, continue to Step 3. Details: [Step 2](#step-2-stylescss-grid-and-color-variables-decision). |
+| **Step 3** | User Provides Semantic HTML | User authors block in Universal Editor and provides the generated HTML. Cursor must not generate HTML ([AI Governance Rules](#ai-governance-rules-process)). Details: [Step 3](#step-3-user-provides-semantic-html) below. |
+| **Step 4** | Frontend | Generate JavaScript and CSS based on user-provided HTML. See [Part 3: Frontend Code Generation](#part-3-frontend-code-generation). |
 
 **Prerequisites:** [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — design source, story requirements, and XWalk field planning.
 
 ---
 
-## Step 2: User Provides Semantic HTML
+## Step 2: Styles.css Grid and Color Variables Decision
 
-**Execute this step AFTER Step 1 (Backend) is complete and deployed.**
+**Execute this step AFTER Step 1 (Backend) and BEFORE requesting user-provided HTML.**
+
+**Objective:** Confirm whether shared grid layout files (`styles/layout/*.css`) and shared token variable files (`styles/variables/*.css`) must be updated to align with project requirements.
+
+**Steps:**
+1. Ask user: "Do you want to update shared grid layout files (`styles/layout/*.css`) and token variable files (`styles/variables/*.css`) based on project requirements?"
+2. If user says **Yes**:
+   - Ask for Figma URL focused on grid system and design tokens
+   - Use Figma MCP to extract breakpoint grid specs (columns, side margins, gutters) and design token values
+   - Update shared layout grid files (`styles/layout/*.css`)
+   - Update shared token variable files (`styles/variables/*.css`) for colors, fonts, and typography scale
+3. If user says **No**:
+   - Skip this step and proceed to Step 3
+
+---
+
+## Step 3: User Provides Semantic HTML
+
+**Execute this step AFTER Step 2 is complete (or skipped) and backend is deployed.**
 
 **Prerequisites:** [Part 2: Backend Code Generation](#part-2-backend-code-generation) must be complete and deployed to Universal Editor.
 
@@ -371,8 +436,8 @@ Rules for Cursor AI when generating EDS blocks:
 5. **Use for:** Generating JavaScript and CSS that match the actual DOM structure
 
 **See also:**
-- [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html) (Pre-Implementation) — full workflow details
-- [Step 2: User Provides Semantic HTML (Checklist)](#step-2-user-provides-semantic-html-mandatory) — detailed checklist
+- [Development Workflow: Backend First, Then Styles Decision, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-styles-decision-then-user-provided-semantic-html) (Pre-Implementation) — full workflow details
+- [Step 3: User Provides Semantic HTML (Checklist)](#step-3-user-provides-semantic-html-mandatory) — detailed checklist
 
 ---
 
@@ -769,7 +834,7 @@ See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Obtain user-p
 - Expected: `cells[0]=image, cells[1]=imageAlt, cells[2]=badge`
 - Actual: `cells[0]=image, cells[1]=badge` (imageAlt cell missing)
 
-**Solution:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Also: [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).
+**Solution:** See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Also: [Development Workflow: Backend First, Then Styles Decision, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-styles-decision-then-user-provided-semantic-html).
 
 **Model Structure:**
 
@@ -1101,15 +1166,15 @@ Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`. S
 - ❌ **DON'T:** Mix resource types incorrectly
 - ❌ **DON'T:** Forget to add all three parts (definition, model, filter if needed)
 
-**Next step:** [Part 3: Frontend Code Generation](#part-3-frontend-code-generation) — generate JavaScript and CSS based on user-provided HTML (after Step 2 is complete).
+**Next step:** [Part 3: Frontend Code Generation](#part-3-frontend-code-generation) — generate JavaScript and CSS based on user-provided HTML (after Step 3 is complete).
 
 ---
 
 # Part 3: Frontend Code Generation
 
-This section covers all frontend implementation aspects: JavaScript and CSS. HTML is generated automatically by AEM from XWalk configuration. **Do this after Step 2 (user provides semantic HTML).**
+This section covers all frontend implementation aspects: JavaScript and CSS. HTML is generated automatically by AEM from XWalk configuration. **Do this after Step 3 (user provides semantic HTML).**
 
-**Prerequisites:** [Part 2 (Backend)](#part-2-backend-code-generation) complete; [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) — user must provide actual HTML from Universal Editor.
+**Prerequisites:** [Part 2 (Backend)](#part-2-backend-code-generation) complete; [Step 3: User Provides Semantic HTML](#step-3-user-provides-semantic-html) — user must provide actual HTML from Universal Editor.
 
 ---
 
@@ -1429,6 +1494,41 @@ shared-components/               # Reusable frontend utilities
 Blocks progress through: `initialized` → `loading` → `loaded`. Check `block.dataset.blockStatus` before operations that should run once.
 
 **Reference:** `scripts/aem.js` lines 777-826
+
+## Important
+### Figma Grid Class Application (EDS Pattern)
+
+When design specifies a responsive grid, apply shared grid classes in `decorate()` instead of hardcoding pixel widths per element. Keep grid behavior in `styles/layout/*.css` (grid + breakpoints) and only attach responsive utility classes in JS.
+
+**Reference (use as the grid pattern):**
+- `blocks/youmayalsolike/youmayalsolike.js` (JS assigns responsive `col-*` / `col-md-*` / `col-lg-*` classes)
+- `blocks/youmayalsolike/youmayalsolike.css` (CSS styles the transformed card layout)
+
+**Carousel exception (important):**
+- If the component is a carousel/slider (e.g., uses the Swiper pattern), do **not** force the grid system onto the slide layout.
+- Follow the carousel structure/classes (`.swiper`, `.swiper-wrapper`, `.swiper-slide`) and let Swiper’s breakpoints/control layout drive item sizing/positioning (see Pattern 7: Carousel Block with Swiper).
+
+```javascript
+/**
+ * Example: apply shared grid utilities to first content row.
+ * Assumes grid utilities are defined globally in styles/layout/*.css.
+ */
+export default function decorate(block) {
+  const firstRow = block.querySelector(':scope > div');
+  if (!firstRow) return;
+
+  // Container controls side margins at each Figma breakpoint
+  block.classList.add('container');
+
+  // Row controls gutter behavior
+  firstRow.classList.add('row');
+
+  // Mobile: 4-col, Tablet: 6-col, Desktop: 12-col
+  [...firstRow.children].forEach((cell) => {
+    cell.classList.add('col-4', 'col-md-3', 'col-lg-3');
+  });
+}
+```
 
 ### Index-Based Structure and Data Extraction
 
@@ -2147,16 +2247,11 @@ const isDesktop = window.matchMedia('(min-width: 900px)');
 if (isDesktop.matches) { ... }
 ```
 
-**Impact:** Inconsistent responsive behavior  
-
 #### ❌ Anti-Pattern 3: Missing XWalk Configuration
 
 **Issue:** Block works but cannot be authored in AEM because XWalk configuration is missing.
 
 **Solution:** Add block definition, model, and filter to `blocks/<block-name>/_<block-name>.json`, then run `npm run build:json`.
-
-**Impact:** Block cannot be configured in AEM authoring interface  
-
 
 #### ❌ Anti-Pattern 4: Using innerHTML with User Content
 
@@ -2490,6 +2585,13 @@ export default function decorate(block) {
 - ✅ **DO:** Use `moveInstrumentation()` when replacing or moving elements.
 - ✅ **DO:** Make `decorate()` async if loading external resources.
 - ✅ **DO:** Preserve semantic HTML structure.
+- ✅ **DO:** Keep **cognitive complexity** low for `decorate()` and helper functions (SonarQube rule `S3776`): prefer small, focused functions over deeply branching logic.
+- ✅ **DO:** Reduce nesting with **guard clauses** and **early returns**.
+- ✅ **DO:** Refactor long `if/else` or `switch` chains into smaller helpers (or data-driven maps like `const handlers = { ... }`).
+- ✅ **DO:** Keep loop bodies small; move non-trivial work into named helpers.
+- ✅ **DO:** Preserve accessibility semantics during DOM transformation: do not remove existing accessible names/roles/ARIA unless required.
+- ✅ **DO:** Ensure focus behavior is correct when JS updates the DOM (do not break tab order; avoid focus traps).
+- ✅ **DO:** Keyboard support: if JS adds interactivity (e.g. click handlers on non-native elements), ensure it is also operable via keyboard (Enter/Space) and follows ARIA best practices.
 
 #### ❌ JavaScript Anti-patterns
 
@@ -2497,6 +2599,8 @@ export default function decorate(block) {
 - ❌ **DON'T:** Use global variables, skip error handling, or mutate shared components.
 - ❌ **DON'T:** Access `children[index]` without null checks or forget `moveInstrumentation()` when transforming DOM.
 - ❌ **DON'T:** Block main thread or use sync operations for external resources.
+- ❌ **DON'T:** Allow `decorate()` to accumulate multiple responsibilities (selection, transformation, business logic, event wiring) in one function.
+- ❌ **DON'T:** Attach click-only behavior to elements that are not keyboard-accessible without adding proper keyboard handling and/or ARIA-role fixes.
 
 #### ✅ CSS Best Practices
 
@@ -2506,6 +2610,8 @@ export default function decorate(block) {
 - ✅ **DO:** Follow responsive design patterns
 - ✅ **DO:** Use CSS variables for theming
 - ✅ **DO:** Keep styles scoped to block
+- ✅ **DO:** Keep CSS rules readable and maintainable: avoid overly long selector chains and excessive selector nesting.
+- ✅ **DO:** Accessibility AA support via styling: ensure foreground/background color contrast meets WCAG 2.x AA (use shared token variables; avoid hardcoded low-contrast values).
 
 #### ❌ CSS Anti-patterns
 
@@ -2514,6 +2620,7 @@ export default function decorate(block) {
 - ❌ **DON'T:** Use overly specific selectors
 - ❌ **DON'T:** Hardcode colors/values
 - ❌ **DON'T:** Skip responsive breakpoints
+- ❌ **DON'T:** Create deeply nested / highly specific selector combinations that are hard to reason about (treat this as a “cognitive load” issue, similar to Sonar complexity concerns for JS).
 
 #### ✅ HTML Best Practices
 
@@ -2521,6 +2628,13 @@ export default function decorate(block) {
 - ✅ **DO:** Use **semantic HTML** only; do **not** use data attributes for structure.
 - ✅ **DO:** Keep a fixed, documented order of rows and cells so index-based selection is reliable.
 - ✅ **DO:** Test in local development environment.
+- ✅ **DO:** WCAG 2.x AA accessibility basics for the user-provided semantic HTML:
+  - Provide meaningful `alt` text for images (or empty alt `alt=""` when decorative)
+  - Keep heading hierarchy logical and in order (H1 → H2 → H3…)
+  - Ensure every interactive control has an accessible name (native elements preferred)
+  - Associate form controls with labels (`label for=` / `aria-labelledby` only when needed)
+  - Avoid ARIA misuse; only add roles/states when necessary and keep them consistent with the DOM
+  - Ensure keyboard navigation works (tab order + visible focus)
 
 ---
 
@@ -2908,11 +3022,29 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] Document accessibility requirements
 - [ ] Create implementation plan based on design + requirements
 
-### Step 2: User Provides Semantic HTML (MANDATORY)
+### Step 2: Styles.css Grid and Variables Decision
+
+**Execute this step AFTER Step 1 (Backend) and BEFORE requesting user-provided HTML.**
+
+**Objective:** Decide whether to update shared grid layout files (`styles/layout/*.css`) and shared token variable files (`styles/variables/*.css`).
+
+**Steps:**
+1. **Ask user decision:**
+   - [ ] Prompt user: "Do you want to update shared grid layout files (`styles/layout/*.css`) and token variable files (`styles/variables/*.css`) based on project requirements?"
+2. **If user says yes:**
+   - [ ] Request Figma URL for grid system and design tokens
+   - [ ] Use Figma MCP to extract grid breakpoints (columns/margins/gutters)
+   - [ ] Use Figma MCP to extract design token values (colors, typography, etc.)
+   - [ ] Update shared grid layout files (`styles/layout/*.css`)
+   - [ ] Update token variable files (`styles/variables/*.css`)
+3. **If user says no:**
+   - [ ] Skip styles update and continue to Step 3
+
+### Step 3: User Provides Semantic HTML (MANDATORY)
 
 **Execute this step AFTER Step 1 (Backend) is complete and deployed.**
 
-**See:** [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) (standalone section above) for context.
+**See:** [Step 3: User Provides Semantic HTML](#step-3-user-provides-semantic-html) (standalone section above) for context.
 
 **Objective:** Obtain the actual HTML structure from Adobe Universal Editor. Do NOT generate HTML — user-provided HTML ensures correct DOM structure.
 
@@ -2933,6 +3065,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
    - [ ] Document field indices (0, 1, 2, etc.)
    - [ ] Document empty field behavior (missing cells vs empty cells)
    - [ ] Document optional field behavior (parent title, etc.)
+   - [ ] Validate WCAG 2.x AA basics in the user-provided semantic HTML (alt text, heading order, accessible names for controls/links, keyboard/focus behavior, correct form label associations)
 
 4. **Use for frontend development:**
    - [ ] Generate JavaScript based on user-provided HTML structure
@@ -3190,10 +3323,14 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - Reference: `shared-components/Utility.js` (sanitizeHTMLString) (Part 3)
 
 ### Accessibility Considerations
-- Use semantic HTML elements (Part 3)
-- Provide alt text for images (Part 3)
-- Maintain heading hierarchy (Part 3)
-- Ensure keyboard navigation (Part 3)
+- Target **WCAG 2.x AA** for any user-provided semantic HTML and any DOM transformations done in JS (Part 3)
+- Use semantic HTML elements (headings, lists, buttons, links) and keep them consistent after JS `decorate()` transformations
+- Provide meaningful `alt` text for images; use `alt=""` for purely decorative images
+- Maintain heading hierarchy (H1 → H2 → H3…) and do not skip levels
+- Ensure every interactive control has an accessible name (native controls preferred)
+- Ensure keyboard navigation works end-to-end (tab order, Enter/Space activation where applicable, visible focus)
+- Use ARIA only when necessary and keep ARIA states/attributes consistent with the actual DOM and behavior
+- Ensure text/background color contrast meets AA (prefer shared token variables rather than hardcoded values)
 
 ---
 
@@ -3248,12 +3385,12 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 ## Next Steps
 
-1. **Review this guide** - Start with Part 1 for backend, Part 2 for frontend
+1. **Review this guide** - Start with Part 1 for process flow, then Parts 2 and 3 for implementation
 2. **Gather design source** - Request Figma URL OR component design images (desktop, tablet, mobile); Cursor can generate code from either
 3. **Study similar blocks** - Reference examples provided in each section
 4. **Use AI codebase analysis** - Cursor can analyze existing blocks for patterns
 5. **Follow checklist** - Use the implementation checklist step by step
-6. **Request user to provide semantic HTML** - User authors in Universal Editor and provides HTML; generate JS/CSS based on it (MANDATORY)
+6. **Ask styles decision, then request user-provided semantic HTML** - Ask whether to update shared `styles/layout/*.css` grid files and `styles/variables/*.css` token files first; then collect Universal Editor HTML (MANDATORY)
 7. **Reference existing code** - Rather than creating from scratch
 
 ---
@@ -3277,7 +3414,7 @@ This implementation guide provides comprehensive step-by-step instructions for c
    - `component-definition.json` - Component definitions (build output)
    - `component-models.json` - Field models (build output)
    - `component-filters.json` - Nesting rules (build output)
-3. **User-provided semantic HTML (MANDATORY):** See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html) and [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html).
+3. **Styles decision + user-provided semantic HTML (MANDATORY):** See [Step 2: Styles.css Grid and Color Variables Decision](#step-2-stylescss-grid-and-color-variables-decision), [Step 3: User Provides Semantic HTML](#step-3-user-provides-semantic-html), and [Development Workflow: Backend First, Then Styles Decision, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-styles-decision-then-user-provided-semantic-html).
 4. **Index-based implementation:** Use index-based selection only; no data attributes for structure or selection. Document the structure contract in block JS based on actual HTML structure.
 5. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM
 6. **Testing:** Test with user-provided HTML first, then manual testing in browser and AEM authoring interface
@@ -3286,6 +3423,6 @@ This implementation guide provides comprehensive step-by-step instructions for c
 **CRITICAL:** 
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`). Run `npm run build:json` to update the three root-level files. Do NOT edit root files directly.
 - Do NOT create separate child block folders or files. See [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder).
-- **MANDATORY:** Request user to provide semantic HTML from Universal Editor. See [Step 2: User Provides Semantic HTML](#step-2-user-provides-semantic-html). Do NOT generate HTML.
+- **MANDATORY:** Ask Step 2 styles decision first, then request user to provide semantic HTML from Universal Editor (Step 3). Do NOT generate HTML.
 
 **Overall Confidence Score:** 98%
