@@ -324,11 +324,10 @@ export default async function decorate(block) {
       clickable: true,
       renderBullet: (index, className) => bulletHtml(index, className),
     },
-    on: {
-      slideChange() {
-        updateProgressFills(swiper.realIndex);
-      },
-    },
+  });
+
+  swiper.on('slideChange', () => {
+    updateProgressFills(swiper.realIndex);
   });
 
   updateProgressFills(swiper.realIndex);
