@@ -58,6 +58,8 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - [Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) (Experience League)
 - [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions) (AEM.live)
 
+**Reference block (parent + child items in one folder):** Study `blocks/ai-component-guide/` (`ai-component-guide.js`, `ai-component-guide.css`) for the full index-based pattern (section rows + card item rows in one `decorate()`). This folder is for the implementation guide only — not registered in XWalk. See [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder).
+
 ---
 
 ## Document Structure
@@ -481,6 +483,7 @@ See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Summary:
 **Reference Examples:**
 - Simple block: See `hero` definition in `component-definition.json` (lines 145-159)
 - Complex block: See `cards` and `card` definitions in `component-definition.json` (lines 85-114)
+- Parent + child items (XWalk): See `cards` and `card` in `component-definition.json` and `blocks/cards/_cards.json` — frontend pattern for multi-row parent + children: `blocks/ai-component-guide/`
 - Models: See `hero` model in `component-models.json` (lines 192-217)
 - Filters: See `cards` filter in `component-filters.json` (lines 21-26)
 
@@ -1367,7 +1370,7 @@ Generate **exactly one** JavaScript file and **exactly one** CSS file per block.
 
 ### Critical: Parent-Child Blocks Use ONE Folder
 
-**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`, `relatedarticles` → `relatedarticle`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.
+**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.
 
 **Pattern:**
 - **XWalk Config (Backend):** Parent block definition + Child block definition (two separate definitions in JSON)
@@ -1377,13 +1380,11 @@ Generate **exactly one** JavaScript file and **exactly one** CSS file per block.
 - `blocks/cards/` - ONE folder
   - `cards.js` - Handles parent container AND all child card items in one `decorate()` function
   - `cards.css` - Styles for parent container AND all child card items
-- `blocks/relatedarticles/` - ONE folder
-  - `relatedarticles.js` - Handles section title (parent) AND all article items (children) in one `decorate()` function
-  - `relatedarticles.css` - Styles for section title AND all article items
+- `blocks/ai-component-guide/` - **Guide reference only** (not in XWalk). Full example: section title row, aura row, and 2–3 card rows in one `decorate()`; study `ai-component-guide.js` and `ai-component-guide.css`.
 
 **Why:** The parent block's `decorate()` function receives all child items as `block.children`, so it processes everything in one place. There is no separate child block folder or files.
 
-**Reference:** `blocks/cards/cards.js`, `blocks/relatedarticles/relatedarticles.js`
+**Reference:** `blocks/ai-component-guide/ai-component-guide.js`, `blocks/ai-component-guide/ai-component-guide.css`; `blocks/cards/cards.js`, `blocks/cards/_cards.json` (XWalk parent + child configuration)
 
 ### Shared Resources
 
@@ -1785,7 +1786,7 @@ export default function decorate(block) {
 **Reference:** 
 - `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2
 - `blocks/cards/cards.js` - Simple parent-child pattern
-- `blocks/relatedarticles/relatedarticles.js` - Parent title + child items pattern
+- `blocks/ai-component-guide/ai-component-guide.js` - Parent rows (title, optional aura) + child card rows (guide reference implementation)
 
 #### Pattern 3: Async Block with External Content
 
@@ -3392,7 +3393,8 @@ export default function decorate(block) {
 
 ### Example Blocks to Study
 - **Simple:** `blocks/hero/` - Basic structure
-- **Complex:** `blocks/feature/` - Parent with items
+- **Parent + child (guide reference):** `blocks/ai-component-guide/` — section rows + card items in one `decorate()` (not registered in XWalk; for documentation only)
+- **Carousel / multi-card:** `blocks/cards/`, `blocks/featurecardscarousel/`
 - **Async:** `blocks/fragment/` - External content loading
 - **Interactive:** `blocks/header/` - Event handlers
 
@@ -3426,7 +3428,7 @@ export default function decorate(block) {
 ---
 
 **Document Version:** EDS-2026.1.0  
-**Last Updated:** 2026-03-26  
+**Last Updated:** 2026-03-27  
 **Maintained By:** AI Documentation Engineer  
 **Review Status:** Ready for Use
 
@@ -3439,7 +3441,7 @@ This implementation guide provides comprehensive step-by-step instructions for c
 1. **Two files required per block:** JavaScript and CSS (in `blocks/<block-name>/`)
    - **CRITICAL:** Even for parent-child blocks, use ONE folder with ONE JS file and ONE CSS file
    - Parent and child items are processed in the same `decorate()` function
-   - Example: `blocks/cards/` handles both parent container and all child card items
+   - Examples: `blocks/cards/` (parent + child cards); `blocks/ai-component-guide/` (guide reference: title/aura rows + card items).
 2. **XWalk configuration:** Add definitions/models/filters to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json` to update:
    - `component-definition.json` - Component definitions (build output)
    - `component-models.json` - Field models (build output)

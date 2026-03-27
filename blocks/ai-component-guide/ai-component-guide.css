@@ -1,29 +1,25 @@
-/* You May Also Like — UE + Figma (Components---TCCC); tokens: styles/styles.css */
+/* AI Component Guide — reference block; tokens: styles/styles.css */
 
-.youmayalsolike {
+.ai-component-guide {
   font-family: var(--body-font-family);
 }
 
 /* Card columns: global .row, .col-s-*, .col-m-*, .col-xl-* (styles/styles.css).
    Section wrapper already applies .container-like max-width/padding via main > .section > div. */
-.youmayalsolike .youmayalsolike-inner {
+.ai-component-guide .ai-component-guide-inner {
   padding-top: 24px;
   padding-bottom: 32px;
   background: var(--background-off-white);
 }
 
 @media (width >= 1280px) {
-  .youmayalsolike .youmayalsolike-inner {
+  .ai-component-guide .ai-component-guide-inner {
     padding-top: 36px;
     padding-bottom: 48px;
   }
 }
 
-.youmayalsolike-cards > [class*='col-'] > .youmayalsolike-card {
-  width: 100%;
-}
-
-.youmayalsolike .youmayalsolike-title {
+.ai-component-guide .ai-component-guide-title {
   margin: 0 0 30px;
   text-align: center;
   font-family: var(--heading-font-family);
@@ -35,26 +31,14 @@
 }
 
 @media (width >= 1280px) {
-  .youmayalsolike .youmayalsolike-title {
+  .ai-component-guide .ai-component-guide-title {
     margin-bottom: 50px;
   }
 }
 
 /* Card layout: global .row + .col-s-* / .col-m-* / .col-xl-* (styles/styles.css). */
 
-/* Card link */
-.youmayalsolike-card:any-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.youmayalsolike-card:hover,
-.youmayalsolike-card:focus-visible {
-  color: inherit;
-  text-decoration: none;
-}
-
-.youmayalsolike-card {
+.ai-component-guide-card {
   position: relative;
   box-sizing: border-box;
   display: block;
@@ -64,13 +48,25 @@
 }
 
 @media (width >= 1280px) {
-  .youmayalsolike-card {
+  .ai-component-guide-card {
     min-height: 400px;
     border-radius: 24px;
   }
 }
 
-.youmayalsolike-card-media {
+/* Card link */
+.ai-component-guide-card:any-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ai-component-guide-card:hover,
+.ai-component-guide-card:focus-visible {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ai-component-guide-card-media {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -78,22 +74,22 @@
   overflow: hidden;
 }
 
-.youmayalsolike-card-media picture,
-.youmayalsolike-card-media img {
+.ai-component-guide-card-media picture,
+.ai-component-guide-card-media img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.youmayalsolike-card-gradient {
+.ai-component-guide-card-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 65%));
   pointer-events: none;
 }
 
-.youmayalsolike-card-body {
+.ai-component-guide-card-body {
   position: relative;
   z-index: 1;
   display: flex;
@@ -105,13 +101,13 @@
 }
 
 @media (width >= 1280px) {
-  .youmayalsolike-card-body {
+  .ai-component-guide-card-body {
     min-height: 400px;
     padding: 30px;
   }
 }
 
-.youmayalsolike-card-badge {
+.ai-component-guide-card-badge {
   align-self: flex-start;
   padding: 11px 12px;
   border-radius: 50px;
@@ -123,14 +119,14 @@
   white-space: nowrap;
 }
 
-.youmayalsolike-card-bottom {
+.ai-component-guide-card-bottom {
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
 }
 
-.youmayalsolike-card-title {
+.ai-component-guide-card-title {
   margin: 0;
   font-family: var(--heading-font-family);
   font-weight: 600;
@@ -143,7 +139,7 @@
   overflow: hidden;
 }
 
-.youmayalsolike-card-more {
+.ai-component-guide-card-more {
   display: none;
   align-items: center;
   gap: 10px;
@@ -153,7 +149,7 @@
   color: var(--neutral-white);
 }
 
-.youmayalsolike-card-more-icon {
+.ai-component-guide-card-more-icon {
   display: flex;
   flex-shrink: 0;
   width: 24px;
@@ -163,22 +159,26 @@
   color: var(--neutral-white);
 }
 
-.youmayalsolike-card-more-icon svg {
+.ai-component-guide-card-more-icon svg {
   display: block;
 }
 
 @media (width < 768px) {
-  .youmayalsolike-card-more {
+  .ai-component-guide-card-more {
     display: flex;
   }
 }
 
-.youmayalsolike-card:hover .youmayalsolike-card-gradient,
-.youmayalsolike-card:focus-visible .youmayalsolike-card-gradient {
+.ai-component-guide-card:hover .ai-component-guide-card-gradient,
+.ai-component-guide-card:focus-visible .ai-component-guide-card-gradient {
   background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 78%));
 }
 
-.youmayalsolike-card:focus-visible {
+.ai-component-guide-card:focus-visible {
   outline: 2px solid var(--neutral-white);
   outline-offset: 3px;
+}
+
+.ai-component-guide-cards > [class*='col-'] > .ai-component-guide-card {
+  width: 100%;
 }

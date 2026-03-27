@@ -1,5 +1,5 @@
 /**
- * You May Also Like
+ * AI Component Guide (reference block)
  *
  * Structure contract (Universal Editor HTML):
  * - block.children[0]: title row — cells children[0] = section title text
@@ -22,7 +22,7 @@ const AURA_CLASS_RE = /^aura-[a-z0-9-]+$/i;
 /** Inline arrow for mobile "Read more" (~24×24). */
 function readMoreIcon() {
   const wrap = document.createElement('span');
-  wrap.className = 'youmayalsolike-card-more-icon';
+  wrap.className = 'ai-component-guide-card-more-icon';
   wrap.setAttribute('aria-hidden', 'true');
   wrap.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   return wrap;
@@ -54,17 +54,17 @@ export default function decorate(block) {
   }
 
   const inner = document.createElement('div');
-  inner.className = 'youmayalsolike-inner';
+  inner.className = 'ai-component-guide-inner';
 
   if (titleText) {
     const h2 = document.createElement('h2');
-    h2.className = 'youmayalsolike-title';
+    h2.className = 'ai-component-guide-title';
     h2.textContent = titleText;
     inner.appendChild(h2);
   }
 
   const cardRow = document.createElement('div');
-  cardRow.className = 'row youmayalsolike-cards';
+  cardRow.className = 'row ai-component-guide-cards';
   const built = [];
 
   cardRows.forEach((row) => {
@@ -78,17 +78,16 @@ export default function decorate(block) {
     let href = normalizeUrl(linkEl?.getAttribute('href') || '');
     if (!href) href = '#';
     const readMoreRaw = cells[4]?.textContent?.trim() || '';
-    const readMoreLabel =
-      readMoreRaw.replace(/\s+/g, '').toLowerCase() === 'readmore' ? 'Read more' : readMoreRaw || 'Read more';
+    const readMoreLabel = readMoreRaw.replace(/\s+/g, '').toLowerCase() === 'readmore' ? 'Read more' : readMoreRaw || 'Read more';
 
     const img = pictureCell?.querySelector('img');
-    let imgSrc = normalizeUrl(img?.getAttribute('src') || img?.src || '');
+    const imgSrc = normalizeUrl(img?.getAttribute('src') || img?.src || '');
     const imgAlt = img?.getAttribute('alt') || '';
 
     if (!imgSrc) return;
 
     const card = document.createElement('a');
-    card.className = 'youmayalsolike-card';
+    card.className = 'ai-component-guide-card';
     card.href = href;
 
     if (href.startsWith('http')) {
@@ -97,7 +96,7 @@ export default function decorate(block) {
     }
 
     const media = document.createElement('span');
-    media.className = 'youmayalsolike-card-media';
+    media.className = 'ai-component-guide-card-media';
 
     const optimizedPic = createOptimizedPicture(imgSrc, imgAlt, false, [
       { media: '(min-width: 600px)', width: '2000' },
@@ -108,36 +107,36 @@ export default function decorate(block) {
     media.appendChild(optimizedPic);
 
     const gradient = document.createElement('span');
-    gradient.className = 'youmayalsolike-card-gradient';
+    gradient.className = 'ai-component-guide-card-gradient';
     gradient.setAttribute('aria-hidden', 'true');
     media.appendChild(gradient);
 
     card.appendChild(media);
 
     const body = document.createElement('span');
-    body.className = 'youmayalsolike-card-body';
+    body.className = 'ai-component-guide-card-body';
 
     if (category) {
       const badge = document.createElement('span');
-      badge.className = 'youmayalsolike-card-badge';
+      badge.className = 'ai-component-guide-card-badge';
       badge.textContent = category;
       body.appendChild(badge);
     }
 
     const bottom = document.createElement('span');
-    bottom.className = 'youmayalsolike-card-bottom';
+    bottom.className = 'ai-component-guide-card-bottom';
 
     if (articleTitle) {
       const titleEl = document.createElement('span');
-      titleEl.className = 'youmayalsolike-card-title';
+      titleEl.className = 'ai-component-guide-card-title';
       titleEl.textContent = articleTitle;
       bottom.appendChild(titleEl);
     }
 
     const more = document.createElement('span');
-    more.className = 'youmayalsolike-card-more';
+    more.className = 'ai-component-guide-card-more';
     const moreLabel = document.createElement('span');
-    moreLabel.className = 'youmayalsolike-card-more-label';
+    moreLabel.className = 'ai-component-guide-card-more-label';
     moreLabel.textContent = readMoreLabel;
     more.appendChild(moreLabel);
     more.appendChild(readMoreIcon());

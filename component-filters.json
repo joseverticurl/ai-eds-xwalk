@@ -18,7 +18,6 @@
       "fragment",
       "featurecardscarousel",
       "socialpromo",
-      "youmayalsolike",
       "textwithimage",
       "textwithimagegif"
     ]
@@ -54,12 +53,6 @@
     "id": "socialpromo",
     "components": [
       "socialpromo-card"
-    ]
-  },
-  {
-    "id": "youmayalsolike",
-    "components": [
-      "youmayalsolike-card"
     ]
   }
 ]
