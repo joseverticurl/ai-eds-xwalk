@@ -111,6 +111,7 @@ This guide is organized into three parts:
 - [Part 3a: Core Concepts](#part-3a-core-concepts)
 - [Part 3b: JavaScript Implementation](#part-3b-javascript-implementation)
   - [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)
+    - [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory)
   - [Carousel Component Snippets (Swiper)](#carousel-component-snippets-swiper)
 - [Part 3c: CSS Implementation](#part-3c-css-implementation)
   - [Layout grid (global design system classes)](#layout-grid-global-design-system-classes)
@@ -2038,6 +2039,9 @@ export default async function decorate(block) {
       1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
     },
   });
+
+  // If you sync UI on slide change: call swiper.on('slideChange', ...) here, or add on: { slideChange() { ... this.realIndex ... } }
+  // above (classic function only — never arrow + outer `swiper` in options). See mandatory subsection below.
 }
 ```
 
@@ -2048,6 +2052,45 @@ export default async function decorate(block) {
 - Responsive breakpoints match common EDS viewports (390, 768, 1280, 1920)
 - Use `createOptimizedPicture()` for slide images (EDS performance)
 - **Do not use global layout grid classes** (`container`, `row`, `col-s-*`, `col-m-*`, `col-xl-*`) on the Swiper root, `.swiper-wrapper`, or `.swiper-slide`. Carousels rely on Swiper’s own flex/track layout; mixing Bootstrap-style grid utilities breaks slide sizing, gutters, and touch behavior. Lay out **content inside** a slide with grid/flex if needed; keep the carousel shell on Swiper’s structure only.
+- **Swiper event handlers must not reference `swiper` before it exists** — See [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory) below. Sliders that violate this throw at runtime and fail to load.
+
+##### Swiper initialization and event handlers (mandatory)
+
+Swiper’s constructor can emit **`slideChange`**, **`init`**, and internal updates **before** the JavaScript assignment `const swiper = new Swiper(...)` finishes. Any `on: { slideChange }` callback (or similar) that **closes over** the outer constant `swiper` can run in that gap and trigger:
+
+`ReferenceError: Cannot access 'swiper' before initialization` (temporal dead zone).
+
+**Required — use one of these patterns so the slider always initializes reliably:**
+
+1. **`on` callbacks: use a classic `function` and `this`** — Swiper calls handlers with the instance as `this`. Use `this.realIndex` when `loop: true`, otherwise `this.activeIndex` or `this.realIndex` as appropriate.
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  loop: false,
+  on: {
+    slideChange() {
+      const idx = this.realIndex;
+      updatePaginationUI(idx);
+    },
+  },
+});
+```
+
+Do **not** write `on: { slideChange: () => { ... swiper.realIndex ... } }` if the arrow function reads `swiper` from the outer scope while `new Swiper()` is still executing.
+
+2. **Attach listeners after construction** — Safe to close over `swiper` because assignment is complete:
+
+```javascript
+const swiper = new Swiper(swiperWrap, { /* omit slideChange here */ });
+swiper.on('slideChange', () => {
+  const idx = swiper.realIndex;
+  updatePaginationUI(idx);
+});
+```
+
+**Loop mode:** Prefer **`realIndex`** over **`activeIndex`** when syncing UI (thumbnails, brand dots, progress) so the index matches authored slide order.
+
+**Autoplay after manual `slideTo` / `slideToLoop`:** If authors expect the timer to reset when a user picks a slide, call `swiper.autoplay?.stop()` then `swiper.autoplay?.start()` after programmatic navigation (when `autoplay` is enabled).
 
 **Reference:** `blocks/featurecardscarousel/featurecardscarousel.js`
 
@@ -2077,6 +2120,8 @@ if (!Swiper) return;
 
 #### Snippet: Swiper Config (EDS Breakpoints)
 
+Do **not** add `slideChange` / `init` handlers that read an outer `const swiper` inside this object unless they use a classic `function` and `this` (see mandatory subsection). Prefer `swiper.on('slideChange', …)` **after** `new Swiper` returns.
+
 ```javascript
 const swiper = new Swiper(swiperWrap, {
   grabCursor: true,
@@ -2095,6 +2140,24 @@ const swiper = new Swiper(swiperWrap, {
     768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
     1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
     1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
+  },
+});
+
+swiper.on('slideChange', () => {
+  const idx = swiper.realIndex;
+  // sync UI — safe: swiper is assigned
+});
+```
+
+Safe **inside** the options object only if handlers use a classic `function` and **`this`** (never an arrow that reads outer `swiper`):
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  slidesPerView: 1,
+  on: {
+    slideChange() {
+      const idx = this.realIndex;
+    },
   },
 });
 ```
@@ -2116,12 +2179,13 @@ const swiper = new Swiper(swiperWrap, {
 
 #### Snippet: Slide Change Handler (Sync Content)
 
-For blocks that sync content (e.g. center image) when slide changes:
+For blocks that sync content (e.g. center image) when slide changes. **Register after `new Swiper`** (so the handler may use `swiper` safely), or use `on.slideChange` with a **non-arrow** `function` and `this.realIndex` — see [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory).
 
 ```javascript
+const swiper = new Swiper(swiperWrap, { /* options without slideChange */ });
+
 swiper.on('slideChange', () => {
-  const idx = swiper.activeIndex;
-  const slide = swiper.slides[idx];
+  const slide = swiper.slides[swiper.activeIndex];
   const img = centerImageWrap.querySelector('img');
   if (slide?.dataset?.centerImage && img) {
     img.src = slide.dataset.centerImage;
@@ -2129,25 +2193,73 @@ swiper.on('slideChange', () => {
   }
 });
 
-// Click on slide to go to
+// Click to go to slide; restart autoplay timer if enabled
 swiperWrap.querySelectorAll('.blockname-slide').forEach((el, idx) => {
-  el.addEventListener('click', () => swiper.slideTo(idx));
+  el.addEventListener('click', () => {
+    swiper.slideTo(idx);
+    const { autoplay } = swiper;
+    if (autoplay) {
+      autoplay.stop();
+      autoplay.start();
+    }
+  });
+});
+```
+
+Alternative inside the constructor options (must use `this`, not `swiper`):
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  on: {
+    slideChange() {
+      const idx = this.realIndex;
+      const slide = this.slides[this.activeIndex];
+      const img = centerImageWrap.querySelector('img');
+      if (slide?.dataset?.centerImage && img) {
+        img.src = slide.dataset.centerImage;
+        img.alt = slide.dataset.centerImageAlt || '';
+      }
+    },
+  },
 });
 ```
 
 #### Snippet: Autoplay (Configurable Delay)
+
+Add **`slideChange` / UI sync only after** `new Swiper` or via `on.slideChange() { … this.realIndex … }` — not as an arrow in `on` that closes over `swiper` (see [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory)).
 
 ```javascript
 // carouselLagSec from authoring (e.g. 1–5, default 4)
 const carouselLagSec = Math.min(5, Math.max(1, Number.parseInt(getText(rows[9]?.children?.[0]) || '4', 10) || 4));
 
 const swiper = new Swiper(swiperWrap, {
-  // ... other options
+  // ... other options (navigation, pagination, breakpoints, etc.)
   autoplay: {
     delay: carouselLagSec * 1000,
     disableOnInteraction: false,
   },
 });
+
+swiper.on('slideChange', () => {
+  // optional: progress UI using swiper.realIndex
+});
+```
+
+After **`slideTo` / `slideToLoop`** (custom dots, thumbnails), reset the autoplay clock when needed:
+
+```javascript
+function goToSlide(idx) {
+  if (swiper.params.loop && typeof swiper.slideToLoop === 'function') {
+    swiper.slideToLoop(idx);
+  } else {
+    swiper.slideTo(idx);
+  }
+  const { autoplay } = swiper;
+  if (autoplay) {
+    autoplay.stop();
+    autoplay.start();
+  }
+}
 ```
 
 ### Anti-Patterns to Avoid
