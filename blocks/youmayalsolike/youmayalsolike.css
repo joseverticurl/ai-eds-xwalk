@@ -1,10 +1,8 @@
-/* You May Also Like — UE contract + Figma Components---TCCC (desktop 1:1691, mobile 1:1703) */
+/* You May Also Like — UE contract + Figma; layout grid: .container / .row / .col-* in styles/styles.css */
 
 .youmayalsolike {
   box-sizing: border-box;
-  margin: 0 auto;
-  max-width: var(--container-max-width);
-  padding: 57px var(--grid-margin-s) 48px;
+  padding: 57px 0 48px;
   font-family: var(--heading-font-family);
 }
 
@@ -58,25 +56,6 @@
   color: var(--neutral-white);
 }
 
-.youmayalsolike-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--grid-gutter);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.youmayalsolike-grid-cols-2,
-.youmayalsolike-grid-cols-3 {
-  grid-template-columns: 1fr;
-}
-
-.youmayalsolike-card {
-  margin: 0;
-  padding: 0;
-}
-
 .youmayalsolike-card-link {
   position: relative;
   display: flex;
@@ -90,6 +69,16 @@
 .youmayalsolike-card-link:focus-visible {
   outline: 2px solid var(--range-aura-aqua);
   outline-offset: 3px;
+}
+
+/* Column wrapper: stretch cards to equal row height */
+.youmayalsolike-cards > .youmayalsolike-card {
+  display: flex;
+}
+
+.youmayalsolike-cards > .youmayalsolike-card > .youmayalsolike-card-link {
+  flex: 1 1 auto;
+  width: 100%;
 }
 
 .youmayalsolike-card-media {
@@ -182,12 +171,7 @@
 
 @media (width >= 768px) {
   .youmayalsolike {
-    padding: 64px var(--grid-margin-s) 56px;
-  }
-
-  .youmayalsolike-grid-cols-2,
-  .youmayalsolike-grid-cols-3 {
-    grid-template-columns: repeat(2, 1fr);
+    padding: 64px 0 56px;
   }
 
   .youmayalsolike-card-cta {
@@ -211,19 +195,11 @@
 
 @media (width >= 1280px) {
   .youmayalsolike {
-    padding: 80px var(--grid-margin-xl) 72px;
+    padding: 80px 0 72px;
   }
 
   .youmayalsolike-title {
     margin-bottom: 50px;
-  }
-
-  .youmayalsolike-grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .youmayalsolike-grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .youmayalsolike-card-heading {

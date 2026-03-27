@@ -5,6 +5,8 @@
  * block.children[0] = title row — first cell contains heading text
  * block.children[1] = aura row — first cell is class token (e.g. aura-creative)
  * block.children[2+] = card rows — cells: picture, category, title, link (<a>), read-more label
+ *
+ * Layout uses global flex grid: .container, .row, .col-s-*, .col-m-*, .col-xl-* (styles/styles.css)
  */
 
 import { createOptimizedPicture } from '../../scripts/aem.js';
@@ -94,15 +96,8 @@ function buildCardLink(row) {
   return link;
 }
 
-function buildCard(row) {
-  const link = buildCardLink(row);
-  if (!link.querySelector('.youmayalsolike-card-media')?.querySelector('picture, img')) {
-    return null;
-  }
-  const li = document.createElement('li');
-  li.className = 'youmayalsolike-card';
-  li.appendChild(link);
-  return li;
+function linkHasImage(link) {
+  return Boolean(link.querySelector('.youmayalsolike-card-media')?.querySelector('picture, img'));
 }
 
 function applyAuraClass(block, auraRaw) {
@@ -127,23 +122,31 @@ export default function decorate(block) {
   title.className = 'youmayalsolike-title';
   title.textContent = titleText || 'You may also like';
 
-  const grid = document.createElement('ul');
-  grid.className = 'youmayalsolike-grid';
-
+  const links = [];
   cardRows.forEach((row) => {
-    const card = buildCard(row);
-    if (card) grid.appendChild(card);
+    const link = buildCardLink(row);
+    if (linkHasImage(link)) links.push(link);
   });
 
-  const cardCount = grid.children.length;
-  if (cardCount < MIN_CARDS) {
+  if (links.length < MIN_CARDS) {
     block.replaceChildren();
     return;
   }
 
-  grid.classList.add(
-    cardCount === 2 ? 'youmayalsolike-grid-cols-2' : 'youmayalsolike-grid-cols-3',
-  );
+  const xlColClass = links.length === 2 ? 'col-xl-6' : 'col-xl-4';
+  const rowEl = document.createElement('div');
+  rowEl.className = 'row youmayalsolike-cards';
 
-  block.replaceChildren(title, grid);
+  links.forEach((link) => {
+    const col = document.createElement('div');
+    col.className = `youmayalsolike-card col-s-4 col-m-4 ${xlColClass}`;
+    col.appendChild(link);
+    rowEl.appendChild(col);
+  });
+
+  const inner = document.createElement('div');
+  inner.className = 'container';
+  inner.append(title, rowEl);
+
+  block.replaceChildren(inner);
 }

@@ -60,9 +60,14 @@ describe('youmayalsolike block', () => {
 
     decorate(block);
 
+    expect(block.querySelector('.container')).toBeTruthy();
     expect(block.querySelector('.youmayalsolike-title')?.textContent).toBe('You may also like');
-    expect(block.querySelectorAll('.youmayalsolike-card')).toHaveLength(2);
-    expect(block.querySelector('.youmayalsolike-grid-cols-2')).toBeTruthy();
+    expect(block.querySelectorAll('.youmayalsolike-cards > .youmayalsolike-card')).toHaveLength(2);
+    expect(block.querySelector('.row.youmayalsolike-cards')).toBeTruthy();
+    const col = block.querySelector('.youmayalsolike-cards > .youmayalsolike-card');
+    expect(col?.classList.contains('col-s-4')).toBe(true);
+    expect(col?.classList.contains('col-m-4')).toBe(true);
+    expect(col?.classList.contains('col-xl-6')).toBe(true);
     const link = block.querySelector('.youmayalsolike-card-link');
     expect(link?.getAttribute('href')).toBe('/one');
   });
@@ -117,8 +122,9 @@ describe('youmayalsolike block', () => {
 
     decorate(block);
 
-    expect(block.querySelectorAll('.youmayalsolike-card')).toHaveLength(3);
-    expect(block.querySelector('.youmayalsolike-grid-cols-3')).toBeTruthy();
+    expect(block.querySelectorAll('.youmayalsolike-cards > .youmayalsolike-card')).toHaveLength(3);
+    const col = block.querySelector('.youmayalsolike-cards > .youmayalsolike-card');
+    expect(col?.classList.contains('col-xl-4')).toBe(true);
   });
 
   it('normalizes Readmore label on CTA', () => {
