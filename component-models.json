@@ -357,6 +357,179 @@
     ]
   },
   {
+    "id": "homepagecarousel",
+    "fields": [
+      {
+        "component": "richtext",
+        "name": "headline_sectionHeadline",
+        "label": "Section Headline",
+        "value": "",
+        "valueType": "string",
+        "description": "Desktop left column; supports line breaks"
+      },
+      {
+        "component": "number",
+        "valueType": "number",
+        "name": "timing_transitionDuration",
+        "label": "Slide Duration (sec)",
+        "value": 5,
+        "description": "Time per slide before auto-advance"
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "timing_autoplay",
+        "label": "Autoplay",
+        "value": "true",
+        "options": [
+          {
+            "name": "On",
+            "value": "true"
+          },
+          {
+            "name": "Off",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "timing_loopSlides",
+        "label": "Loop Slides",
+        "value": "true",
+        "options": [
+          {
+            "name": "On",
+            "value": "true"
+          },
+          {
+            "name": "Off",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "aura_enableAuraEffect",
+        "label": "Enable Aura Effect",
+        "value": "true",
+        "options": [
+          {
+            "name": "On",
+            "value": "true"
+          },
+          {
+            "name": "Off",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "aura_auraGradient",
+        "label": "Aura Gradient",
+        "value": "",
+        "description": "Optional CSS or design token for background aura"
+      }
+    ]
+  },
+  {
+    "id": "homepagecarouselitem",
+    "fields": [
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "bg_mediaType",
+        "label": "Media Type",
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "bg_image",
+        "label": "Background Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "bg_imageAlt",
+        "label": "Image Alt",
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "bg_video",
+        "label": "Background Video",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "body_categoryTag",
+        "label": "Category Tag",
+        "value": "",
+        "description": "Optional (e.g. News)"
+      },
+      {
+        "component": "richtext",
+        "name": "body_paragraphs",
+        "label": "Paragraphs",
+        "value": "",
+        "valueType": "string",
+        "description": "Multiple lines; alignment pattern applied in frontend"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "label": "CTA Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta_linkText",
+        "label": "CTA Label",
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "visual_brandIcon",
+        "label": "Brand Icon",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "visual_brandIconAlt",
+        "label": "Brand Icon Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "visual_overlayGradient",
+        "label": "Overlay Gradient",
+        "value": "",
+        "description": "Optional per-slide overlay for text readability (CSS or token)"
+      }
+    ]
+  },
+  {
     "id": "socialpromo",
     "fields": [
       {

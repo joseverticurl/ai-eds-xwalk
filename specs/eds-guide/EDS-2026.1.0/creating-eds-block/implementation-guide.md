@@ -43,6 +43,7 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - **Block CSS must not target grid utilities** — in `blocks/*/*.css`, do not write selectors for global grid classes (`.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*`, or broad `[class*="col-"]` hacks). Style block-specific BEM classes; global styles own the grid. **Exceptions** are rare and must be documented (e.g. Swiper shells where grid must not touch the track; see that pattern’s notes).
 - **Lint before merge:** Run `npm run lint` (ESLint + Stylelint). Keep `decorate()` and helpers within Sonar-friendly **cognitive complexity**; see [Appendix E: Sonar cognitive complexity and project lint rules](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules).
 - **User-provided HTML is mandatory** — validate structure contract before coding
+- **Figma URL is mandatory for the implementation plan** — include specific frame or component links (per breakpoint when layouts differ) in the plan; extract design specs with Figma MCP before treating the plan as complete (see [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements))
 - Parent-child blocks use **ONE folder** — one JS file and one CSS file for both parent and children
 - **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).
 
@@ -133,18 +134,12 @@ Before starting implementation, gather all necessary requirements and design ass
 
 When creating a component implementation plan, **always ask for**:
 
-1. **Design Source (one of the following):**
-   - **Figma Design URL** (preferred when available):
-     - Full Figma file URL or specific frame/component URL
-     - Access permissions (if file is private)
-     - Specific variant or state to implement (if multiple exist)
-     - Breakpoint specifications (mobile, tablet, desktop)
-   - **OR Component Design Images** (when Figma URL is not available):
-     - Design images for **desktop** viewport
-     - Design images for **tablet** viewport (if layout differs)
-     - Design images for **mobile** viewport (if layout differs)
-     - Cursor can analyze images and generate code based on visual design
-     - Provide clear, high-resolution screenshots or exports of the component
+1. **Figma design URL (mandatory for the plan)**  
+   Do **not** write or finalize an implementation plan until you have at least one Figma link that points to the component or frame being built (not only a whole page, unless you then drill to the block node via metadata). Collect:
+   - Full Figma file URL or specific frame/component URL — **separate URLs when desktop, tablet, and mobile use different frames**
+   - Access permissions (if the file is private)
+   - Specific variant or state to implement (if multiple exist)  
+   **Record these URLs in the implementation plan header** (same pattern as existing block plans in this repo). Optional **supplementary** PNG/PDF exports or screenshots may be added for reviewers or offline QA; they **do not** replace Figma as the source of truth for measurements and MCP extraction.
 
 2. **Story/Requirements Document**
    - User story or feature requirements
@@ -163,7 +158,7 @@ When creating a component implementation plan, **always ask for**:
 
 ### Using Figma MCP Tools
 
-**When Figma URL is provided, use Figma MCP tools to extract design information:**
+**Figma MCP is the primary way to extract design information for the plan.** Use these tools once the mandatory Figma URL(s) are available:
 
 1. **Extract Design Specifications:**
    - Use Figma MCP to fetch the design: prefer **`get_design_context`** (primary) on the exact component/frame node; supplement with **`get_variable_defs`** (spacing/color/type tokens), **`get_metadata`** (structure with positions and sizes for every descendant), and **`get_screenshot`** (visual truth for verification). See [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing).
@@ -277,48 +272,18 @@ Figma MCP output is usually **px**. If block CSS uses **`rem`**, convert consist
 5. Create implementation plan based on design + requirements
 ```
 
-### Using Design Images (When Figma URL is Not Available)
+### Supplementary design exports (optional)
 
-**When Figma URL is not provided, request component design images and generate code from visual analysis:**
-
-1. **Request Design Images:**
-   - Ask user: "Please provide component design images for desktop, tablet, and mobile viewports (if layouts differ)."
-   - Desktop image (required) — primary layout reference
-   - Tablet image (if layout differs from desktop)
-   - Mobile image (if layout differs from desktop/tablet)
-
-2. **Analyze Design Images:**
-   - Use image analysis to extract layout, structure, and hierarchy
-   - Identify colors, typography, spacing, and sizing from visual inspection
-   - Infer responsive breakpoints from layout differences across viewports
-   - Map visual elements to HTML structure and CSS properties
-
-3. **Generate Implementation:**
-   - Create implementation plan based on image analysis + story requirements
-   - Generate code (HTML structure, CSS, JavaScript) that matches the visual design
-   - Cursor can infer design specifications from images and produce equivalent code
-
-**Example Workflow (Design Images):**
-```
-1. Request: "Please provide design images for desktop, tablet, and mobile."
-2. User provides images (e.g., desktop.png, tablet.png, mobile.png)
-3. Analyze images to extract:
-   - Layout (map columns to **global grid tiers** where applicable; Flexbox/stacking for non-column patterns)
-   - Component structure and nesting
-   - Colors, typography, spacing
-   - Breakpoint differences (layout changes at tablet/mobile)
-4. Cross-reference with story requirements
-5. Generate implementation plan and code based on visual design
-```
+PNG/PDF/screenshot exports are **optional add-ons** after Figma URLs are in the plan. Use them for stakeholder handoff, slide decks, or cross-checking screenshots against `get_screenshot`. Spacing audits, token references, and numeric layout in the plan must still come from **Figma MCP** on the linked nodes, not from raster images alone.
 
 ### Requirements Checklist
 
 Before starting implementation, ensure you have:
 
-- [ ] Design source: Figma design URL (with access) OR component design images (desktop, tablet, mobile)
+- [ ] **Figma design URL(s)** in the implementation plan (with access); optional supplementary exports only
 - [ ] Story/requirements document
-- [ ] Design specifications extracted (via Figma MCP, design images, or manual review)
-- [ ] If Figma: spacing audit completed (per-container gaps/padding, per breakpoint) and cross-checked with metadata or screenshots for pixel parity
+- [ ] Design specifications extracted via **Figma MCP** (and manual review of requirements as needed)
+- [ ] Spacing audit completed (per-container gaps/padding, per breakpoint) and cross-checked with metadata or screenshots for pixel parity
 - [ ] Content structure mapped to XWalk fields
 - [ ] Similar blocks identified for reference
 - [ ] Breakpoint requirements confirmed
@@ -326,7 +291,7 @@ Before starting implementation, ensure you have:
 - [ ] Browser compatibility requirements noted
 - [ ] Performance requirements reviewed (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices))
 
-**Note:** If Figma URL is not available, request component design images (desktop, tablet, mobile) instead. Cursor can generate code from design images. Ensure story requirements are provided before proceeding. Accurate requirements prevent rework and ensure the component meets design and functional specifications.
+**Note:** Without a Figma URL, **do not create the implementation plan** — obtain the correct frame/component links first (and access), then proceed. Story requirements are still required before implementation. Accurate inputs prevent rework and ensure the component meets design and functional specifications.
 
 ### Development Workflow: Backend First, Then User-Provided Semantic HTML
 
@@ -2552,7 +2517,7 @@ export default function decorate(block) {
 - Use `aspect-ratio` CSS property when design specifies exact ratios (e.g., 670/746)
 - Set both `width` and `height: 100%` on image when using aspect-ratio on wrapper
 - Use `object-fit: cover` to maintain aspect ratio while filling container
-- Always verify image dimensions match design specifications (from Figma or design images)
+- Always verify image dimensions match design specifications (from Figma; supplementary exports optional)
 
 ---
 
@@ -3005,10 +2970,10 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ### Complete Workflow
 
 1. **Requirements Gathering** → Gather design source, story requirements, and design specifications (Pre-Implementation)
-   - Request Figma design URL OR component design images (desktop, tablet, mobile)
+   - Request **Figma frame/component URL(s)** (mandatory before the implementation plan; per breakpoint when frames differ)
    - Request story/requirements document
-   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications; for Figma, follow [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing) (`get_design_context`, `get_variable_defs`, `get_metadata`, `get_screenshot`)
-   - Analyze design and map to implementation plan (include spacing audit for Figma)
+   - Use Figma MCP to extract specifications; follow [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing) (`get_design_context`, `get_variable_defs`, `get_metadata`, `get_screenshot`)
+   - Analyze design and map to implementation plan (include spacing audit)
 
 2. **Backend Configuration (Generate First)** → Add definitions/models/filters to block-level JSON, run build (Part 2)
    - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`
@@ -3045,12 +3010,12 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ## Implementation Checklist
 
 ### Phase 0: Pre-Implementation - Requirements Gathering (MANDATORY)
-- [ ] Request and receive design source: Figma design URL OR component design images (desktop, tablet, mobile)
+- [ ] Request and receive **Figma design URL(s)** (with access); record in the implementation plan header
 - [ ] Request and receive story/requirements document
-- [ ] Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
-- [ ] Analyze component structure from design (Figma or images)
+- [ ] Use Figma MCP tools to extract specifications
+- [ ] Analyze component structure from Figma
 - [ ] Extract design tokens (colors, typography, spacing)
-- [ ] If Figma: complete spacing audit (`get_design_context` + `get_variable_defs` + `get_metadata` as needed); document per-container gap/padding per breakpoint; verify against screenshot ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
+- [ ] Complete spacing audit (`get_design_context` + `get_variable_defs` + `get_metadata` as needed); document per-container gap/padding per breakpoint; verify against screenshot ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
 - [ ] Map design elements to HTML structure
 - [ ] Map design styles to CSS properties
 - [ ] Identify content fields needed for XWalk configuration
@@ -3174,8 +3139,8 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 ### Pre-Implementation
 1. **Gather Requirements** (see Pre-Implementation: Gathering Requirements section)
-   - Request Figma URL OR component design images (desktop, tablet, mobile) and story requirements
-   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications; include Figma spacing audit when applicable ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
+   - Request **Figma URL(s)** and story requirements (Figma is mandatory for the implementation plan)
+   - Use Figma MCP to extract specifications; include the spacing audit ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
    - Analyze design and create implementation plan
 2. Review similar blocks in codebase
 3. Identify reusable components/models
@@ -3266,7 +3231,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - Use CSS `aspect-ratio` property when design specifies exact ratios
 - Set `aspect-ratio` on image wrapper, not just width
 - Use `object-fit: cover` to maintain aspect ratio while filling container
-- Verify dimensions match design specifications (from Figma or design images)
+- Verify dimensions match design specifications (from Figma; supplementary exports optional)
 - Reference: See "Image Sizing and Aspect Ratios" section above
 
 ### Backend/Configuration Issues
@@ -3481,7 +3446,7 @@ export default function decorate(block) {
 ## Next Steps
 
 1. **Review this guide** - Start with Part 1 for backend, Part 2 for frontend
-2. **Gather design source** - Request Figma URL OR component design images (desktop, tablet, mobile); Cursor can generate code from either
+2. **Gather design source** - Obtain **Figma URL(s)** for the block (mandatory for the implementation plan); use Figma MCP to extract specs
 3. **Study similar blocks** - Reference examples provided in each section
 4. **Use AI codebase analysis** - Cursor can analyze existing blocks for patterns
 5. **Follow checklist** - Use the implementation checklist step by step
