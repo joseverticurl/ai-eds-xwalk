@@ -39,6 +39,8 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 **Critical rules:**
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`); run build command to update root files
 - Use **index-based** structure only — no `data-*` attributes for selection
+- **Layout grid is mandatory** for standard responsive column layouts: use the project’s global grid system (`container`, `row`, `col-*` from e.g. `styles/styles.css`) and apply those classes in structure built by `decorate()` — do not recreate the same layout only in block CSS (ad hoc `display: grid`, arbitrary `%` widths, or custom column math). See [Layout grid (global design system classes)](#layout-grid-global-design-system-classes).
+- **Block CSS must not target grid utilities** — in `blocks/*/*.css`, do not write selectors for global grid classes (`.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*`, or broad `[class*="col-"]` hacks). Style block-specific BEM classes; global styles own the grid. **Exceptions** are rare and must be documented (e.g. Swiper shells where grid must not touch the track; see that pattern’s notes).
 - **Lint before merge:** Run `npm run lint` (ESLint + Stylelint). Keep `decorate()` and helpers within Sonar-friendly **cognitive complexity**; see [Appendix E: Sonar cognitive complexity and project lint rules](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules).
 - **User-provided HTML is mandatory** — validate structure contract before coding
 - Parent-child blocks use **ONE folder** — one JS file and one CSS file for both parent and children
@@ -203,7 +205,7 @@ When creating a component implementation plan, **always ask for**:
 1. Receive Figma URL: https://www.figma.com/file/...
 2. Use Figma MCP to fetch design file
 3. Analyze component structure and extract:
-   - Layout: Grid, Flexbox, or custom
+   - Layout: Map multi-column / breakpoint behavior to the **project layout grid** (`container` / `row` / `col-*`); use Flexbox or other layout inside columns or for non-grid patterns only as needed
    - Colors: Primary, secondary, text colors
    - Typography: Font families, sizes, weights
    - Spacing: Margins, padding values
@@ -239,7 +241,7 @@ When creating a component implementation plan, **always ask for**:
 1. Request: "Please provide design images for desktop, tablet, and mobile."
 2. User provides images (e.g., desktop.png, tablet.png, mobile.png)
 3. Analyze images to extract:
-   - Layout (Grid, Flexbox, stacking order)
+   - Layout (map columns to **global grid tiers** where applicable; Flexbox/stacking for non-column patterns)
    - Component structure and nesting
    - Colors, typography, spacing
    - Breakpoint differences (layout changes at tablet/mobile)
@@ -2273,6 +2275,8 @@ Automatically added by `decorateBlock()`:
 
 **One CSS file per block:** Create only `<block-name>.css` (matching the folder name). Never create two CSS files (e.g., `social-promo.css` and `socialpromo.css`).
 
+**Layout grid (mandatory):** Standard responsive columns **must** use the global `container` / `row` / `col-*` system from project styles, applied in `decorate()` — see [Layout grid (global design system classes)](#layout-grid-global-design-system-classes). **Do not** put selectors for those grid classes in block CSS except rare documented exceptions.
+
 ### CSS File Structure
 
 **Path:** `blocks/<block-name>/<block-name>.css`
@@ -2378,7 +2382,11 @@ export default function decorate(block) {
 
 ### Layout grid (global design system classes)
 
-When the project defines **Bootstrap-style layout utilities** in global styles (e.g. `styles/styles.css`), use them for **responsive column layouts** in blocks instead of ad hoc percentage widths or CSS Grid `span` helpers for the same pattern.
+**Mandatory — use the defined grid system:** When the project provides **Bootstrap-style layout utilities** in global styles (e.g. `styles/styles.css`), you **must** use them for responsive column layouts that match the design grid. Apply `container`, `row`, and `col-*` in the DOM produced by `decorate()` (or equivalent). Do **not** implement the same column behavior solely in block CSS (e.g. custom `display: grid` templates, hand-tuned `%` widths, or per-breakpoint column fractions) when the global utilities already express that pattern — that duplicates the system, breaks alignment with shared gutters/max-width/breakpoints, and makes blocks harder to maintain.
+
+**Mandatory — grid class names do not belong in block CSS:** The file `blocks/<block-name>/<block-name>.css` **must not** declare selectors that target global grid utilities — for example `.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*`, or generic `[class*="col-"]`. Those classes are applied in markup/JavaScript; block stylesheets should style **block-specific** classes (e.g. `.block-name`, `.block-name__*`) for visuals, spacing inside a cell, media, typography, and states. Global CSS owns grid behavior.
+
+**Exceptions (document when used):** Only in **rare** cases may block CSS interact with layout near grid nodes — for example, **carousels (Swiper)** must not use grid classes on the swiper root, wrapper, or slides (see [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)); put grid on **static** siblings only. If you truly need a one-off override, document why and prefer a wrapper class or a global token change over re-styling `.row` / `.col-*` from a block sheet.
 
 **Class names (typical project convention):**
 
@@ -3060,10 +3068,12 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification
 - [ ] **Run `npm run build:json`** after adding/updating block config (root files are build outputs)
 - [ ] **NEVER** create separate child block folders or files — see [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder)
+- [ ] **Layout grid:** For standard multi-column responsive layouts, use the global grid (`container` / `row` / `col-*`) in the structure built by `decorate()` per [Layout grid (global design system classes)](#layout-grid-global-design-system-classes) — not a block-only reimplementation in CSS
 - [ ] **Test with user-provided HTML** to verify extraction logic works correctly
 
 ### Phase 3: Frontend - CSS Styling
 - [ ] Create `blocks/<block-name>/<block-name>.css` (ONE file only — never create two CSS files with different naming, e.g., social-promo.css and socialpromo.css)
+- [ ] **No grid utility selectors** in block CSS (do not target `.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*` in `*.css`) unless there is a **documented exception**; rely on global styles for grid and style block BEM classes only
 - [ ] Style block structure (parent container and child items in same file)
 - [ ] Add responsive breakpoints
 - [ ] **Test with user-provided HTML** to verify styling works correctly

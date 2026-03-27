@@ -54,11 +54,5 @@
     "components": [
       "socialpromo-card"
     ]
-  },
-  {
-    "id": "youmayalsolike",
-    "components": [
-      "youmayalsolikeitem"
-    ]
   }
 ]
