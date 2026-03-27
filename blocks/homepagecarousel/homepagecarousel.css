@@ -58,7 +58,7 @@
 
 @media (width >= 1280px) {
   .homepagecarousel-stage {
-    min-height: 660px;
+    min-height: 200px;
   }
 }
 
