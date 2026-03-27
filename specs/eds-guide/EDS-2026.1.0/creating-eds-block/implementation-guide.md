@@ -21,7 +21,6 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - Complex blocks (nested items, containers)
 - XWalk configuration for AEM authoring
 - Frontend JavaScript and CSS
-- Unit testing (if applicable)
 
 **Out of Scope:**
 - OSGi services
@@ -40,6 +39,7 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 **Critical rules:**
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`); run build command to update root files
 - Use **index-based** structure only — no `data-*` attributes for selection
+- **Lint before merge:** Run `npm run lint` (ESLint + Stylelint). Keep `decorate()` and helpers within Sonar-friendly **cognitive complexity**; see [Appendix E: Sonar cognitive complexity and project lint rules](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules).
 - **User-provided HTML is mandatory** — validate structure contract before coding
 - Parent-child blocks use **ONE folder** — one JS file and one CSS file for both parent and children
 - **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).
@@ -107,6 +107,7 @@ This guide is organized into three parts:
   - [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)
   - [Carousel Component Snippets (Swiper)](#carousel-component-snippets-swiper)
 - [Part 3c: CSS Implementation](#part-3c-css-implementation)
+  - [Layout grid (global design system classes)](#layout-grid-global-design-system-classes)
 - [Part 3d: HTML Implementation](#part-3d-html-implementation)
 - [Part 3e: Best Practices](#part-3e-best-practices-and-reference)
 
@@ -115,6 +116,7 @@ This guide is organized into three parts:
 - [Appendix B: Adobe FE EDS Practices](#appendix-b-adobe-fe-eds-recommended-practices-block-creation)
 - [Appendix C: Key References](#appendix-c-key-references)
 - [Appendix D: Common Issues and Solutions](#appendix-d-common-issues-and-solutions)
+- [Appendix E: Sonar cognitive complexity and project lint rules](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)
 
 ---
 
@@ -2016,12 +2018,15 @@ export default async function decorate(block) {
 - Use `moveInstrumentation()` when transforming DOM
 - Responsive breakpoints match common EDS viewports (390, 768, 1280, 1920)
 - Use `createOptimizedPicture()` for slide images (EDS performance)
+- **Do not use global layout grid classes** (`container`, `row`, `col-s-*`, `col-m-*`, `col-xl-*`) on the Swiper root, `.swiper-wrapper`, or `.swiper-slide`. Carousels rely on Swiper’s own flex/track layout; mixing Bootstrap-style grid utilities breaks slide sizing, gutters, and touch behavior. Lay out **content inside** a slide with grid/flex if needed; keep the carousel shell on Swiper’s structure only.
 
 **Reference:** `blocks/featurecardscarousel/featurecardscarousel.js`
 
 ### Carousel Component Snippets (Swiper)
 
 Reusable Swiper configuration snippets for EDS carousel blocks. Adapt to your block structure and naming.
+
+**Layout:** Do **not** wrap Swiper in `container` / `row` / `col-*` grid classes. Use Swiper markup as shown; apply [layout grid classes](#layout-grid-global-design-system-classes) to **static** sections (e.g. intro copy above the carousel), not to the carousel track itself.
 
 #### Snippet: Load Swiper (EDS Pattern)
 
@@ -2371,6 +2376,78 @@ export default function decorate(block) {
 
 **Reference:** `blocks/hero/hero.css`
 
+### Layout grid (global design system classes)
+
+When the project defines **Bootstrap-style layout utilities** in global styles (e.g. `styles/styles.css`), use them for **responsive column layouts** in blocks instead of ad hoc percentage widths or CSS Grid `span` helpers for the same pattern.
+
+**Class names (typical project convention):**
+
+| Class | Role |
+|-------|------|
+| `container` | Centers content, applies horizontal padding and max width aligned to the design grid. |
+| `row` | Flex row with negative horizontal margin so column gutters align. |
+| `col-s-*` | Mobile tier — **N = 4** columns (widths in 25% steps: `col-s-1` … `col-s-4`). |
+| `col-m-*` | Tablet tier (e.g. `width >= 768px`) — **N = 8** columns (`col-m-1` … `col-m-8`). |
+| `col-xl-*` | Desktop tier (e.g. `width >= 1280px`) — **N = 12** columns (`col-xl-1` … `col-xl-12`). |
+
+**Rules:**
+- Apply **`container`** once** as the outer width constraint; put **`row`** inside it; put **`col-*`** elements as direct children of **`row`**.
+- Combine breakpoints as needed: e.g. full width on mobile, half on tablet, third on desktop — `col-s-4 col-m-4 col-xl-4` (same semantic span at each tier, different **N** per tier).
+- **Carousels (Swiper):** Do **not** put `row` / `col-*` / `container` on Swiper’s root, wrapper, or slides. Style slides with block classes and Swiper options (`slidesPerView`, `spaceBetween`). You may still wrap **non-carousel** siblings (headings, CTAs) in `container` + `row` + `col-*`.
+
+**Sample: two-column block content (HTML you might build in `decorate()`):**
+
+```html
+<div class="container">
+  <div class="row">
+    <div class="col-s-4 col-m-4 col-xl-6">
+      <div class="block-name__media"><!-- image or video --></div>
+    </div>
+    <div class="col-s-4 col-m-4 col-xl-6">
+      <div class="block-name__copy"><!-- title, text, buttons --></div>
+    </div>
+  </div>
+</div>
+```
+
+**Sample: three equal columns on desktop (`col-xl-4` each); on tablet (8 columns) use two half-width rows or full-width stack — here each card is full width on small/tablet, one-third on xl:**
+
+```html
+<div class="container">
+  <div class="row">
+    <article class="col-s-4 col-m-8 col-xl-4 block-name__card">...</article>
+    <article class="col-s-4 col-m-8 col-xl-4 block-name__card">...</article>
+    <article class="col-s-4 col-m-8 col-xl-4 block-name__card">...</article>
+  </div>
+</div>
+```
+
+(`col-m-8` = 100% width on the 8-column tier so cards stack; `col-xl-4` = 4/12 per card on desktop.)
+
+**Sample: `decorate()` adding grid classes (index-based contract):**
+
+```javascript
+export default function decorate(block) {
+  const outer = document.createElement('div');
+  outer.className = 'container';
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  const colMedia = document.createElement('div');
+  colMedia.className = 'col-s-4 col-m-4 col-xl-7';
+  const colText = document.createElement('div');
+  colText.className = 'col-s-4 col-m-4 col-xl-5';
+
+  // ... populate colMedia / colText from block.children ...
+
+  row.append(colMedia, colText);
+  outer.append(row);
+  block.replaceChildren(outer);
+}
+```
+
+**Reference:** Global layout rules live in `styles/styles.css` (search for `.container`, `.row`, `.col-s-`, `.col-m-`, `.col-xl-`). If your fork uses different breakpoints or column counts, align snippets with that file.
+
 ### Image Sizing and Aspect Ratios
 
 **When design specifies exact image dimensions or aspect ratios, use CSS `aspect-ratio` property:**
@@ -2497,6 +2574,7 @@ export default function decorate(block) {
 - ❌ **DON'T:** Use global variables, skip error handling, or mutate shared components.
 - ❌ **DON'T:** Access `children[index]` without null checks or forget `moveInstrumentation()` when transforming DOM.
 - ❌ **DON'T:** Block main thread or use sync operations for external resources.
+- ❌ **DON'T:** Ship a single monolithic `decorate()` with deeply nested `if`/`for`/`switch` that will fail Sonar **cognitive complexity** (S3776) — extract pure helpers and use early returns (see [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)).
 
 #### ✅ CSS Best Practices
 
@@ -2506,6 +2584,7 @@ export default function decorate(block) {
 - ✅ **DO:** Follow responsive design patterns
 - ✅ **DO:** Use CSS variables for theming
 - ✅ **DO:** Keep styles scoped to block
+- ✅ **DO:** Run **`npm run lint`** and fix ESLint/Stylelint issues before opening a PR; follow [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules) for Sonar cognitive-complexity expectations in `decorate()` and helpers.
 
 #### ❌ CSS Anti-patterns
 
@@ -2990,6 +3069,11 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] **Test with user-provided HTML** to verify styling works correctly
 - [ ] Test in AEM authoring mode
 
+### Phase 3b: Lint, Sonar cognitive complexity, and quality gates
+- [ ] Run **`npm run lint`** from the repo root and **resolve all errors** (JS/JSON via ESLint, CSS via Stylelint). Use **`npm run lint:fix`** where safe to apply autofixes.
+- [ ] Keep **`decorate()`** and extracted helpers **readable for Sonar**: avoid excessive nesting; prefer guard clauses and small named functions so **cognitive complexity** stays within typical Sonar thresholds (see [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)).
+- [ ] If the pipeline runs **SonarQube / SonarCloud**, address **new** issues on changed files (especially S3776 cognitive complexity and related maintainability rules) before merge.
+
 ### Phase 4: Integration - Component Registration
 - [ ] Verify component definition appears in `component-definition.json`
   - [ ] Check JSON syntax is valid
@@ -3010,12 +3094,6 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] Test content renders correctly in publish mode
 - [ ] Verify index-based access works (no reliance on data-aue-* attributes)
 
-### Phase 6: Frontend - Unit Testing (If Applicable)
-- [ ] Create `blocks/<block-name>/<block-name>.test.js`
-- [ ] Test data transformation functions
-- [ ] Test validation logic
-- [ ] Test edge cases
-
 ---
 
 ## Validation Workflow
@@ -3035,16 +3113,19 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 2. Verify field order in XWalk model matches expected JavaScript access pattern (Part 2)
 3. Test JavaScript in browser console (Part 3)
 4. Test CSS in AEM authoring mode (Part 3)
+5. Run **`npm run lint`** frequently; fix ESLint/Stylelint violations as you go (Part 3, [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
 
 ### Post-Implementation
-1. Verify JSON syntax is valid in all three configuration files (Part 2)
-2. Verify component registration (Part 2)
+1. Run **`npm run lint`** and ensure **zero errors** before PR (`lint:js` + `lint:css`)
+2. Verify JSON syntax is valid in all three configuration files (Part 2)
+3. Verify component registration (Part 2)
    - Check definition in `component-definition.json`
    - Check model in `component-models.json`
    - Check filter in `component-filters.json` (if applicable)
-3. Test in AEM authoring interface
-4. Verify responsive behavior (Part 3)
-5. Verify accessibility (Part 3)
+4. Test in AEM authoring interface
+5. Verify responsive behavior (Part 3)
+6. Verify accessibility (Part 3)
+7. Resolve Sonar / cognitive-complexity feedback on changed files if your CI reports it ([Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
 
 ---
 
@@ -3165,6 +3246,82 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 ---
 
+## Appendix E: Sonar cognitive complexity and project lint rules
+
+This project enforces **ESLint** and **Stylelint** locally. CI or SonarQube / SonarCloud may additionally enforce **cognitive complexity** and other maintainability rules. **Block code should pass local lint and stay easy for Sonar to analyze.**
+
+### Project lint commands (package.json)
+
+| Command | What it runs |
+|---------|----------------|
+| `npm run lint` | ESLint (`lint:js`) **and** Stylelint (`lint:css`) — **run before every PR** |
+| `npm run lint:js` | ESLint on `.js`, `.mjs`, `.json` (Airbnb base + JSON + xwalk plugin) |
+| `npm run lint:css` | Stylelint on `blocks/**/*.css` and `styles/*.css` |
+| `npm run lint:fix` | Autofix where rules allow (then re-run `npm run lint` to confirm) |
+
+**Config files:** `.eslintrc.js` (extends `airbnb-base`, `plugin:json/recommended`, `plugin:xwalk/recommended`; project overrides such as `import/extensions` for `.js` imports and `linebreak-style: unix`), `.stylelintrc.json` (extends `stylelint-config-standard`).
+
+### Ensuring code follows lint rules
+
+1. **Before opening a PR:** Run `npm run lint` from the repository root and fix **all** reported errors (warnings should be cleared or justified per team policy).
+2. **IDE:** Enable ESLint and Stylelint integrations so issues surface while editing.
+3. **Block scope:** New or edited files under `blocks/<block-name>/` must be covered by the globs above; global styles under `styles/` are included in Stylelint.
+4. **Do not disable rules** broadly (`eslint-disable` / `stylelint-disable`) unless there is a documented exception on a **minimal** line range.
+
+### Sonar: cognitive complexity (and related rules)
+
+Sonar’s **JavaScript Cognitive Complexity** rule is commonly **S3776** (title: *Cognitive Complexity of functions should not be too high*). Default thresholds are often **15** on the function, with increments for nested control flow. Exact gates depend on your SonarQube/SonarCloud **quality profile**—align with your team’s profile.
+
+**What increases cognitive complexity (simplified):**
+
+- `if`, `else if`, `else`, `for`, `while`, `do`, `switch` cases, `catch`, and logical combinations inside them
+- **Nesting** increases the cost more than sequential statements at the top level
+
+**Patterns that keep `decorate()` and helpers Sonar-friendly:**
+
+| Practice | Why |
+|----------|-----|
+| **Extract** row/cell parsing into `function parseSlideRow(row) { ... }` (or a module-local helper) | Shrinks one giant function with many nested branches |
+| **Early returns** (`if (!rows.length) return;`) | Reduces `else` depth |
+| **Guard clauses** at the top of each helper | Avoids a single deep `if` tree |
+| **Avoid `switch` on large enums** in one block | Prefer a map `const handlers = { ... }` or separate functions |
+| **Limit loops inside loops** | If unavoidable, extract the inner loop to a named function |
+
+**Related Sonar rules** often seen with block JS (names vary by language plugin):
+
+- **Control flow nesting** (e.g. depth of `if`/`for` chains) — keep nesting shallow; extract inner blocks.
+- **Too many lines** in a single function — split decoration into `buildHeader`, `buildItems`, etc.
+
+**Example refactor (conceptual):**
+
+```javascript
+// ❌ Harder for Sonar: one nested decorate() with many branches
+
+// ✅ Prefer: thin decorate() + small helpers
+function extractCta(row) {
+  const linkCell = row?.children?.[2];
+  const linkEl = linkCell?.querySelector?.('a') ?? linkCell?.querySelector?.('p a');
+  const href = linkEl?.getAttribute?.('href') || linkEl?.href || '';
+  if (!href) return null;
+  return { href, text: linkEl?.textContent?.trim() || 'Learn more' };
+}
+
+export default function decorate(block) {
+  const rows = [...block.children];
+  if (rows.length < 1) return;
+  const cta = extractCta(rows[0]);
+  // ...
+}
+```
+
+### References
+
+- **Sonar rule:** Search your SonarQube/SonarCloud **Rules** for *cognitive complexity* (JavaScript) — e.g. S3776.
+- **Local lint:** `package.json` scripts (`lint`, `lint:js`, `lint:css`, `lint:fix`).
+- **ESLint:** [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript) (base config used by this repo).
+
+---
+
 ## Considerations
 
 ### UX Considerations
@@ -3259,7 +3416,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ---
 
 **Document Version:** EDS-2026.1.0  
-**Last Updated:** 2026-02-25  
+**Last Updated:** 2026-03-26  
 **Maintained By:** AI Documentation Engineer  
 **Review Status:** Ready for Use
 
@@ -3282,6 +3439,7 @@ This implementation guide provides comprehensive step-by-step instructions for c
 5. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM
 6. **Testing:** Test with user-provided HTML first, then manual testing in browser and AEM authoring interface
 7. **Patterns:** Follow established patterns from existing blocks
+8. **Lint & Sonar:** Run `npm run lint` before PR; structure `decorate()` so cognitive complexity stays manageable ([Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
 
 **CRITICAL:** 
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`). Run `npm run build:json` to update the three root-level files. Do NOT edit root files directly.
