@@ -3072,7 +3072,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ### Phase 3b: Lint, Sonar cognitive complexity, and quality gates
 - [ ] Run **`npm run lint`** from the repo root and **resolve all errors** (JS/JSON via ESLint, CSS via Stylelint). Use **`npm run lint:fix`** where safe to apply autofixes.
 - [ ] Keep **`decorate()`** and extracted helpers **readable for Sonar**: avoid excessive nesting; prefer guard clauses and small named functions so **cognitive complexity** stays within typical Sonar thresholds (see [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)).
-- [ ] If the pipeline runs **SonarQube / SonarCloud**, address **new** issues on changed files (especially S3776 cognitive complexity and related maintainability rules) before merge.
+
 
 ### Phase 4: Integration - Component Registration
 - [ ] Verify component definition appears in `component-definition.json`
