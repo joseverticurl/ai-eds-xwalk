@@ -7,6 +7,22 @@
 
 ---
 
+## Before backend generation: mandatory checklist (ask first)
+
+Do **not** generate block-level JSON (`blocks/<block-name>/_<block-name>.json`) or run `npm run build:json` until the following are confirmed or collected. Use this as a conversation checklist for implementers and AI assistants.
+
+| # | Item | What to ask or confirm |
+|---|------|------------------------|
+| 1 | **Guide acknowledgment** | Confirm this guide applies: **EDS-2026.1.0**, backend-first workflow, and that the work is in scope (see [Purpose and Scope](#purpose-and-scope)). Note any intentional deviations from the guide. |
+| 2 | **Figma URL(s)** | At least one link to the **component or frame** being built (not only a whole page, unless you then drill to the block node). Separate URLs when desktop, tablet, and mobile use different frames. Capture variant or state if multiple exist, and file access if the file is private. |
+| 3 | **Story and requirements** | User story, acceptance criteria, functional behavior, content and field needs, interactions (hover, carousel, keyboard, etc.), accessibility expectations, and browser or device compatibility. Link or paste the requirements source (for example `specs/requirements/<feature>.md` or ticket text). |
+| 4 | **Backend (XWalk) specifics** | Intended **block folder name** (kebab-case), **simple vs. parent–child** (one folder for parent + children), **author-facing fields** (text, richtext, references, multifields, defaults), any **filter or resource-type** rules, and **similar blocks** in this repo to use as patterns. |
+| 5 | **Design ↔ model alignment** | Enough detail to map Figma layers to **XWalk fields** (what is author-editable versus fixed in code or content fragments). |
+
+**After this checklist:** finish [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — including Figma MCP extraction and an implementation plan with URLs in the header — before authoring `_<block-name>.json`.
+
+---
+
 ## Purpose and Scope
 
 This guide provides step-by-step instructions for creating new EDS blocks or enhancing existing ones with XWalk authoring integration. It covers the complete development lifecycle from block creation to AEM authoring validation.
@@ -78,6 +94,7 @@ This guide is organized into three parts:
 ## Table of Contents
 
 **Pre-Implementation**
+- [Before backend generation: mandatory checklist (ask first)](#before-backend-generation-mandatory-checklist-ask-first)
 - [Requirements Gathering](#pre-implementation-gathering-requirements)
 - [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
 - [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
