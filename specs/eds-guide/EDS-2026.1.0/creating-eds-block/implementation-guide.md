@@ -78,6 +78,7 @@ This guide is organized into three parts:
 
 **Pre-Implementation**
 - [Requirements Gathering](#pre-implementation-gathering-requirements)
+- [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
 - [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
 
 **Part 1: Process Flow (3 Steps)**
@@ -165,9 +166,9 @@ When creating a component implementation plan, **always ask for**:
 **When Figma URL is provided, use Figma MCP tools to extract design information:**
 
 1. **Extract Design Specifications:**
-   - Use Figma MCP to fetch the design file
+   - Use Figma MCP to fetch the design: prefer **`get_design_context`** (primary) on the exact component/frame node; supplement with **`get_variable_defs`** (spacing/color/type tokens), **`get_metadata`** (structure with positions and sizes for every descendant), and **`get_screenshot`** (visual truth for verification). See [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing).
    - Extract component structure, layout, and hierarchy
-   - Identify colors, typography, spacing, and sizing
+   - Identify colors, typography, spacing, and sizing — **capture every gap and padding**, not only top-level margins (nested Auto Layout frames each have their own gap and padding)
    - Extract responsive breakpoints and variants
    - Identify interactive states (hover, active, disabled, etc.)
 
@@ -201,17 +202,76 @@ When creating a component implementation plan, **always ask for**:
    - Map Figma styles to CSS properties
    - Identify reusable components from `shared-components/`
    - Note any design tokens or CSS variables needed
+   - Include a **spacing audit** (container → gap / padding / insets, per breakpoint) so CSS matches Figma numerically; see [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
+
+### Figma: Pixel-perfect layout, gaps, and spacing
+
+**Goal:** Reproduce Figma’s layout in the block with **matching pixel distances** between elements — every Auto Layout **gap**, **padding**, and meaningful **inset** — not approximate “nice” spacing from the generated reference code alone.
+
+**1. Select the right node(s)**
+
+- Request a Figma URL that points to the **component or frame** you are implementing (not an entire page), so MCP output stays detailed. Large frames may omit or generalize spacing; if only a page URL exists, use **`get_metadata`** on the page to find the child `node-id` for the block frame, then call **`get_design_context`** on that child.
+- Figma often layouts **one breakpoint per frame** (Desktop / Tablet / Mobile). Repeat the workflow **per breakpoint URL** when layouts differ; do not assume one set of gaps applies at all widths.
+
+**2. Call MCP tools in this order (same `fileKey` / parsed `node-id`)**
+
+| Tool | Use for gaps and layout |
+|------|-------------------------|
+| **`get_design_context`** | Primary output: reference layout code, Tailwind-style spacing classes, and hints. **Transcribe numeric spacing from here into the implementation plan** — do not round or substitute token names until you have confirmed project conventions. |
+| **`get_variable_defs`** | Variables bound to the subtree (often **spacing scale**, colors, radii). When padding or gap uses a variable, record **resolved or token name + value** so CSS matches the design system. |
+| **`get_metadata`** | XML with **names, types, x/y, width, height** for the tree. Use this when generated code is vague or a container is large: **derive gaps from sibling geometry** (see below) and confirm padding by comparing frame bounds to first-child bounds. Prefer metadata over guessing from screenshots alone. |
+| **`get_screenshot`** | Visual ground truth. After CSS is written, compare the living block to the screenshot (same width as the frame when possible). |
+
+**3. Map Figma Auto Layout to CSS (every container)**
+
+For **each** Frame or Component with Auto Layout in the subtree:
+
+- **Item spacing** → CSS `gap` (or legacy “space between” patterns only when the DOM cannot be a single flex/grid container).
+- **Padding** → `padding` / logical padding (`padding-block`, `padding-inline`) to match Figma’s top/right/bottom/left.
+- **Alignment / distribution** → `justify-content`, `align-items`, `align-content` (for wrapped rows, also capture **row gap** if Figma exposes wrapped spacing separately from primary gap).
+- **Direction** → `flex-direction` or grid axis; nested frames get **their own** gap/padding — walk the tree and list values per container in the implementation plan.
+
+Do **not** collapse nested gaps into a single outer `gap` if Figma uses stacked Auto Layout frames; that will not match Dev Mode measurements.
+
+**4. Derive gaps from `get_metadata` when needed**
+
+When MCP code omits a gap or you need to verify a number:
+
+- Use sibling rectangles in the parent’s coordinate space (or consistent absolute bounds from metadata). For a **horizontal** row, the horizontal gap between adjacent visible siblings is often: **next.left − (prev.left + prev.width)** after accounting for parent padding (compare parent frame bounds to the first child’s position to infer padding).
+- For **vertical** stacks, use **next.top − (prev.top + prev.height)** analogously.
+- Ignore purely decorative layers (absolute overlays, masks) when they sit between siblings; match **content** frames the design uses for layout.
+- If measurements disagree with `get_design_context`, trust **metadata geometry + Figma Dev Mode** (if the author can confirm) and document the chosen value in the spacing audit.
+
+**5. Spacing audit (required in the implementation plan)**
+
+Add a short table or bullet list, **one row per layout container**, for example:
+
+| Figma layer | Direction | Gap (px) | Padding (T/R/B/L px) | CSS location (BEM class) |
+|-------------|-----------|----------|----------------------|--------------------------|
+| Card content | column | 16 | 24 / 24 / 24 / 24 | `.block__card-inner` |
+| Icon + text row | row | 8 | 0 | `.block__meta` |
+
+Also list **breakpoint-specific** rows when gap or padding changes per frame.
+
+**6. Project units**
+
+Figma MCP output is usually **px**. If block CSS uses **`rem`**, convert consistently (commonly `1rem = 16px` root, unless the project defines otherwise) and **document the conversion** next to each value so reviewers can check against Figma.
+
+**7. Verification**
+
+- Compare compiled layout to **`get_screenshot`** at the frame width.
+- Spot-check a few vertical and horizontal **edge distances** (e.g. text to image, card to card) against the spacing audit.
 
 **Example Workflow:**
 ```
-1. Receive Figma URL: https://www.figma.com/file/...
-2. Use Figma MCP to fetch design file
+1. Receive Figma URL: https://www.figma.com/file/... (prefer node URL for the block frame)
+2. Use Figma MCP: get_design_context; add get_variable_defs, get_metadata, get_screenshot as needed for gaps and verification
 3. Analyze component structure and extract:
    - Layout: Map multi-column / breakpoint behavior to the **project layout grid** (`container` / `row` / `col-*`); use Flexbox or other layout inside columns or for non-grid patterns only as needed
    - Colors: Primary, secondary, text colors
    - Typography: Font families, sizes, weights
-   - Spacing: Margins, padding values
-   - Breakpoints: Mobile, tablet, desktop
+   - Spacing: **Every** Auto Layout gap and padding (per container), plus derived spacing from **`get_metadata`** when needed; spacing audit in the implementation plan (see [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
+   - Breakpoints: Mobile, tablet, desktop (separate Figma frames → separate spacing rows if values differ)
    - Icons: Fetch SVG markup from Figma for each icon node; save as icons/<name>.svg
 4. Cross-reference with story requirements
 5. Create implementation plan based on design + requirements
@@ -258,6 +318,7 @@ Before starting implementation, ensure you have:
 - [ ] Design source: Figma design URL (with access) OR component design images (desktop, tablet, mobile)
 - [ ] Story/requirements document
 - [ ] Design specifications extracted (via Figma MCP, design images, or manual review)
+- [ ] If Figma: spacing audit completed (per-container gaps/padding, per breakpoint) and cross-checked with metadata or screenshots for pixel parity
 - [ ] Content structure mapped to XWalk fields
 - [ ] Similar blocks identified for reference
 - [ ] Breakpoint requirements confirmed
@@ -2946,8 +3007,8 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 1. **Requirements Gathering** → Gather design source, story requirements, and design specifications (Pre-Implementation)
    - Request Figma design URL OR component design images (desktop, tablet, mobile)
    - Request story/requirements document
-   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
-   - Analyze design and map to implementation plan
+   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications; for Figma, follow [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing) (`get_design_context`, `get_variable_defs`, `get_metadata`, `get_screenshot`)
+   - Analyze design and map to implementation plan (include spacing audit for Figma)
 
 2. **Backend Configuration (Generate First)** → Add definitions/models/filters to block-level JSON, run build (Part 2)
    - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`
@@ -2968,6 +3029,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 5. **CSS** → Style the block (`<block-name>.css`) based on user-provided HTML (Part 3)
    - Target the transformed structure
+   - Apply gap/padding from the **spacing audit** (Figma) so layout matches design numerically; verify against `get_screenshot` at frame width when available
    - Test with user-provided HTML to verify styling
 
 6. **Component Registration** → Verify JSON syntax and configuration (Part 2)
@@ -2988,6 +3050,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
 - [ ] Analyze component structure from design (Figma or images)
 - [ ] Extract design tokens (colors, typography, spacing)
+- [ ] If Figma: complete spacing audit (`get_design_context` + `get_variable_defs` + `get_metadata` as needed); document per-container gap/padding per breakpoint; verify against screenshot ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
 - [ ] Map design elements to HTML structure
 - [ ] Map design styles to CSS properties
 - [ ] Identify content fields needed for XWalk configuration
@@ -3112,7 +3175,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ### Pre-Implementation
 1. **Gather Requirements** (see Pre-Implementation: Gathering Requirements section)
    - Request Figma URL OR component design images (desktop, tablet, mobile) and story requirements
-   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
+   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications; include Figma spacing audit when applicable ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
    - Analyze design and create implementation plan
 2. Review similar blocks in codebase
 3. Identify reusable components/models
@@ -3134,7 +3197,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
    - Check model in `component-models.json`
    - Check filter in `component-filters.json` (if applicable)
 4. Test in AEM authoring interface
-5. Verify responsive behavior (Part 3)
+5. Verify responsive behavior (Part 3); if design is from Figma, spot-check key gaps/padding against the spacing audit and frame screenshots
 6. Verify accessibility (Part 3)
 7. Resolve Sonar / cognitive-complexity feedback on changed files if your CI reports it ([Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
 
