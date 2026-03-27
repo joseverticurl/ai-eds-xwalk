@@ -8,8 +8,8 @@
 **Version:** v1  
 
 **Phase 1 status:** Complete (2026-03-27) — `_youmayalsolike.json`, section filter, `npm run build:json`  
-**Phase 2 status:** Blocked — awaits semantic HTML from Universal Editor  
-**Phase 3+ status:** Not started  
+**Phase 2 status:** Complete (2026-03-27) — UE HTML received; structure contract documented below  
+**Phase 3–4 status:** Complete (2026-03-27) — `youmayalsolike.js`, `youmayalsolike.css` (human visual / AEM tests still outstanding)  
 
 ---
 
@@ -155,9 +155,7 @@ Append `"youmayalsolike"` to the `section` filter `components` array (same patte
 
 ### Phase 2: User provides semantic HTML (**BLOCKING — mandatory wait**)
 
-#### Task 2.1: **WAIT** — authoring and HTML handoff
-
-**Do not** start `youmayalsolike.js` / `.css` until this is done.
+#### Task 2.1: Authoring and HTML handoff
 
 **Author prompt (for the user / author):**
 
@@ -173,12 +171,32 @@ Append `"youmayalsolike"` to the `section` filter `components` array (same patte
 
 After HTML is received:
 
-- [ ] Map each **row** / **cell index** to model fields (index-based contract for `decorate()`)
-- [ ] Document behavior when optional fields are empty (missing nodes vs empty strings)
-- [ ] Confirm how many rows belong to parent vs each child card (parent-child blocks vary by UE output)
-- [ ] Save a short “contract” subsection under Phase 2 in this file (or link to a checked-in `requirements/youmayalsolike-ue-sample.html` if the team adds one)
+- [x] Map each **row** / **cell index** to model fields (index-based contract for `decorate()`)
+- [x] Document behavior when optional fields are empty (missing nodes vs empty strings)
+- [x] Confirm how many rows belong to parent vs each child card (parent-child blocks vary by UE output)
+- [x] Save a short “contract” subsection under Phase 2 in this file (or link to a checked-in `requirements/youmayalsolike-ue-sample.html` if the team adds one)
 
-**Confidence target:** **≥ 95%** on indices before Phase 3 coding.
+**Confidence:** **≥ 95%** — matches delivered UE markup (2026-03-27).
+
+**Structure contract (`decorate` receives `<div class="youmayalsolike">` as `block`):**
+
+| Row index | Role | DOM | Maps to model |
+|-----------|------|-----|----------------|
+| `0` | Title | `<div><div>{text}</div></div>` | `youmayalsolike.title` |
+| `1` | Aura | `<div><div>{token}</div></div>` | `youmayalsolike.aura` — if token matches `/^aura-[a-z0-9-]+$/i`, added as class on `block` |
+| `2` … `4` | Cards (max 3) | each row = one card | each `youmayalsolike-card` |
+
+**Per card row** (direct children of the row = cells, index order):
+
+| Cell index | Content |
+|------------|---------|
+| `0` | Wrapper containing `<picture>` / `<img>` |
+| `1` | Category label (plain text) |
+| `2` | Article title (plain text) |
+| `3` | Link cell with `<a href="...">` |
+| `4` | Read-more label (e.g. `Readmore`); JS normalizes “readmore” → display **Read more**; empty → **Read more** |
+
+**Empty / invalid behavior:** `decorate` requires **≥ 4** top-level rows (title + aura + **≥ 2** card rows). A card row with **&lt; 4** cells is skipped. Card ignored if no usable `img` src. If **&lt; 2** cards remain after filtering → **`block.remove()`**. Card rows beyond index `4` are ignored (**max 3** cards: `rows.slice(2, 5)`).
 
 ---
 
@@ -186,7 +204,7 @@ After HTML is received:
 
 **Prerequisite:** Phase 2 structure contract complete.
 
-#### Task 3.1: Implement `decorate(block)`
+#### Task 3.1: Implement `decorate(block)` ✅
 
 **File:** `blocks/youmayalsolike/youmayalsolike.js`
 
@@ -212,7 +230,7 @@ After HTML is received:
 
 **Prerequisite:** Phase 2 HTML + Phase 3 DOM shape stable.
 
-#### Task 4.1: Implement `youmayalsolike.css`
+#### Task 4.1: Implement `youmayalsolike.css` ✅
 
 **File:** `blocks/youmayalsolike/youmayalsolike.css`
 
