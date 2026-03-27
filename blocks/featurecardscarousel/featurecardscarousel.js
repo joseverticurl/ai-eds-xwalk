@@ -289,8 +289,8 @@ export default async function decorate(block) {
     },
   });
 
-  imageSwiper.on('slideChange', () => {
-    const idx = imageSwiper.activeIndex;
+  imageSwiper.on('slideChange', (sw) => {
+    const idx = sw.realIndex;
     setSelectedCard(desktopWrap, idx);
     updateProgressFills(centerImageWrap, idx);
   });
@@ -318,9 +318,9 @@ export default async function decorate(block) {
     },
   });
 
-  cardsSwiper.on('slideChange', () => {
-    const idx = cardsSwiper.activeIndex;
-    const card = cardsSwiper.slides[idx];
+  cardsSwiper.on('slideChange', (sw) => {
+    const idx = sw.realIndex;
+    const card = sw.slides[idx];
     const img = mobileCenterWrap.querySelector('img');
     if (card && img) {
       img.src = card.dataset.centerImage || '';

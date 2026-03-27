@@ -359,8 +359,9 @@ export default async function decorate(block) {
       }
       : false,
     on: {
-      slideChange() {
-        syncBrandActive(brandstrip, swiper.realIndex, autoplayOn);
+      /* Swiper passes instance; outer `const swiper` is still in TDZ during constructor init. */
+      slideChange(sw) {
+        syncBrandActive(brandstrip, sw.realIndex, autoplayOn);
       },
     },
   });
