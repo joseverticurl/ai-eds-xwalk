@@ -1,0 +1,197 @@
+{
+  "definitions": [
+    {
+      "title": "Homepage Carousel",
+      "id": "homepagecarousel",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "HomepageCarousel",
+              "model": "homepagecarousel",
+              "filter": "homepagecarousel"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Homepage Carousel Slide",
+      "id": "homepagecarouselitem",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "HomepageCarouselSlide",
+              "model": "homepagecarouselitem"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "homepagecarousel",
+      "fields": [
+        {
+          "component": "richtext",
+          "name": "sectionHeadline",
+          "label": "Section headline (desktop)",
+          "value": "",
+          "valueType": "string",
+          "description": "Left column headline; hidden on mobile"
+        },
+        {
+          "component": "number",
+          "valueType": "number",
+          "name": "carousel_transitionDuration",
+          "label": "Slide duration (sec)",
+          "value": 5,
+          "description": "Seconds per slide (e.g. 3–10)"
+        },
+        {
+          "component": "select",
+          "name": "carousel_autoplay",
+          "label": "Autoplay",
+          "value": "true",
+          "options": [
+            { "name": "On", "value": "true" },
+            { "name": "Off", "value": "false" }
+          ]
+        },
+        {
+          "component": "select",
+          "name": "carousel_loopSlides",
+          "label": "Loop slides",
+          "value": "true",
+          "options": [
+            { "name": "Yes", "value": "true" },
+            { "name": "No", "value": "false" }
+          ]
+        },
+        {
+          "component": "select",
+          "name": "aura_enableAuraEffect",
+          "label": "Aura / gradient background",
+          "value": "true",
+          "options": [
+            { "name": "On", "value": "true" },
+            { "name": "Off", "value": "false" }
+          ]
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "aura_auraGradient",
+          "label": "Aura gradient (CSS)",
+          "value": "",
+          "description": "Optional CSS gradient or color; used when aura is on"
+        }
+      ]
+    },
+    {
+      "id": "homepagecarouselitem",
+      "fields": [
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "media_kind",
+          "label": "Media type",
+          "value": "image",
+          "options": [
+            { "name": "Image", "value": "image" },
+            { "name": "Video", "value": "video" }
+          ]
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "media_image",
+          "label": "Background image",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "media_imageAlt",
+          "label": "Image alt text",
+          "value": ""
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "media_video",
+          "label": "Background video",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "media_videoAlt",
+          "label": "Video description (accessibility)",
+          "value": "",
+          "description": "Short description for screen readers when video is used"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "copy_categoryTag",
+          "label": "Category tag",
+          "value": "",
+          "description": "Optional (e.g. News)"
+        },
+        {
+          "component": "richtext",
+          "name": "copy_paragraphs",
+          "label": "Body copy",
+          "value": "",
+          "valueType": "string",
+          "description": "Multiple paragraphs; alignment cycles left / right / center in the block"
+        },
+        {
+          "component": "aem-content",
+          "name": "cta_link",
+          "label": "CTA link"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "cta_linkText",
+          "label": "CTA label",
+          "value": ""
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "brand_brandIcon",
+          "label": "Brand icon",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "brand_brandIconAlt",
+          "label": "Brand icon alt text",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "brand_overlayGradient",
+          "label": "Text overlay gradient (CSS)",
+          "value": "",
+          "description": "Optional overlay for readability over media"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "homepagecarousel",
+      "components": ["homepagecarouselitem"]
+    }
+  ]
+}
