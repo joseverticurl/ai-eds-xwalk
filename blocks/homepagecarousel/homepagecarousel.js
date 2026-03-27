@@ -321,8 +321,9 @@ export default async function decorate(block) {
       disableOnInteraction: false,
     } : false,
     on: {
+      /* slideChange can run during init before `const swiper` exists; Swiper sets `this`. */
       slideChange() {
-        setActiveIcon(swiper.realIndex);
+        setActiveIcon(this.realIndex);
       },
     },
   });
