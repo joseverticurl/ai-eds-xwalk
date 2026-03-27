@@ -7,9 +7,9 @@
 
 ---
 
-## Before backend generation: mandatory checklist (ask first)
+## Mandatory preflight before backend generation
 
-Do **not** generate block-level JSON (`blocks/<block-name>/_<block-name>.json`) or run `npm run build:json` until the following are confirmed or collected. Use this as a conversation checklist for implementers and AI assistants.
+Ask for and confirm everything below **before** generating block-level JSON (`blocks/<block-name>/_<block-name>.json`) or running `npm run build:json`. Use this as a conversation checklist for implementers and AI assistants.
 
 | # | Item | What to ask or confirm |
 |---|------|------------------------|
@@ -64,6 +64,7 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).
 
 **Jump to:**
+- [Mandatory preflight before backend generation](#mandatory-preflight-before-backend-generation)
 - [Part 1: Process Flow (3 Steps)](#part-1-process-flow-3-steps)
 - [Part 2: Backend Code Generation](#part-2-backend-code-generation)
 - [Part 3: Frontend Code Generation](#part-3-frontend-code-generation)
@@ -94,7 +95,7 @@ This guide is organized into three parts:
 ## Table of Contents
 
 **Pre-Implementation**
-- [Before backend generation: mandatory checklist (ask first)](#before-backend-generation-mandatory-checklist-ask-first)
+- [Mandatory preflight before backend generation](#mandatory-preflight-before-backend-generation)
 - [Requirements Gathering](#pre-implementation-gathering-requirements)
 - [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
 - [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)

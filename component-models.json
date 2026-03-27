@@ -357,6 +357,172 @@
     ]
   },
   {
+    "id": "homepagecarousel",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "sectionHeadline",
+        "label": "Section headline",
+        "value": "",
+        "description": "Desktop left column; hidden on mobile"
+      },
+      {
+        "component": "number",
+        "valueType": "number",
+        "name": "transitionDuration",
+        "label": "Transition duration (sec)",
+        "value": 5,
+        "description": "Seconds per slide before auto-advance (1–60)"
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "autoplay",
+        "label": "Autoplay",
+        "value": "true",
+        "options": [
+          {
+            "name": "On",
+            "value": "true"
+          },
+          {
+            "name": "Off",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "loopSlides",
+        "label": "Loop slides",
+        "value": "true",
+        "options": [
+          {
+            "name": "On",
+            "value": "true"
+          },
+          {
+            "name": "Off",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "enableAuraEffect",
+        "label": "Enable aura effect",
+        "value": "true",
+        "options": [
+          {
+            "name": "On",
+            "value": "true"
+          },
+          {
+            "name": "Off",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "auraGradient",
+        "label": "Aura gradient (CSS)",
+        "value": "",
+        "description": "Optional CSS gradient when aura is on"
+      }
+    ]
+  },
+  {
+    "id": "homepagecarouselitem",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Media",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": "",
+        "description": "Alt text for image or descriptive label for video"
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "mediaType",
+        "label": "Media type",
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "categoryTag",
+        "label": "Category tag",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "paragraphs",
+        "label": "Paragraphs",
+        "value": "",
+        "valueType": "string",
+        "description": "Multiple lines; alignment cycles left → right → center"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaLabel",
+        "label": "CTA label",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA link"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "brandIcon",
+        "label": "Brand icon",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "brandIconAlt",
+        "label": "Brand icon alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "overlayGradient",
+        "label": "Overlay gradient (CSS)",
+        "value": "",
+        "description": "Optional overlay for text contrast"
+      }
+    ]
+  },
+  {
     "id": "socialpromo",
     "fields": [
       {
