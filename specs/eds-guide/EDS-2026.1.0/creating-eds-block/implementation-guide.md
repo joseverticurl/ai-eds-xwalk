@@ -98,6 +98,7 @@ This guide is organized into three parts:
 - [Mandatory preflight before backend generation](#mandatory-preflight-before-backend-generation)
 - [Requirements Gathering](#pre-implementation-gathering-requirements)
 - [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
+- [Figma: Carousel and Swiper behavior (breakpoint audit)](#figma-carousel-and-swiper-behavior-breakpoint-audit)
 - [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
 
 **Part 1: Process Flow (3 Steps)**
@@ -131,6 +132,7 @@ This guide is organized into three parts:
   - [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)
     - [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory)
   - [Carousel Component Snippets (Swiper)](#carousel-component-snippets-swiper)
+    - [Snippet: Navigation and pagination visibility by breakpoint (Figma-driven)](#snippet-navigation-and-pagination-visibility-by-breakpoint-figma-driven)
 - [Part 3c: CSS Implementation](#part-3c-css-implementation)
   - [Layout grid (global design system classes)](#layout-grid-global-design-system-classes)
 - [Part 3d: HTML Implementation](#part-3d-html-implementation)
@@ -193,6 +195,7 @@ When creating a component implementation plan, **always ask for**:
    - Icon usage and placement
    - Button styles and states
    - Form elements (if applicable)
+   - **Carousels / sliders:** Treat as a separate audit (see [Figma: Carousel and Swiper behavior (breakpoint audit)](#figma-carousel-and-swiper-behavior-breakpoint-audit)). Figma MCP (`get_design_context`) usually reflects **one frame at a time** — it does **not** infer that desktop hides arrows while mobile shows them unless you **compare frames** (or variants) explicitly.
 
 3. **Fetch SVG Icons from Figma:**
    - Use Figma MCP (`get_design_context` or `get_screenshot`) to extract icon nodes from the design
@@ -286,6 +289,7 @@ Figma MCP output is usually **px**. If block CSS uses **`rem`**, convert consist
    - Typography: Font families, sizes, weights
    - Spacing: **Every** Auto Layout gap and padding (per container), plus derived spacing from **`get_metadata`** when needed; spacing audit in the implementation plan (see [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
    - Breakpoints: Mobile, tablet, desktop (separate Figma frames → separate spacing rows if values differ)
+   - Carousels: For any slider, fill the [carousel behavior matrix](#figma-carousel-and-swiper-behavior-breakpoint-audit) using **each** breakpoint frame — MCP on one frame does not imply nav/pagination for other widths
    - Icons: Fetch SVG markup from Figma for each icon node; save as icons/<name>.svg
 4. Cross-reference with story requirements
 5. Create implementation plan based on design + requirements
@@ -294,6 +298,32 @@ Figma MCP output is usually **px**. If block CSS uses **`rem`**, convert consist
 ### Supplementary design exports (optional)
 
 PNG/PDF/screenshot exports are **optional add-ons** after Figma URLs are in the plan. Use them for stakeholder handoff, slide decks, or cross-checking screenshots against `get_screenshot`. Spacing audits, token references, and numeric layout in the plan must still come from **Figma MCP** on the linked nodes, not from raster images alone.
+
+### Figma: Carousel and Swiper behavior (breakpoint audit)
+
+**Problem:** Generated reference code from Figma MCP is tuned to the **single node** you requested (`get_design_context` on Desktop **or** Mobile). If the **Desktop** frame omits prev/next arrows and the **Mobile** frame includes them, copying one MCP response yields the wrong Swiper setup (e.g. navigation always on or always off).
+
+**Rule:** For any block using Swiper, complete a **carousel behavior matrix** in the implementation plan **before** coding. Fill it by comparing **every** Figma frame (or variant) that represents a different breakpoint for that block — not from a single MCP call alone.
+
+| Audit question | Source in Figma | Maps to Swiper / implementation |
+|----------------|-----------------|----------------------------------|
+| Are **prev/next** (or chevron) controls **visible** at this width? | Control layers present in Desktop vs Mobile frames; `get_metadata` / layer list; `get_screenshot` | `navigation` on/off or enabled per breakpoint; or keep buttons in DOM and **show/hide with CSS** to match design (see snippet below). |
+| **Pagination** type: dots, fraction, progress bar, none? | Pagination component or text node | `pagination.type` (`bullets`, `fraction`, `progressbar`), or omit pagination |
+| **Slides per view** (peek of next slide? full-bleed card?) | Card width vs frame width; Auto Layout item count per row | `slidesPerView` (number or `'auto'` + slide CSS width), `centeredSlides`, `spaceBetween` from **card gap** in Figma |
+| **Slides per group** / step size | Design intent: one card vs multiple per swipe | `slidesPerGroup` |
+| **Loop** | Design shows infinite strip vs hard ends | `loop`, `loopAdditionalSlides` |
+| **Scrollbar / drag** | Visible track or “grab” affordance | `scrollbar`, `grabCursor` |
+| **Autoplay** | Presence of timer / motion spec | `autoplay` (+ delay from design or authoring) |
+| **Free mode** vs snap | Casual scroll vs strict paging | `freeMode` |
+
+**Workflow with Figma MCP:**
+
+1. Run **`get_design_context`** + **`get_screenshot`** on the **Desktop** carousel frame and again on the **Tablet** / **Mobile** frame(s) when the file uses separate frames per breakpoint.
+2. Use **`get_metadata`** on each frame to list descendants and confirm whether **arrow/chevron icons** and **pagination dots** exist as named layers (designers sometimes hide controls in a variant instead of deleting them — check visibility).
+3. Record the matrix in the implementation plan; **do not** assume Pattern 7 sample values (390 / 768 / 1280 / 1920, `slidesPerView`, `spaceBetween`, navigation, pagination) match your file.
+4. Align Swiper `breakpoints` keys with **project breakpoints** (`styles/styles.css` / design tokens) once counts and gaps are known from Figma — same numbers can appear in both spacing audit and Swiper config.
+
+**Common pattern — arrows on mobile only, hidden on desktop:** This is a **cross-frame** behavior. Implement visibility to match the frame where controls exist (see [Snippet: Navigation and pagination visibility by breakpoint (Figma-driven)](#snippet-navigation-and-pagination-visibility-by-breakpoint-figma-driven)).
 
 ### Requirements Checklist
 
@@ -306,6 +336,7 @@ Before starting implementation, ensure you have:
 - [ ] Content structure mapped to XWalk fields
 - [ ] Similar blocks identified for reference
 - [ ] Breakpoint requirements confirmed
+- [ ] For carousel/slider blocks: [carousel behavior matrix](#figma-carousel-and-swiper-behavior-breakpoint-audit) filled from **all** relevant Figma frames (not a single MCP extraction); navigation/pagination/slides-per-view verified per breakpoint
 - [ ] Accessibility requirements documented
 - [ ] Browser compatibility requirements noted
 - [ ] Performance requirements reviewed (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices))
@@ -1957,6 +1988,8 @@ if (ctaLink) {
 
 **Use Case:** Blocks with carousel/slider behavior (cards, images, testimonials). Uses Swiper JS loaded via `loadScript()`/`loadCSS()` per EDS practice — no jQuery required.
 
+**Figma-driven config (mandatory):** The **`breakpoints`**, **`slidesPerView`**, **`spaceBetween`**, **`navigation`**, **`pagination`**, and **`loop`** values in the example below are **illustrative only**. Derive them from the [carousel behavior matrix](#figma-carousel-and-swiper-behavior-breakpoint-audit) after comparing Desktop, Tablet, and Mobile Figma frames. A design that shows **no arrows on desktop** and **arrows on mobile** must not be implemented from a single `get_design_context` pass that only targeted the desktop frame.
+
 **EDS-specific requirements:**
 - Load Swiper in the block that needs it via `loadScript()`/`loadCSS()` from `scripts/aem.js` — do not add to `head.html`
 - Use `moveInstrumentation()` when transforming DOM (preserves AEM authoring)
@@ -2049,13 +2082,7 @@ export default async function decorate(block) {
       el: paginationEl,
       type: 'fraction',
       clickable: true,
-    },
-    breakpoints: {
-      390: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 16 },
-      768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
-      1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
-      1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
-    },
+    }
   });
 
   // If you sync UI on slide change: call swiper.on('slideChange', ...) here, or add on: { slideChange() { ... this.realIndex ... } }
@@ -2067,7 +2094,7 @@ export default async function decorate(block) {
 - Load Swiper via `loadScript()`/`loadCSS()` in the block — EDS pattern for third-party libs
 - Swiper is vanilla JS (no jQuery required)
 - Use `moveInstrumentation()` when transforming DOM
-- Responsive breakpoints match common EDS viewports (390, 768, 1280, 1920)
+- Responsive `breakpoints` and **controls (nav/pagination)** must match Figma per viewport (see [Figma: Carousel and Swiper behavior (breakpoint audit)](#figma-carousel-and-swiper-behavior-breakpoint-audit)); the sample viewports (390, 768, 1280, 1920) are placeholders until the plan records actual design values
 - Use `createOptimizedPicture()` for slide images (EDS performance)
 - **Do not use global layout grid classes** (`container`, `row`, `col-s-*`, `col-m-*`, `col-xl-*`) on the Swiper root, `.swiper-wrapper`, or `.swiper-slide`. Carousels rely on Swiper’s own flex/track layout; mixing Bootstrap-style grid utilities breaks slide sizing, gutters, and touch behavior. Lay out **content inside** a slide with grid/flex if needed; keep the carousel shell on Swiper’s structure only.
 - **Swiper event handlers must not reference `swiper` before it exists** — See [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory) below. Sliders that violate this throw at runtime and fail to load.
@@ -2179,6 +2206,48 @@ const swiper = new Swiper(swiperWrap, {
   },
 });
 ```
+
+#### Snippet: Navigation and pagination visibility by breakpoint (Figma-driven)
+
+Use when Figma shows **prev/next only on small viewports** (or only on large ones): keep `navigation.nextEl` / `prevEl` wired if Swiper should still expose programmatic navigation, but **match visibility** to the design.
+
+**Option A — CSS (common):** Hide controls at widths where the design omits them. Replace `768px` with the project breakpoint where mobile nav appears.
+
+```css
+/* Example: arrows only below 768px — align with Figma Mobile frame */
+@media (min-width: 768px) {
+  .blockname-swiper .blockname-prev,
+  .blockname-swiper .blockname-next {
+    display: none !important; /* Swiper themes use !important; override as needed */
+  }
+}
+```
+
+When controls are hidden, ensure they are not focus traps (project a11y patterns may add `hidden`, `aria-hidden="true"`, or `tabindex="-1"` on desktop — coordinate with accessibility requirements).
+
+**Option B — Swiper `breakpoints`:** In Swiper 9+, toggle navigation per breakpoint if you prefer API-level enable/disable (verify against your Swiper version):
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  navigation: {
+    nextEl: nextButton,
+    prevEl: prevButton,
+    enabled: true,
+  },
+  pagination: {
+    el: paginationEl,
+    clickable: true,
+    // Omit or set bullets/fraction/progressbar per Figma
+  },
+  breakpoints: {
+    768: {
+      navigation: { enabled: false },
+    },
+  },
+});
+```
+
+**Pagination-only on some breakpoints:** Apply the same idea — CSS hide `.swiper-pagination` where the design has no dots, or rebuild pagination options per breakpoint if using Swiper’s dynamic params. Always reconcile with **`get_screenshot`** on each frame.
 
 #### Snippet: Swiper HTML Structure (EDS)
 
@@ -3135,6 +3204,14 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
    - Test in AEM/Universal Editor authoring interface
    - Verify content renders correctly
 
+8. **Published visual QA (Figma parity)** → After implementation, **prompt the author** to **publish** (or use the stable preview URL) the page that contains the block, then **provide that same URL** back for QA. That URL is what you compare against the **Figma frames** linked in the implementation plan (not a different path unless the block only exists there). Record it in the plan.
+   - **Prompt (implementers / assistants):** Ask the user clearly—for example: *“Please publish the page that shows this block (or confirm the preview URL), and paste the full URL here so we can match it to the Figma designs.”*
+   - Use an **automated browser** (for example **Cursor’s built-in browser / browser automation**) to **navigate** to that URL, **resize** the viewport to each **Figma frame width**, take **viewport screenshots**, and compare them to Figma **`get_screenshot`** or approved exports. Automation keeps checks repeatable and matches the same steps across breakpoints.
+   - Record the **demo page URL** in the block’s implementation plan (same folder pattern as existing plans, for example [socialpromo/.../implementation-plan.md](socialpromo/2026-02-26/v1/implementation-plan.md): `creating-eds-block/<block-or-feature>/<date>/vN/implementation-plan.md`)
+   - Resize the browser to **Figma frame widths** per breakpoint (for example desktop 1440px, mobile 375px when that is the Figma frame — align logical width with the frames used in the spacing audit; avoid comparing 480px live to a 375px export unless differences are expected)
+   - Capture **viewport screenshots** and compare to Figma **`get_screenshot`** output or supplementary PNG exports at the **same logical widths**; when comparing raster diffs, account for **device pixel ratio** (exported PNGs may be larger than CSS pixels)
+   - Resolve or document mismatches using the **spacing audit** and token list; note limits that are not CSS-only (author images, licensed fonts, content copy)
+
 ---
 
 ## Implementation Checklist
@@ -3263,6 +3340,17 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] Test content renders correctly in publish mode
 - [ ] Verify index-based access works (no reliance on data-aue-* attributes)
 
+### Phase 6: Published visual QA (Figma and spacing audit, recommended)
+
+**When:** After publish/preview matches the branch you intend to ship. Use the same host reviewers will use (for example `*.aem.live`).
+
+- [ ] **Prompt the user** — After block work is complete, ask them to **publish** the relevant page (or confirm the canonical preview URL) and to **paste the full URL** used for the live block. That URL must be the one you compare to the **Figma designs** in the plan (same page, same content intent).
+- [ ] **Demo URL** — Add that URL to the block’s `implementation-plan.md` header or a short “Review / QA” subsection
+- [ ] **Automated browser** — Prefer **browser automation** (for example Cursor’s integrated browser) to open the URL, **resize** to each target width, and capture **viewport** screenshots for visual checks against Figma
+- [ ] **Viewport widths** — For each Figma frame in the spacing audit, set the browser to that **CSS pixel width** (and a reasonable height); capture **viewport** screenshots, not only full-page if the frame is hero-sized
+- [ ] **Comparison** — Compare live screenshots to Figma `get_screenshot` or approved exports; tick through gap/padding from the [spacing audit](#figma-pixel-perfect-layout-gaps-and-spacing)
+- [ ] **Sign-off notes** — Record residual gaps (fonts, imagery, DPR, unpublished code) in the implementation plan so reviewers know what is intentional vs open
+
 ---
 
 ## Validation Workflow
@@ -3295,6 +3383,8 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 5. Verify responsive behavior (Part 3); if design is from Figma, spot-check key gaps/padding against the spacing audit and frame screenshots
 6. Verify accessibility (Part 3)
 7. Resolve Sonar / cognitive-complexity feedback on changed files if your CI reports it ([Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
+8. **Published visual QA** — **Prompt the user** to **publish** the page (or supply the stable preview link) and **provide the same URL** you will use to match **Figma** (implementation plan links). On that URL, use an **automated browser** where possible to **navigate**, **resize** to each **Figma frame width**, and capture **viewport screenshots**; compare to Figma screenshots and the **spacing audit** ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)). Document the URL and outcomes in the block’s `implementation-plan.md` ([Phase 6: Published visual QA](#phase-6-published-visual-qa-figma-and-spacing-audit-recommended) in the Implementation Checklist).
+9. If CSS/JS changes are needed after comparison, merge and **re-deploy**, ask for the **updated published URL** if it changed, then repeat step 8 before sign-off.
 
 ---
 
