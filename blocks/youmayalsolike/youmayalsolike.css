@@ -1,0 +1,197 @@
+/* You May Also Like — TCCC-related cards; aura classes hook section background */
+
+.youmayalsolike-wrapper {
+  --youmayalsolike-gap: 20px;
+  --youmayalsolike-card-radius: 16px;
+  --youmayalsolike-card-padding: 24px;
+  --youmayalsolike-title-gap: 30px;
+
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 57px 20px 40px;
+}
+
+.youmayalsolike-heading {
+  margin: 0 auto;
+  max-width: 100%;
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text-color);
+}
+
+.youmayalsolike-grid {
+  display: grid;
+  gap: var(--youmayalsolike-gap);
+  grid-template-columns: 1fr;
+  margin-top: var(--youmayalsolike-title-gap);
+}
+
+/* Aura presets — extend in global styles as design tokens land */
+.youmayalsolike-wrapper.aura-light {
+  background: var(--light-color, #f2f2f2);
+  border-radius: 8px;
+}
+
+.youmayalsolike-wrapper.aura-dark {
+  background: var(--dark-color, #505050);
+  color: #fff;
+}
+
+.youmayalsolike-wrapper.aura-dark .youmayalsolike-heading {
+  color: #fff;
+}
+
+.youmayalsolike-wrapper.aura-creative,
+.youmayalsolike-wrapper.aura-health,
+.youmayalsolike-wrapper.aura-sustainability {
+  background: var(--light-color, #f2f2f2);
+  border-radius: 8px;
+}
+
+.youmayalsolike-card {
+  position: relative;
+  display: block;
+  min-height: 360px;
+  overflow: hidden;
+  border-radius: var(--youmayalsolike-card-radius);
+  text-decoration: none;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.youmayalsolike-card-title {
+  margin-top: auto;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.youmayalsolike-card:hover .youmayalsolike-card-title,
+.youmayalsolike-card:focus-visible .youmayalsolike-card-title {
+  text-decoration: underline;
+}
+
+.youmayalsolike-card-media {
+  position: absolute;
+  inset: 0;
+}
+
+.youmayalsolike-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.youmayalsolike-card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0%) 0%,
+    rgb(0 0 0 / 60%) 100%
+  );
+  pointer-events: none;
+}
+
+.youmayalsolike-card-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 360px;
+  padding: var(--youmayalsolike-card-padding);
+  box-sizing: border-box;
+}
+
+.youmayalsolike-card-category {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 50px;
+  background: #fff;
+  color: var(--text-color);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.youmayalsolike-card-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.youmayalsolike-card-cta-icon {
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* Desktop: hide “Read more” row; entire card is the link */
+@media (width >= 900px) {
+  .youmayalsolike-wrapper {
+    --youmayalsolike-card-radius: 24px;
+    --youmayalsolike-card-padding: 30px;
+    --youmayalsolike-title-gap: 50px;
+    --youmayalsolike-card-min-height: 400px;
+
+    padding: 167px 40px 80px;
+  }
+
+  .youmayalsolike-heading {
+    font-size: 64px;
+    letter-spacing: -0.03em;
+  }
+
+  .youmayalsolike-card {
+    min-height: var(--youmayalsolike-card-min-height);
+  }
+
+  .youmayalsolike-card-body {
+    min-height: var(--youmayalsolike-card-min-height);
+  }
+
+  .youmayalsolike-card-title {
+    font-size: 26px;
+    -webkit-line-clamp: 3;
+  }
+
+  .youmayalsolike-card-cta {
+    display: none;
+  }
+
+  .youmayalsolike-grid.youmayalsolike-layout-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .youmayalsolike-grid.youmayalsolike-layout-triple {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Tablet: 2 columns when three cards */
+@media (width >= 600px) and (width < 900px) {
+  .youmayalsolike-grid.youmayalsolike-layout-triple {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .youmayalsolike-grid.youmayalsolike-layout-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -7,6 +7,22 @@
 
 ---
 
+## Mandatory preflight before backend generation
+
+Ask for and confirm everything below **before** generating block-level JSON (`blocks/<block-name>/_<block-name>.json`) or running `npm run build:json`. Use this as a conversation checklist for implementers and AI assistants.
+
+| # | Item | What to ask or confirm |
+|---|------|------------------------|
+| 1 | **Guide acknowledgment** | Confirm this guide applies: **EDS-2026.1.0**, backend-first workflow, and that the work is in scope (see [Purpose and Scope](#purpose-and-scope)). Note any intentional deviations from the guide. |
+| 2 | **Figma URL(s)** | At least one link to the **component or frame** being built (not only a whole page, unless you then drill to the block node). Separate URLs when desktop, tablet, and mobile use different frames. Capture variant or state if multiple exist, and file access if the file is private. |
+| 3 | **Story and requirements** | User story, acceptance criteria, functional behavior, content and field needs, interactions (hover, carousel, keyboard, etc.), accessibility expectations, and browser or device compatibility. Link or paste the requirements source (for example `specs/requirements/<feature>.md` or ticket text). |
+| 4 | **Backend (XWalk) specifics** | Intended **block folder name** (kebab-case), **simple vs. parent–child** (one folder for parent + children), **author-facing fields** (text, richtext, references, multifields, defaults), any **filter or resource-type** rules, and **similar blocks** in this repo to use as patterns. |
+| 5 | **Design ↔ model alignment** | Enough detail to map Figma layers to **XWalk fields** (what is author-editable versus fixed in code or content fragments). |
+
+**After this checklist:** finish [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements) — including Figma MCP extraction and an implementation plan with URLs in the header — before authoring `_<block-name>.json`.
+
+---
+
 ## Purpose and Scope
 
 This guide provides step-by-step instructions for creating new EDS blocks or enhancing existing ones with XWalk authoring integration. It covers the complete development lifecycle from block creation to AEM authoring validation.
@@ -21,7 +37,6 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 - Complex blocks (nested items, containers)
 - XWalk configuration for AEM authoring
 - Frontend JavaScript and CSS
-- Unit testing (if applicable)
 
 **Out of Scope:**
 - OSGi services
@@ -40,11 +55,16 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 **Critical rules:**
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`); run build command to update root files
 - Use **index-based** structure only — no `data-*` attributes for selection
+- **Layout grid is mandatory** for standard responsive column layouts: use the project’s global grid system (`container`, `row`, `col-*` from e.g. `styles/styles.css`) and apply those classes in structure built by `decorate()` — do not recreate the same layout only in block CSS (ad hoc `display: grid`, arbitrary `%` widths, or custom column math). See [Layout grid (global design system classes)](#layout-grid-global-design-system-classes).
+- **Block CSS must not target grid utilities** — in `blocks/*/*.css`, do not write selectors for global grid classes (`.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*`, or broad `[class*="col-"]` hacks). Style block-specific BEM classes; global styles own the grid. **Exceptions** are rare and must be documented (e.g. Swiper shells where grid must not touch the track; see that pattern’s notes).
+- **Lint before merge:** Run `npm run lint` (ESLint + Stylelint). Keep `decorate()` and helpers within Sonar-friendly **cognitive complexity**; see [Appendix E: Sonar cognitive complexity and project lint rules](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules).
 - **User-provided HTML is mandatory** — validate structure contract before coding
+- **Figma URL is mandatory for the implementation plan** — include specific frame or component links (per breakpoint when layouts differ) in the plan; extract design specs with Figma MCP before treating the plan as complete (see [Pre-Implementation: Gathering Requirements](#pre-implementation-gathering-requirements))
 - Parent-child blocks use **ONE folder** — one JS file and one CSS file for both parent and children
 - **One JS, one CSS per block** — Generate exactly `<block-name>.js` and `<block-name>.css` (matching the folder name). Never create two files with different naming (e.g., `social-promo.js` and `socialpromo.js` is wrong — use only one).
 
 **Jump to:**
+- [Mandatory preflight before backend generation](#mandatory-preflight-before-backend-generation)
 - [Part 1: Process Flow (3 Steps)](#part-1-process-flow-3-steps)
 - [Part 2: Backend Code Generation](#part-2-backend-code-generation)
 - [Part 3: Frontend Code Generation](#part-3-frontend-code-generation)
@@ -55,6 +75,8 @@ This guide provides step-by-step instructions for creating new EDS blocks or enh
 **Key documentation:**
 - [Model Definitions, Fields, and Component Types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) (Experience League)
 - [Content modeling for AEM authoring projects](https://www.aem.live/developer/component-model-definitions) (AEM.live)
+
+**Reference block (parent + child items in one folder):** Study `blocks/ai-component-guide/` (`ai-component-guide.js`, `ai-component-guide.css`) for the full index-based pattern (section rows + card item rows in one `decorate()`). This folder is for the implementation guide only — not registered in XWalk. See [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder).
 
 ---
 
@@ -73,7 +95,10 @@ This guide is organized into three parts:
 ## Table of Contents
 
 **Pre-Implementation**
+- [Mandatory preflight before backend generation](#mandatory-preflight-before-backend-generation)
 - [Requirements Gathering](#pre-implementation-gathering-requirements)
+- [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
+- [Figma: Carousel and Swiper behavior (breakpoint audit)](#figma-carousel-and-swiper-behavior-breakpoint-audit)
 - [Development Workflow: Backend First, Then User-Provided Semantic HTML](#development-workflow-backend-first-then-user-provided-semantic-html)
 
 **Part 1: Process Flow (3 Steps)**
@@ -105,8 +130,11 @@ This guide is organized into three parts:
 - [Part 3a: Core Concepts](#part-3a-core-concepts)
 - [Part 3b: JavaScript Implementation](#part-3b-javascript-implementation)
   - [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)
+    - [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory)
   - [Carousel Component Snippets (Swiper)](#carousel-component-snippets-swiper)
+    - [Snippet: Navigation and pagination visibility by breakpoint (Figma-driven)](#snippet-navigation-and-pagination-visibility-by-breakpoint-figma-driven)
 - [Part 3c: CSS Implementation](#part-3c-css-implementation)
+  - [Layout grid (global design system classes)](#layout-grid-global-design-system-classes)
 - [Part 3d: HTML Implementation](#part-3d-html-implementation)
 - [Part 3e: Best Practices](#part-3e-best-practices-and-reference)
 
@@ -115,6 +143,7 @@ This guide is organized into three parts:
 - [Appendix B: Adobe FE EDS Practices](#appendix-b-adobe-fe-eds-recommended-practices-block-creation)
 - [Appendix C: Key References](#appendix-c-key-references)
 - [Appendix D: Common Issues and Solutions](#appendix-d-common-issues-and-solutions)
+- [Appendix E: Sonar cognitive complexity and project lint rules](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)
 
 ---
 
@@ -126,18 +155,12 @@ Before starting implementation, gather all necessary requirements and design ass
 
 When creating a component implementation plan, **always ask for**:
 
-1. **Design Source (one of the following):**
-   - **Figma Design URL** (preferred when available):
-     - Full Figma file URL or specific frame/component URL
-     - Access permissions (if file is private)
-     - Specific variant or state to implement (if multiple exist)
-     - Breakpoint specifications (mobile, tablet, desktop)
-   - **OR Component Design Images** (when Figma URL is not available):
-     - Design images for **desktop** viewport
-     - Design images for **tablet** viewport (if layout differs)
-     - Design images for **mobile** viewport (if layout differs)
-     - Cursor can analyze images and generate code based on visual design
-     - Provide clear, high-resolution screenshots or exports of the component
+1. **Figma design URL (mandatory for the plan)**  
+   Do **not** write or finalize an implementation plan until you have at least one Figma link that points to the component or frame being built (not only a whole page, unless you then drill to the block node via metadata). Collect:
+   - Full Figma file URL or specific frame/component URL — **separate URLs when desktop, tablet, and mobile use different frames**
+   - Access permissions (if the file is private)
+   - Specific variant or state to implement (if multiple exist)  
+   **Record these URLs in the implementation plan header** (same pattern as existing block plans in this repo). Optional **supplementary** PNG/PDF exports or screenshots may be added for reviewers or offline QA; they **do not** replace Figma as the source of truth for measurements and MCP extraction.
 
 2. **Story/Requirements Document**
    - User story or feature requirements
@@ -156,12 +179,12 @@ When creating a component implementation plan, **always ask for**:
 
 ### Using Figma MCP Tools
 
-**When Figma URL is provided, use Figma MCP tools to extract design information:**
+**Figma MCP is the primary way to extract design information for the plan.** Use these tools once the mandatory Figma URL(s) are available:
 
 1. **Extract Design Specifications:**
-   - Use Figma MCP to fetch the design file
+   - Use Figma MCP to fetch the design: prefer **`get_design_context`** (primary) on the exact component/frame node; supplement with **`get_variable_defs`** (spacing/color/type tokens), **`get_metadata`** (structure with positions and sizes for every descendant), and **`get_screenshot`** (visual truth for verification). See [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing).
    - Extract component structure, layout, and hierarchy
-   - Identify colors, typography, spacing, and sizing
+   - Identify colors, typography, spacing, and sizing — **capture every gap and padding**, not only top-level margins (nested Auto Layout frames each have their own gap and padding)
    - Extract responsive breakpoints and variants
    - Identify interactive states (hover, active, disabled, etc.)
 
@@ -172,6 +195,7 @@ When creating a component implementation plan, **always ask for**:
    - Icon usage and placement
    - Button styles and states
    - Form elements (if applicable)
+   - **Carousels / sliders:** Treat as a separate audit (see [Figma: Carousel and Swiper behavior (breakpoint audit)](#figma-carousel-and-swiper-behavior-breakpoint-audit)). Figma MCP (`get_design_context`) usually reflects **one frame at a time** — it does **not** infer that desktop hides arrows while mobile shows them unless you **compare frames** (or variants) explicitly.
 
 3. **Fetch SVG Icons from Figma:**
    - Use Figma MCP (`get_design_context` or `get_screenshot`) to extract icon nodes from the design
@@ -195,71 +219,129 @@ When creating a component implementation plan, **always ask for**:
    - Map Figma styles to CSS properties
    - Identify reusable components from `shared-components/`
    - Note any design tokens or CSS variables needed
+   - Include a **spacing audit** (container → gap / padding / insets, per breakpoint) so CSS matches Figma numerically; see [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)
+
+### Figma: Pixel-perfect layout, gaps, and spacing
+
+**Goal:** Reproduce Figma’s layout in the block with **matching pixel distances** between elements — every Auto Layout **gap**, **padding**, and meaningful **inset** — not approximate “nice” spacing from the generated reference code alone.
+
+**1. Select the right node(s)**
+
+- Request a Figma URL that points to the **component or frame** you are implementing (not an entire page), so MCP output stays detailed. Large frames may omit or generalize spacing; if only a page URL exists, use **`get_metadata`** on the page to find the child `node-id` for the block frame, then call **`get_design_context`** on that child.
+- Figma often layouts **one breakpoint per frame** (Desktop / Tablet / Mobile). Repeat the workflow **per breakpoint URL** when layouts differ; do not assume one set of gaps applies at all widths.
+
+**2. Call MCP tools in this order (same `fileKey` / parsed `node-id`)**
+
+| Tool | Use for gaps and layout |
+|------|-------------------------|
+| **`get_design_context`** | Primary output: reference layout code, Tailwind-style spacing classes, and hints. **Transcribe numeric spacing from here into the implementation plan** — do not round or substitute token names until you have confirmed project conventions. |
+| **`get_variable_defs`** | Variables bound to the subtree (often **spacing scale**, colors, radii). When padding or gap uses a variable, record **resolved or token name + value** so CSS matches the design system. |
+| **`get_metadata`** | XML with **names, types, x/y, width, height** for the tree. Use this when generated code is vague or a container is large: **derive gaps from sibling geometry** (see below) and confirm padding by comparing frame bounds to first-child bounds. Prefer metadata over guessing from screenshots alone. |
+| **`get_screenshot`** | Visual ground truth. After CSS is written, compare the living block to the screenshot (same width as the frame when possible). |
+
+**3. Map Figma Auto Layout to CSS (every container)**
+
+For **each** Frame or Component with Auto Layout in the subtree:
+
+- **Item spacing** → CSS `gap` (or legacy “space between” patterns only when the DOM cannot be a single flex/grid container).
+- **Padding** → `padding` / logical padding (`padding-block`, `padding-inline`) to match Figma’s top/right/bottom/left.
+- **Alignment / distribution** → `justify-content`, `align-items`, `align-content` (for wrapped rows, also capture **row gap** if Figma exposes wrapped spacing separately from primary gap).
+- **Direction** → `flex-direction` or grid axis; nested frames get **their own** gap/padding — walk the tree and list values per container in the implementation plan.
+
+Do **not** collapse nested gaps into a single outer `gap` if Figma uses stacked Auto Layout frames; that will not match Dev Mode measurements.
+
+**4. Derive gaps from `get_metadata` when needed**
+
+When MCP code omits a gap or you need to verify a number:
+
+- Use sibling rectangles in the parent’s coordinate space (or consistent absolute bounds from metadata). For a **horizontal** row, the horizontal gap between adjacent visible siblings is often: **next.left − (prev.left + prev.width)** after accounting for parent padding (compare parent frame bounds to the first child’s position to infer padding).
+- For **vertical** stacks, use **next.top − (prev.top + prev.height)** analogously.
+- Ignore purely decorative layers (absolute overlays, masks) when they sit between siblings; match **content** frames the design uses for layout.
+- If measurements disagree with `get_design_context`, trust **metadata geometry + Figma Dev Mode** (if the author can confirm) and document the chosen value in the spacing audit.
+
+**5. Spacing audit (required in the implementation plan)**
+
+Add a short table or bullet list, **one row per layout container**, for example:
+
+| Figma layer | Direction | Gap (px) | Padding (T/R/B/L px) | CSS location (BEM class) |
+|-------------|-----------|----------|----------------------|--------------------------|
+| Card content | column | 16 | 24 / 24 / 24 / 24 | `.block__card-inner` |
+| Icon + text row | row | 8 | 0 | `.block__meta` |
+
+Also list **breakpoint-specific** rows when gap or padding changes per frame.
+
+**6. Project units**
+
+Figma MCP output is usually **px**. If block CSS uses **`rem`**, convert consistently (commonly `1rem = 16px` root, unless the project defines otherwise) and **document the conversion** next to each value so reviewers can check against Figma.
+
+**7. Verification**
+
+- Compare compiled layout to **`get_screenshot`** at the frame width.
+- Spot-check a few vertical and horizontal **edge distances** (e.g. text to image, card to card) against the spacing audit.
 
 **Example Workflow:**
 ```
-1. Receive Figma URL: https://www.figma.com/file/...
-2. Use Figma MCP to fetch design file
+1. Receive Figma URL: https://www.figma.com/file/... (prefer node URL for the block frame)
+2. Use Figma MCP: get_design_context; add get_variable_defs, get_metadata, get_screenshot as needed for gaps and verification
 3. Analyze component structure and extract:
-   - Layout: Grid, Flexbox, or custom
+   - Layout: Map multi-column / breakpoint behavior to the **project layout grid** (`container` / `row` / `col-*`); use Flexbox or other layout inside columns or for non-grid patterns only as needed
    - Colors: Primary, secondary, text colors
    - Typography: Font families, sizes, weights
-   - Spacing: Margins, padding values
-   - Breakpoints: Mobile, tablet, desktop
+   - Spacing: **Every** Auto Layout gap and padding (per container), plus derived spacing from **`get_metadata`** when needed; spacing audit in the implementation plan (see [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
+   - Breakpoints: Mobile, tablet, desktop (separate Figma frames → separate spacing rows if values differ)
+   - Carousels: For any slider, fill the [carousel behavior matrix](#figma-carousel-and-swiper-behavior-breakpoint-audit) using **each** breakpoint frame — MCP on one frame does not imply nav/pagination for other widths
    - Icons: Fetch SVG markup from Figma for each icon node; save as icons/<name>.svg
 4. Cross-reference with story requirements
 5. Create implementation plan based on design + requirements
 ```
 
-### Using Design Images (When Figma URL is Not Available)
+### Supplementary design exports (optional)
 
-**When Figma URL is not provided, request component design images and generate code from visual analysis:**
+PNG/PDF/screenshot exports are **optional add-ons** after Figma URLs are in the plan. Use them for stakeholder handoff, slide decks, or cross-checking screenshots against `get_screenshot`. Spacing audits, token references, and numeric layout in the plan must still come from **Figma MCP** on the linked nodes, not from raster images alone.
 
-1. **Request Design Images:**
-   - Ask user: "Please provide component design images for desktop, tablet, and mobile viewports (if layouts differ)."
-   - Desktop image (required) — primary layout reference
-   - Tablet image (if layout differs from desktop)
-   - Mobile image (if layout differs from desktop/tablet)
+### Figma: Carousel and Swiper behavior (breakpoint audit)
 
-2. **Analyze Design Images:**
-   - Use image analysis to extract layout, structure, and hierarchy
-   - Identify colors, typography, spacing, and sizing from visual inspection
-   - Infer responsive breakpoints from layout differences across viewports
-   - Map visual elements to HTML structure and CSS properties
+**Problem:** Generated reference code from Figma MCP is tuned to the **single node** you requested (`get_design_context` on Desktop **or** Mobile). If the **Desktop** frame omits prev/next arrows and the **Mobile** frame includes them, copying one MCP response yields the wrong Swiper setup (e.g. navigation always on or always off).
 
-3. **Generate Implementation:**
-   - Create implementation plan based on image analysis + story requirements
-   - Generate code (HTML structure, CSS, JavaScript) that matches the visual design
-   - Cursor can infer design specifications from images and produce equivalent code
+**Rule:** For any block using Swiper, complete a **carousel behavior matrix** in the implementation plan **before** coding. Fill it by comparing **every** Figma frame (or variant) that represents a different breakpoint for that block — not from a single MCP call alone.
 
-**Example Workflow (Design Images):**
-```
-1. Request: "Please provide design images for desktop, tablet, and mobile."
-2. User provides images (e.g., desktop.png, tablet.png, mobile.png)
-3. Analyze images to extract:
-   - Layout (Grid, Flexbox, stacking order)
-   - Component structure and nesting
-   - Colors, typography, spacing
-   - Breakpoint differences (layout changes at tablet/mobile)
-4. Cross-reference with story requirements
-5. Generate implementation plan and code based on visual design
-```
+| Audit question | Source in Figma | Maps to Swiper / implementation |
+|----------------|-----------------|----------------------------------|
+| Are **prev/next** (or chevron) controls **visible** at this width? | Control layers present in Desktop vs Mobile frames; `get_metadata` / layer list; `get_screenshot` | `navigation` on/off or enabled per breakpoint; or keep buttons in DOM and **show/hide with CSS** to match design (see snippet below). |
+| **Pagination** type: dots, fraction, progress bar, none? | Pagination component or text node | `pagination.type` (`bullets`, `fraction`, `progressbar`), or omit pagination |
+| **Slides per view** (peek of next slide? full-bleed card?) | Card width vs frame width; Auto Layout item count per row | `slidesPerView` (number or `'auto'` + slide CSS width), `centeredSlides`, `spaceBetween` from **card gap** in Figma |
+| **Slides per group** / step size | Design intent: one card vs multiple per swipe | `slidesPerGroup` |
+| **Loop** | Design shows infinite strip vs hard ends | `loop`, `loopAdditionalSlides` |
+| **Scrollbar / drag** | Visible track or “grab” affordance | `scrollbar`, `grabCursor` |
+| **Autoplay** | Presence of timer / motion spec | `autoplay` (+ delay from design or authoring) |
+| **Free mode** vs snap | Casual scroll vs strict paging | `freeMode` |
+
+**Workflow with Figma MCP:**
+
+1. Run **`get_design_context`** + **`get_screenshot`** on the **Desktop** carousel frame and again on the **Tablet** / **Mobile** frame(s) when the file uses separate frames per breakpoint.
+2. Use **`get_metadata`** on each frame to list descendants and confirm whether **arrow/chevron icons** and **pagination dots** exist as named layers (designers sometimes hide controls in a variant instead of deleting them — check visibility).
+3. Record the matrix in the implementation plan; **do not** assume Pattern 7 sample values (390 / 768 / 1280 / 1920, `slidesPerView`, `spaceBetween`, navigation, pagination) match your file.
+4. Align Swiper `breakpoints` keys with **project breakpoints** (`styles/styles.css` / design tokens) once counts and gaps are known from Figma — same numbers can appear in both spacing audit and Swiper config.
+
+**Common pattern — arrows on mobile only, hidden on desktop:** This is a **cross-frame** behavior. Implement visibility to match the frame where controls exist (see [Snippet: Navigation and pagination visibility by breakpoint (Figma-driven)](#snippet-navigation-and-pagination-visibility-by-breakpoint-figma-driven)).
 
 ### Requirements Checklist
 
 Before starting implementation, ensure you have:
 
-- [ ] Design source: Figma design URL (with access) OR component design images (desktop, tablet, mobile)
+- [ ] **Figma design URL(s)** in the implementation plan (with access); optional supplementary exports only
 - [ ] Story/requirements document
-- [ ] Design specifications extracted (via Figma MCP, design images, or manual review)
+- [ ] Design specifications extracted via **Figma MCP** (and manual review of requirements as needed)
+- [ ] Spacing audit completed (per-container gaps/padding, per breakpoint) and cross-checked with metadata or screenshots for pixel parity
 - [ ] Content structure mapped to XWalk fields
 - [ ] Similar blocks identified for reference
 - [ ] Breakpoint requirements confirmed
+- [ ] For carousel/slider blocks: [carousel behavior matrix](#figma-carousel-and-swiper-behavior-breakpoint-audit) filled from **all** relevant Figma frames (not a single MCP extraction); navigation/pagination/slides-per-view verified per breakpoint
 - [ ] Accessibility requirements documented
 - [ ] Browser compatibility requirements noted
 - [ ] Performance requirements reviewed (see [EDS Performance & Lighthouse Best Practices](#eds-performance--lighthouse-best-practices))
 
-**Note:** If Figma URL is not available, request component design images (desktop, tablet, mobile) instead. Cursor can generate code from design images. Ensure story requirements are provided before proceeding. Accurate requirements prevent rework and ensure the component meets design and functional specifications.
+**Note:** Without a Figma URL, **do not create the implementation plan** — obtain the correct frame/component links first (and access), then proceed. Story requirements are still required before implementation. Accurate inputs prevent rework and ensure the component meets design and functional specifications.
 
 ### Development Workflow: Backend First, Then User-Provided Semantic HTML
 
@@ -477,6 +559,7 @@ See [AI Governance Rules (Backend)](#ai-governance-rules-backend). Summary:
 **Reference Examples:**
 - Simple block: See `hero` definition in `component-definition.json` (lines 145-159)
 - Complex block: See `cards` and `card` definitions in `component-definition.json` (lines 85-114)
+- Parent + child items (XWalk): See `cards` and `card` in `component-definition.json` and `blocks/cards/_cards.json` — frontend pattern for multi-row parent + children: `blocks/ai-component-guide/`
 - Models: See `hero` model in `component-models.json` (lines 192-217)
 - Filters: See `cards` filter in `component-filters.json` (lines 21-26)
 
@@ -1363,7 +1446,7 @@ Generate **exactly one** JavaScript file and **exactly one** CSS file per block.
 
 ### Critical: Parent-Child Blocks Use ONE Folder
 
-**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`, `relatedarticles` → `relatedarticle`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.
+**IMPORTANT:** Even when a block has a parent-child relationship in XWalk configuration (e.g., `cards` → `card`), the frontend implementation uses **ONE folder with ONE JavaScript file and ONE CSS file**.
 
 **Pattern:**
 - **XWalk Config (Backend):** Parent block definition + Child block definition (two separate definitions in JSON)
@@ -1373,13 +1456,11 @@ Generate **exactly one** JavaScript file and **exactly one** CSS file per block.
 - `blocks/cards/` - ONE folder
   - `cards.js` - Handles parent container AND all child card items in one `decorate()` function
   - `cards.css` - Styles for parent container AND all child card items
-- `blocks/relatedarticles/` - ONE folder
-  - `relatedarticles.js` - Handles section title (parent) AND all article items (children) in one `decorate()` function
-  - `relatedarticles.css` - Styles for section title AND all article items
+- `blocks/ai-component-guide/` - **Guide reference only** (not in XWalk). Full example: section title row, aura row, and 2–3 card rows in one `decorate()`; study `ai-component-guide.js` and `ai-component-guide.css`.
 
 **Why:** The parent block's `decorate()` function receives all child items as `block.children`, so it processes everything in one place. There is no separate child block folder or files.
 
-**Reference:** `blocks/cards/cards.js`, `blocks/relatedarticles/relatedarticles.js`
+**Reference:** `blocks/ai-component-guide/ai-component-guide.js`, `blocks/ai-component-guide/ai-component-guide.css`; `blocks/cards/cards.js`, `blocks/cards/_cards.json` (XWalk parent + child configuration)
 
 ### Shared Resources
 
@@ -1781,7 +1862,7 @@ export default function decorate(block) {
 **Reference:** 
 - `specs/eds-guide/EDS-2026.1.0/creating-eds-block/tech-design.md` - Pattern 2
 - `blocks/cards/cards.js` - Simple parent-child pattern
-- `blocks/relatedarticles/relatedarticles.js` - Parent title + child items pattern
+- `blocks/ai-component-guide/ai-component-guide.js` - Parent rows (title, optional aura) + child card rows (guide reference implementation)
 
 #### Pattern 3: Async Block with External Content
 
@@ -1907,6 +1988,8 @@ if (ctaLink) {
 
 **Use Case:** Blocks with carousel/slider behavior (cards, images, testimonials). Uses Swiper JS loaded via `loadScript()`/`loadCSS()` per EDS practice — no jQuery required.
 
+**Figma-driven config (mandatory):** The **`breakpoints`**, **`slidesPerView`**, **`spaceBetween`**, **`navigation`**, **`pagination`**, and **`loop`** values in the example below are **illustrative only**. Derive them from the [carousel behavior matrix](#figma-carousel-and-swiper-behavior-breakpoint-audit) after comparing Desktop, Tablet, and Mobile Figma frames. A design that shows **no arrows on desktop** and **arrows on mobile** must not be implemented from a single `get_design_context` pass that only targeted the desktop frame.
+
 **EDS-specific requirements:**
 - Load Swiper in the block that needs it via `loadScript()`/`loadCSS()` from `scripts/aem.js` — do not add to `head.html`
 - Use `moveInstrumentation()` when transforming DOM (preserves AEM authoring)
@@ -1999,14 +2082,11 @@ export default async function decorate(block) {
       el: paginationEl,
       type: 'fraction',
       clickable: true,
-    },
-    breakpoints: {
-      390: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 16 },
-      768: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
-      1280: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 24 },
-      1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
-    },
+    }
   });
+
+  // If you sync UI on slide change: call swiper.on('slideChange', ...) here, or add on: { slideChange() { ... this.realIndex ... } }
+  // above (classic function only — never arrow + outer `swiper` in options). See mandatory subsection below.
 }
 ```
 
@@ -2014,14 +2094,56 @@ export default async function decorate(block) {
 - Load Swiper via `loadScript()`/`loadCSS()` in the block — EDS pattern for third-party libs
 - Swiper is vanilla JS (no jQuery required)
 - Use `moveInstrumentation()` when transforming DOM
-- Responsive breakpoints match common EDS viewports (390, 768, 1280, 1920)
+- Responsive `breakpoints` and **controls (nav/pagination)** must match Figma per viewport (see [Figma: Carousel and Swiper behavior (breakpoint audit)](#figma-carousel-and-swiper-behavior-breakpoint-audit)); the sample viewports (390, 768, 1280, 1920) are placeholders until the plan records actual design values
 - Use `createOptimizedPicture()` for slide images (EDS performance)
+- **Do not use global layout grid classes** (`container`, `row`, `col-s-*`, `col-m-*`, `col-xl-*`) on the Swiper root, `.swiper-wrapper`, or `.swiper-slide`. Carousels rely on Swiper’s own flex/track layout; mixing Bootstrap-style grid utilities breaks slide sizing, gutters, and touch behavior. Lay out **content inside** a slide with grid/flex if needed; keep the carousel shell on Swiper’s structure only.
+- **Swiper event handlers must not reference `swiper` before it exists** — See [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory) below. Sliders that violate this throw at runtime and fail to load.
+
+##### Swiper initialization and event handlers (mandatory)
+
+Swiper’s constructor can emit **`slideChange`**, **`init`**, and internal updates **before** the JavaScript assignment `const swiper = new Swiper(...)` finishes. Any `on: { slideChange }` callback (or similar) that **closes over** the outer constant `swiper` can run in that gap and trigger:
+
+`ReferenceError: Cannot access 'swiper' before initialization` (temporal dead zone).
+
+**Required — use one of these patterns so the slider always initializes reliably:**
+
+1. **`on` callbacks: use a classic `function` and `this`** — Swiper calls handlers with the instance as `this`. Use `this.realIndex` when `loop: true`, otherwise `this.activeIndex` or `this.realIndex` as appropriate.
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  loop: false,
+  on: {
+    slideChange() {
+      const idx = this.realIndex;
+      updatePaginationUI(idx);
+    },
+  },
+});
+```
+
+Do **not** write `on: { slideChange: () => { ... swiper.realIndex ... } }` if the arrow function reads `swiper` from the outer scope while `new Swiper()` is still executing.
+
+2. **Attach listeners after construction** — Safe to close over `swiper` because assignment is complete:
+
+```javascript
+const swiper = new Swiper(swiperWrap, { /* omit slideChange here */ });
+swiper.on('slideChange', () => {
+  const idx = swiper.realIndex;
+  updatePaginationUI(idx);
+});
+```
+
+**Loop mode:** Prefer **`realIndex`** over **`activeIndex`** when syncing UI (thumbnails, brand dots, progress) so the index matches authored slide order.
+
+**Autoplay after manual `slideTo` / `slideToLoop`:** If authors expect the timer to reset when a user picks a slide, call `swiper.autoplay?.stop()` then `swiper.autoplay?.start()` after programmatic navigation (when `autoplay` is enabled).
 
 **Reference:** `blocks/featurecardscarousel/featurecardscarousel.js`
 
 ### Carousel Component Snippets (Swiper)
 
 Reusable Swiper configuration snippets for EDS carousel blocks. Adapt to your block structure and naming.
+
+**Layout:** Do **not** wrap Swiper in `container` / `row` / `col-*` grid classes. Use Swiper markup as shown; apply [layout grid classes](#layout-grid-global-design-system-classes) to **static** sections (e.g. intro copy above the carousel), not to the carousel track itself.
 
 #### Snippet: Load Swiper (EDS Pattern)
 
@@ -2043,6 +2165,8 @@ if (!Swiper) return;
 
 #### Snippet: Swiper Config (EDS Breakpoints)
 
+Do **not** add `slideChange` / `init` handlers that read an outer `const swiper` inside this object unless they use a classic `function` and `this` (see mandatory subsection). Prefer `swiper.on('slideChange', …)` **after** `new Swiper` returns.
+
 ```javascript
 const swiper = new Swiper(swiperWrap, {
   grabCursor: true,
@@ -2063,7 +2187,67 @@ const swiper = new Swiper(swiperWrap, {
     1920: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 32 },
   },
 });
+
+swiper.on('slideChange', () => {
+  const idx = swiper.realIndex;
+  // sync UI — safe: swiper is assigned
+});
 ```
+
+Safe **inside** the options object only if handlers use a classic `function` and **`this`** (never an arrow that reads outer `swiper`):
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  slidesPerView: 1,
+  on: {
+    slideChange() {
+      const idx = this.realIndex;
+    },
+  },
+});
+```
+
+#### Snippet: Navigation and pagination visibility by breakpoint (Figma-driven)
+
+Use when Figma shows **prev/next only on small viewports** (or only on large ones): keep `navigation.nextEl` / `prevEl` wired if Swiper should still expose programmatic navigation, but **match visibility** to the design.
+
+**Option A — CSS (common):** Hide controls at widths where the design omits them. Replace `768px` with the project breakpoint where mobile nav appears.
+
+```css
+/* Example: arrows only below 768px — align with Figma Mobile frame */
+@media (min-width: 768px) {
+  .blockname-swiper .blockname-prev,
+  .blockname-swiper .blockname-next {
+    display: none !important; /* Swiper themes use !important; override as needed */
+  }
+}
+```
+
+When controls are hidden, ensure they are not focus traps (project a11y patterns may add `hidden`, `aria-hidden="true"`, or `tabindex="-1"` on desktop — coordinate with accessibility requirements).
+
+**Option B — Swiper `breakpoints`:** In Swiper 9+, toggle navigation per breakpoint if you prefer API-level enable/disable (verify against your Swiper version):
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  navigation: {
+    nextEl: nextButton,
+    prevEl: prevButton,
+    enabled: true,
+  },
+  pagination: {
+    el: paginationEl,
+    clickable: true,
+    // Omit or set bullets/fraction/progressbar per Figma
+  },
+  breakpoints: {
+    768: {
+      navigation: { enabled: false },
+    },
+  },
+});
+```
+
+**Pagination-only on some breakpoints:** Apply the same idea — CSS hide `.swiper-pagination` where the design has no dots, or rebuild pagination options per breakpoint if using Swiper’s dynamic params. Always reconcile with **`get_screenshot`** on each frame.
 
 #### Snippet: Swiper HTML Structure (EDS)
 
@@ -2082,12 +2266,13 @@ const swiper = new Swiper(swiperWrap, {
 
 #### Snippet: Slide Change Handler (Sync Content)
 
-For blocks that sync content (e.g. center image) when slide changes:
+For blocks that sync content (e.g. center image) when slide changes. **Register after `new Swiper`** (so the handler may use `swiper` safely), or use `on.slideChange` with a **non-arrow** `function` and `this.realIndex` — see [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory).
 
 ```javascript
+const swiper = new Swiper(swiperWrap, { /* options without slideChange */ });
+
 swiper.on('slideChange', () => {
-  const idx = swiper.activeIndex;
-  const slide = swiper.slides[idx];
+  const slide = swiper.slides[swiper.activeIndex];
   const img = centerImageWrap.querySelector('img');
   if (slide?.dataset?.centerImage && img) {
     img.src = slide.dataset.centerImage;
@@ -2095,25 +2280,73 @@ swiper.on('slideChange', () => {
   }
 });
 
-// Click on slide to go to
+// Click to go to slide; restart autoplay timer if enabled
 swiperWrap.querySelectorAll('.blockname-slide').forEach((el, idx) => {
-  el.addEventListener('click', () => swiper.slideTo(idx));
+  el.addEventListener('click', () => {
+    swiper.slideTo(idx);
+    const { autoplay } = swiper;
+    if (autoplay) {
+      autoplay.stop();
+      autoplay.start();
+    }
+  });
+});
+```
+
+Alternative inside the constructor options (must use `this`, not `swiper`):
+
+```javascript
+const swiper = new Swiper(swiperWrap, {
+  on: {
+    slideChange() {
+      const idx = this.realIndex;
+      const slide = this.slides[this.activeIndex];
+      const img = centerImageWrap.querySelector('img');
+      if (slide?.dataset?.centerImage && img) {
+        img.src = slide.dataset.centerImage;
+        img.alt = slide.dataset.centerImageAlt || '';
+      }
+    },
+  },
 });
 ```
 
 #### Snippet: Autoplay (Configurable Delay)
+
+Add **`slideChange` / UI sync only after** `new Swiper` or via `on.slideChange() { … this.realIndex … }` — not as an arrow in `on` that closes over `swiper` (see [Swiper initialization and event handlers (mandatory)](#swiper-initialization-and-event-handlers-mandatory)).
 
 ```javascript
 // carouselLagSec from authoring (e.g. 1–5, default 4)
 const carouselLagSec = Math.min(5, Math.max(1, Number.parseInt(getText(rows[9]?.children?.[0]) || '4', 10) || 4));
 
 const swiper = new Swiper(swiperWrap, {
-  // ... other options
+  // ... other options (navigation, pagination, breakpoints, etc.)
   autoplay: {
     delay: carouselLagSec * 1000,
     disableOnInteraction: false,
   },
 });
+
+swiper.on('slideChange', () => {
+  // optional: progress UI using swiper.realIndex
+});
+```
+
+After **`slideTo` / `slideToLoop`** (custom dots, thumbnails), reset the autoplay clock when needed:
+
+```javascript
+function goToSlide(idx) {
+  if (swiper.params.loop && typeof swiper.slideToLoop === 'function') {
+    swiper.slideToLoop(idx);
+  } else {
+    swiper.slideTo(idx);
+  }
+  const { autoplay } = swiper;
+  if (autoplay) {
+    autoplay.stop();
+    autoplay.start();
+  }
+}
 ```
 
 ### Anti-Patterns to Avoid
@@ -2268,6 +2501,8 @@ Automatically added by `decorateBlock()`:
 
 **One CSS file per block:** Create only `<block-name>.css` (matching the folder name). Never create two CSS files (e.g., `social-promo.css` and `socialpromo.css`).
 
+**Layout grid (mandatory):** Standard responsive columns **must** use the global `container` / `row` / `col-*` system from project styles, applied in `decorate()` — see [Layout grid (global design system classes)](#layout-grid-global-design-system-classes). **Do not** put selectors for those grid classes in block CSS except rare documented exceptions.
+
 ### CSS File Structure
 
 **Path:** `blocks/<block-name>/<block-name>.css`
@@ -2371,6 +2606,82 @@ export default function decorate(block) {
 
 **Reference:** `blocks/hero/hero.css`
 
+### Layout grid (global design system classes)
+
+**Mandatory — use the defined grid system:** When the project provides **Bootstrap-style layout utilities** in global styles (e.g. `styles/styles.css`), you **must** use them for responsive column layouts that match the design grid. Apply `container`, `row`, and `col-*` in the DOM produced by `decorate()` (or equivalent). Do **not** implement the same column behavior solely in block CSS (e.g. custom `display: grid` templates, hand-tuned `%` widths, or per-breakpoint column fractions) when the global utilities already express that pattern — that duplicates the system, breaks alignment with shared gutters/max-width/breakpoints, and makes blocks harder to maintain.
+
+**Mandatory — grid class names do not belong in block CSS:** The file `blocks/<block-name>/<block-name>.css` **must not** declare selectors that target global grid utilities — for example `.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*`, or generic `[class*="col-"]`. Those classes are applied in markup/JavaScript; block stylesheets should style **block-specific** classes (e.g. `.block-name`, `.block-name__*`) for visuals, spacing inside a cell, media, typography, and states. Global CSS owns grid behavior.
+
+**Exceptions (document when used):** Only in **rare** cases may block CSS interact with layout near grid nodes — for example, **carousels (Swiper)** must not use grid classes on the swiper root, wrapper, or slides (see [Pattern 7: Carousel Block with Swiper](#pattern-7-carousel-block-with-swiper)); put grid on **static** siblings only. If you truly need a one-off override, document why and prefer a wrapper class or a global token change over re-styling `.row` / `.col-*` from a block sheet.
+
+**Class names (typical project convention):**
+
+| Class | Role |
+|-------|------|
+| `container` | Centers content, applies horizontal padding and max width aligned to the design grid. |
+| `row` | Flex row with negative horizontal margin so column gutters align. |
+| `col-s-*` | Mobile tier — **N = 4** columns (widths in 25% steps: `col-s-1` … `col-s-4`). |
+| `col-m-*` | Tablet tier (e.g. `width >= 768px`) — **N = 8** columns (`col-m-1` … `col-m-8`). |
+| `col-xl-*` | Desktop tier (e.g. `width >= 1280px`) — **N = 12** columns (`col-xl-1` … `col-xl-12`). |
+
+**Rules:**
+- Apply **`container`** once** as the outer width constraint; put **`row`** inside it; put **`col-*`** elements as direct children of **`row`**.
+- Combine breakpoints as needed: e.g. full width on mobile, half on tablet, third on desktop — `col-s-4 col-m-4 col-xl-4` (same semantic span at each tier, different **N** per tier).
+- **Carousels (Swiper):** Do **not** put `row` / `col-*` / `container` on Swiper’s root, wrapper, or slides. Style slides with block classes and Swiper options (`slidesPerView`, `spaceBetween`). You may still wrap **non-carousel** siblings (headings, CTAs) in `container` + `row` + `col-*`.
+
+**Sample: two-column block content (HTML you might build in `decorate()`):**
+
+```html
+<div class="container">
+  <div class="row">
+    <div class="col-s-4 col-m-4 col-xl-6">
+      <div class="block-name__media"><!-- image or video --></div>
+    </div>
+    <div class="col-s-4 col-m-4 col-xl-6">
+      <div class="block-name__copy"><!-- title, text, buttons --></div>
+    </div>
+  </div>
+</div>
+```
+
+**Sample: three equal columns on desktop (`col-xl-4` each); on tablet (8 columns) use two half-width rows or full-width stack — here each card is full width on small/tablet, one-third on xl:**
+
+```html
+<div class="container">
+  <div class="row">
+    <article class="col-s-4 col-m-8 col-xl-4 block-name__card">...</article>
+    <article class="col-s-4 col-m-8 col-xl-4 block-name__card">...</article>
+    <article class="col-s-4 col-m-8 col-xl-4 block-name__card">...</article>
+  </div>
+</div>
+```
+
+(`col-m-8` = 100% width on the 8-column tier so cards stack; `col-xl-4` = 4/12 per card on desktop.)
+
+**Sample: `decorate()` adding grid classes (index-based contract):**
+
+```javascript
+export default function decorate(block) {
+  const outer = document.createElement('div');
+  outer.className = 'container';
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  const colMedia = document.createElement('div');
+  colMedia.className = 'col-s-4 col-m-4 col-xl-7';
+  const colText = document.createElement('div');
+  colText.className = 'col-s-4 col-m-4 col-xl-5';
+
+  // ... populate colMedia / colText from block.children ...
+
+  row.append(colMedia, colText);
+  outer.append(row);
+  block.replaceChildren(outer);
+}
+```
+
+**Reference:** Global layout rules live in `styles/styles.css` (search for `.container`, `.row`, `.col-s-`, `.col-m-`, `.col-xl-`). If your fork uses different breakpoints or column counts, align snippets with that file.
+
 ### Image Sizing and Aspect Ratios
 
 **When design specifies exact image dimensions or aspect ratios, use CSS `aspect-ratio` property:**
@@ -2405,7 +2716,7 @@ export default function decorate(block) {
 - Use `aspect-ratio` CSS property when design specifies exact ratios (e.g., 670/746)
 - Set both `width` and `height: 100%` on image when using aspect-ratio on wrapper
 - Use `object-fit: cover` to maintain aspect ratio while filling container
-- Always verify image dimensions match design specifications (from Figma or design images)
+- Always verify image dimensions match design specifications (from Figma; supplementary exports optional)
 
 ---
 
@@ -2497,6 +2808,7 @@ export default function decorate(block) {
 - ❌ **DON'T:** Use global variables, skip error handling, or mutate shared components.
 - ❌ **DON'T:** Access `children[index]` without null checks or forget `moveInstrumentation()` when transforming DOM.
 - ❌ **DON'T:** Block main thread or use sync operations for external resources.
+- ❌ **DON'T:** Ship a single monolithic `decorate()` with deeply nested `if`/`for`/`switch` that will fail Sonar **cognitive complexity** (S3776) — extract pure helpers and use early returns (see [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)).
 
 #### ✅ CSS Best Practices
 
@@ -2506,6 +2818,7 @@ export default function decorate(block) {
 - ✅ **DO:** Follow responsive design patterns
 - ✅ **DO:** Use CSS variables for theming
 - ✅ **DO:** Keep styles scoped to block
+- ✅ **DO:** Run **`npm run lint`** and fix ESLint/Stylelint issues before opening a PR; follow [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules) for Sonar cognitive-complexity expectations in `decorate()` and helpers.
 
 #### ❌ CSS Anti-patterns
 
@@ -2856,10 +3169,10 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ### Complete Workflow
 
 1. **Requirements Gathering** → Gather design source, story requirements, and design specifications (Pre-Implementation)
-   - Request Figma design URL OR component design images (desktop, tablet, mobile)
+   - Request **Figma frame/component URL(s)** (mandatory before the implementation plan; per breakpoint when frames differ)
    - Request story/requirements document
-   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
-   - Analyze design and map to implementation plan
+   - Use Figma MCP to extract specifications; follow [Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing) (`get_design_context`, `get_variable_defs`, `get_metadata`, `get_screenshot`)
+   - Analyze design and map to implementation plan (include spacing audit)
 
 2. **Backend Configuration (Generate First)** → Add definitions/models/filters to block-level JSON, run build (Part 2)
    - Add definition, model, and filter to `blocks/<block-name>/_<block-name>.json`
@@ -2880,6 +3193,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 5. **CSS** → Style the block (`<block-name>.css`) based on user-provided HTML (Part 3)
    - Target the transformed structure
+   - Apply gap/padding from the **spacing audit** (Figma) so layout matches design numerically; verify against `get_screenshot` at frame width when available
    - Test with user-provided HTML to verify styling
 
 6. **Component Registration** → Verify JSON syntax and configuration (Part 2)
@@ -2890,16 +3204,25 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
    - Test in AEM/Universal Editor authoring interface
    - Verify content renders correctly
 
+8. **Published visual QA (Figma parity)** → After implementation, **prompt the author** to **publish** (or use the stable preview URL) the page that contains the block, then **provide that same URL** back for QA. That URL is what you compare against the **Figma frames** linked in the implementation plan (not a different path unless the block only exists there). Record it in the plan.
+   - **Prompt (implementers / assistants):** Ask the user clearly—for example: *“Please publish the page that shows this block (or confirm the preview URL), and paste the full URL here so we can match it to the Figma designs.”*
+   - Use an **automated browser** (for example **Cursor’s built-in browser / browser automation**) to **navigate** to that URL, **resize** the viewport to each **Figma frame width**, take **viewport screenshots**, and compare them to Figma **`get_screenshot`** or approved exports. Automation keeps checks repeatable and matches the same steps across breakpoints.
+   - Record the **demo page URL** in the block’s implementation plan (same folder pattern as existing plans, for example [socialpromo/.../implementation-plan.md](socialpromo/2026-02-26/v1/implementation-plan.md): `creating-eds-block/<block-or-feature>/<date>/vN/implementation-plan.md`)
+   - Resize the browser to **Figma frame widths** per breakpoint (for example desktop 1440px, mobile 375px when that is the Figma frame — align logical width with the frames used in the spacing audit; avoid comparing 480px live to a 375px export unless differences are expected)
+   - Capture **viewport screenshots** and compare to Figma **`get_screenshot`** output or supplementary PNG exports at the **same logical widths**; when comparing raster diffs, account for **device pixel ratio** (exported PNGs may be larger than CSS pixels)
+   - Resolve or document mismatches using the **spacing audit** and token list; note limits that are not CSS-only (author images, licensed fonts, content copy)
+
 ---
 
 ## Implementation Checklist
 
 ### Phase 0: Pre-Implementation - Requirements Gathering (MANDATORY)
-- [ ] Request and receive design source: Figma design URL OR component design images (desktop, tablet, mobile)
+- [ ] Request and receive **Figma design URL(s)** (with access); record in the implementation plan header
 - [ ] Request and receive story/requirements document
-- [ ] Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
-- [ ] Analyze component structure from design (Figma or images)
+- [ ] Use Figma MCP tools to extract specifications
+- [ ] Analyze component structure from Figma
 - [ ] Extract design tokens (colors, typography, spacing)
+- [ ] Complete spacing audit (`get_design_context` + `get_variable_defs` + `get_metadata` as needed); document per-container gap/padding per breakpoint; verify against screenshot ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
 - [ ] Map design elements to HTML structure
 - [ ] Map design styles to CSS properties
 - [ ] Identify content fields needed for XWalk configuration
@@ -2981,14 +3304,21 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] **NEVER** use `data-aue-*` or `data-gen-*` attributes for element identification
 - [ ] **Run `npm run build:json`** after adding/updating block config (root files are build outputs)
 - [ ] **NEVER** create separate child block folders or files — see [Critical: Parent-Child Blocks Use ONE Folder](#critical-parent-child-blocks-use-one-folder)
+- [ ] **Layout grid:** For standard multi-column responsive layouts, use the global grid (`container` / `row` / `col-*`) in the structure built by `decorate()` per [Layout grid (global design system classes)](#layout-grid-global-design-system-classes) — not a block-only reimplementation in CSS
 - [ ] **Test with user-provided HTML** to verify extraction logic works correctly
 
 ### Phase 3: Frontend - CSS Styling
 - [ ] Create `blocks/<block-name>/<block-name>.css` (ONE file only — never create two CSS files with different naming, e.g., social-promo.css and socialpromo.css)
+- [ ] **No grid utility selectors** in block CSS (do not target `.container`, `.row`, `.col-s-*`, `.col-m-*`, `.col-xl-*` in `*.css`) unless there is a **documented exception**; rely on global styles for grid and style block BEM classes only
 - [ ] Style block structure (parent container and child items in same file)
 - [ ] Add responsive breakpoints
 - [ ] **Test with user-provided HTML** to verify styling works correctly
 - [ ] Test in AEM authoring mode
+
+### Phase 3b: Lint, Sonar cognitive complexity, and quality gates
+- [ ] Run **`npm run lint`** from the repo root and **resolve all errors** (JS/JSON via ESLint, CSS via Stylelint). Use **`npm run lint:fix`** where safe to apply autofixes.
+- [ ] Keep **`decorate()`** and extracted helpers **readable for Sonar**: avoid excessive nesting; prefer guard clauses and small named functions so **cognitive complexity** stays within typical Sonar thresholds (see [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules)).
+
 
 ### Phase 4: Integration - Component Registration
 - [ ] Verify component definition appears in `component-definition.json`
@@ -3010,11 +3340,16 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - [ ] Test content renders correctly in publish mode
 - [ ] Verify index-based access works (no reliance on data-aue-* attributes)
 
-### Phase 6: Frontend - Unit Testing (If Applicable)
-- [ ] Create `blocks/<block-name>/<block-name>.test.js`
-- [ ] Test data transformation functions
-- [ ] Test validation logic
-- [ ] Test edge cases
+### Phase 6: Published visual QA (Figma and spacing audit, recommended)
+
+**When:** After publish/preview matches the branch you intend to ship. Use the same host reviewers will use (for example `*.aem.live`).
+
+- [ ] **Prompt the user** — After block work is complete, ask them to **publish** the relevant page (or confirm the canonical preview URL) and to **paste the full URL** used for the live block. That URL must be the one you compare to the **Figma designs** in the plan (same page, same content intent).
+- [ ] **Demo URL** — Add that URL to the block’s `implementation-plan.md` header or a short “Review / QA” subsection
+- [ ] **Automated browser** — Prefer **browser automation** (for example Cursor’s integrated browser) to open the URL, **resize** to each target width, and capture **viewport** screenshots for visual checks against Figma
+- [ ] **Viewport widths** — For each Figma frame in the spacing audit, set the browser to that **CSS pixel width** (and a reasonable height); capture **viewport** screenshots, not only full-page if the frame is hero-sized
+- [ ] **Comparison** — Compare live screenshots to Figma `get_screenshot` or approved exports; tick through gap/padding from the [spacing audit](#figma-pixel-perfect-layout-gaps-and-spacing)
+- [ ] **Sign-off notes** — Record residual gaps (fonts, imagery, DPR, unpublished code) in the implementation plan so reviewers know what is intentional vs open
 
 ---
 
@@ -3022,8 +3357,8 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 ### Pre-Implementation
 1. **Gather Requirements** (see Pre-Implementation: Gathering Requirements section)
-   - Request Figma URL OR component design images (desktop, tablet, mobile) and story requirements
-   - Use Figma MCP tools (if Figma URL) or analyze design images to extract specifications
+   - Request **Figma URL(s)** and story requirements (Figma is mandatory for the implementation plan)
+   - Use Figma MCP to extract specifications; include the spacing audit ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing))
    - Analyze design and create implementation plan
 2. Review similar blocks in codebase
 3. Identify reusable components/models
@@ -3035,16 +3370,21 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 2. Verify field order in XWalk model matches expected JavaScript access pattern (Part 2)
 3. Test JavaScript in browser console (Part 3)
 4. Test CSS in AEM authoring mode (Part 3)
+5. Run **`npm run lint`** frequently; fix ESLint/Stylelint violations as you go (Part 3, [Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
 
 ### Post-Implementation
-1. Verify JSON syntax is valid in all three configuration files (Part 2)
-2. Verify component registration (Part 2)
+1. Run **`npm run lint`** and ensure **zero errors** before PR (`lint:js` + `lint:css`)
+2. Verify JSON syntax is valid in all three configuration files (Part 2)
+3. Verify component registration (Part 2)
    - Check definition in `component-definition.json`
    - Check model in `component-models.json`
    - Check filter in `component-filters.json` (if applicable)
-3. Test in AEM authoring interface
-4. Verify responsive behavior (Part 3)
-5. Verify accessibility (Part 3)
+4. Test in AEM authoring interface
+5. Verify responsive behavior (Part 3); if design is from Figma, spot-check key gaps/padding against the spacing audit and frame screenshots
+6. Verify accessibility (Part 3)
+7. Resolve Sonar / cognitive-complexity feedback on changed files if your CI reports it ([Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
+8. **Published visual QA** — **Prompt the user** to **publish** the page (or supply the stable preview link) and **provide the same URL** you will use to match **Figma** (implementation plan links). On that URL, use an **automated browser** where possible to **navigate**, **resize** to each **Figma frame width**, and capture **viewport screenshots**; compare to Figma screenshots and the **spacing audit** ([Figma: Pixel-perfect layout, gaps, and spacing](#figma-pixel-perfect-layout-gaps-and-spacing)). Document the URL and outcomes in the block’s `implementation-plan.md` ([Phase 6: Published visual QA](#phase-6-published-visual-qa-figma-and-spacing-audit-recommended) in the Implementation Checklist).
+9. If CSS/JS changes are needed after comparison, merge and **re-deploy**, ask for the **updated published URL** if it changed, then repeat step 8 before sign-off.
 
 ---
 
@@ -3111,7 +3451,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 - Use CSS `aspect-ratio` property when design specifies exact ratios
 - Set `aspect-ratio` on image wrapper, not just width
 - Use `object-fit: cover` to maintain aspect ratio while filling container
-- Verify dimensions match design specifications (from Figma or design images)
+- Verify dimensions match design specifications (from Figma; supplementary exports optional)
 - Reference: See "Image Sizing and Aspect Ratios" section above
 
 ### Backend/Configuration Issues
@@ -3162,6 +3502,82 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
   "filter": "relatedcards"     // ✅ Required for child items
 }
 ```
+
+---
+
+## Appendix E: Sonar cognitive complexity and project lint rules
+
+This project enforces **ESLint** and **Stylelint** locally. CI or SonarQube / SonarCloud may additionally enforce **cognitive complexity** and other maintainability rules. **Block code should pass local lint and stay easy for Sonar to analyze.**
+
+### Project lint commands (package.json)
+
+| Command | What it runs |
+|---------|----------------|
+| `npm run lint` | ESLint (`lint:js`) **and** Stylelint (`lint:css`) — **run before every PR** |
+| `npm run lint:js` | ESLint on `.js`, `.mjs`, `.json` (Airbnb base + JSON + xwalk plugin) |
+| `npm run lint:css` | Stylelint on `blocks/**/*.css` and `styles/*.css` |
+| `npm run lint:fix` | Autofix where rules allow (then re-run `npm run lint` to confirm) |
+
+**Config files:** `.eslintrc.js` (extends `airbnb-base`, `plugin:json/recommended`, `plugin:xwalk/recommended`; project overrides such as `import/extensions` for `.js` imports and `linebreak-style: unix`), `.stylelintrc.json` (extends `stylelint-config-standard`).
+
+### Ensuring code follows lint rules
+
+1. **Before opening a PR:** Run `npm run lint` from the repository root and fix **all** reported errors (warnings should be cleared or justified per team policy).
+2. **IDE:** Enable ESLint and Stylelint integrations so issues surface while editing.
+3. **Block scope:** New or edited files under `blocks/<block-name>/` must be covered by the globs above; global styles under `styles/` are included in Stylelint.
+4. **Do not disable rules** broadly (`eslint-disable` / `stylelint-disable`) unless there is a documented exception on a **minimal** line range.
+
+### Sonar: cognitive complexity (and related rules)
+
+Sonar’s **JavaScript Cognitive Complexity** rule is commonly **S3776** (title: *Cognitive Complexity of functions should not be too high*). Default thresholds are often **15** on the function, with increments for nested control flow. Exact gates depend on your SonarQube/SonarCloud **quality profile**—align with your team’s profile.
+
+**What increases cognitive complexity (simplified):**
+
+- `if`, `else if`, `else`, `for`, `while`, `do`, `switch` cases, `catch`, and logical combinations inside them
+- **Nesting** increases the cost more than sequential statements at the top level
+
+**Patterns that keep `decorate()` and helpers Sonar-friendly:**
+
+| Practice | Why |
+|----------|-----|
+| **Extract** row/cell parsing into `function parseSlideRow(row) { ... }` (or a module-local helper) | Shrinks one giant function with many nested branches |
+| **Early returns** (`if (!rows.length) return;`) | Reduces `else` depth |
+| **Guard clauses** at the top of each helper | Avoids a single deep `if` tree |
+| **Avoid `switch` on large enums** in one block | Prefer a map `const handlers = { ... }` or separate functions |
+| **Limit loops inside loops** | If unavoidable, extract the inner loop to a named function |
+
+**Related Sonar rules** often seen with block JS (names vary by language plugin):
+
+- **Control flow nesting** (e.g. depth of `if`/`for` chains) — keep nesting shallow; extract inner blocks.
+- **Too many lines** in a single function — split decoration into `buildHeader`, `buildItems`, etc.
+
+**Example refactor (conceptual):**
+
+```javascript
+// ❌ Harder for Sonar: one nested decorate() with many branches
+
+// ✅ Prefer: thin decorate() + small helpers
+function extractCta(row) {
+  const linkCell = row?.children?.[2];
+  const linkEl = linkCell?.querySelector?.('a') ?? linkCell?.querySelector?.('p a');
+  const href = linkEl?.getAttribute?.('href') || linkEl?.href || '';
+  if (!href) return null;
+  return { href, text: linkEl?.textContent?.trim() || 'Learn more' };
+}
+
+export default function decorate(block) {
+  const rows = [...block.children];
+  if (rows.length < 1) return;
+  const cta = extractCta(rows[0]);
+  // ...
+}
+```
+
+### References
+
+- **Sonar rule:** Search your SonarQube/SonarCloud **Rules** for *cognitive complexity* (JavaScript) — e.g. S3776.
+- **Local lint:** `package.json` scripts (`lint`, `lint:js`, `lint:css`, `lint:fix`).
+- **ESLint:** [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript) (base config used by this repo).
 
 ---
 
@@ -3225,7 +3641,8 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 
 ### Example Blocks to Study
 - **Simple:** `blocks/hero/` - Basic structure
-- **Complex:** `blocks/feature/` - Parent with items
+- **Parent + child (guide reference):** `blocks/ai-component-guide/` — section rows + card items in one `decorate()` (not registered in XWalk; for documentation only)
+- **Carousel / multi-card:** `blocks/cards/`, `blocks/featurecardscarousel/`
 - **Async:** `blocks/fragment/` - External content loading
 - **Interactive:** `blocks/header/` - Event handlers
 
@@ -3249,7 +3666,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ## Next Steps
 
 1. **Review this guide** - Start with Part 1 for backend, Part 2 for frontend
-2. **Gather design source** - Request Figma URL OR component design images (desktop, tablet, mobile); Cursor can generate code from either
+2. **Gather design source** - Obtain **Figma URL(s)** for the block (mandatory for the implementation plan); use Figma MCP to extract specs
 3. **Study similar blocks** - Reference examples provided in each section
 4. **Use AI codebase analysis** - Cursor can analyze existing blocks for patterns
 5. **Follow checklist** - Use the implementation checklist step by step
@@ -3259,7 +3676,7 @@ Adobe recommendations that directly help when creating blocks. **Reference:** [B
 ---
 
 **Document Version:** EDS-2026.1.0  
-**Last Updated:** 2026-02-25  
+**Last Updated:** 2026-03-27  
 **Maintained By:** AI Documentation Engineer  
 **Review Status:** Ready for Use
 
@@ -3272,7 +3689,7 @@ This implementation guide provides comprehensive step-by-step instructions for c
 1. **Two files required per block:** JavaScript and CSS (in `blocks/<block-name>/`)
    - **CRITICAL:** Even for parent-child blocks, use ONE folder with ONE JS file and ONE CSS file
    - Parent and child items are processed in the same `decorate()` function
-   - Example: `blocks/cards/` handles both parent container and all child card items
+   - Examples: `blocks/cards/` (parent + child cards); `blocks/ai-component-guide/` (guide reference: title/aura rows + card items).
 2. **XWalk configuration:** Add definitions/models/filters to block-level JSON (`blocks/<block-name>/_<block-name>.json`), run `npm run build:json` to update:
    - `component-definition.json` - Component definitions (build output)
    - `component-models.json` - Field models (build output)
@@ -3282,6 +3699,7 @@ This implementation guide provides comprehensive step-by-step instructions for c
 5. **Critical utility:** Always use `moveInstrumentation()` when transforming DOM
 6. **Testing:** Test with user-provided HTML first, then manual testing in browser and AEM authoring interface
 7. **Patterns:** Follow established patterns from existing blocks
+8. **Lint & Sonar:** Run `npm run lint` before PR; structure `decorate()` so cognitive complexity stays manageable ([Appendix E](#appendix-e-sonar-cognitive-complexity-and-project-lint-rules))
 
 **CRITICAL:** 
 - Use block-level JSON files (`blocks/<block-name>/_<block-name>.json`). Run `npm run build:json` to update the three root-level files. Do NOT edit root files directly.

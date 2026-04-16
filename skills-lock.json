@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "eds-block-accessibility": {
+      "source": "Ogilvy-Worldwide/dev-agent-mcp-server",
+      "sourceType": "github",
+      "computedHash": "b5e1135913f7471fdb812406d6f1846263ce63169d57a300fafa1bdf299ac4d4"
+    },
+    "eds-block-frontend": {
+      "source": "Ogilvy-Worldwide/dev-agent-mcp-server",
+      "sourceType": "github",
+      "computedHash": "0c142fad01e13e1d12f380d356c4960921ca242d1f7db235aae89bd9c28c1260"
+    },
+    "eds-block-performance": {
+      "source": "Ogilvy-Worldwide/dev-agent-mcp-server",
+      "sourceType": "github",
+      "computedHash": "f03edac4dfc7de3ad739c7bbe9f30b6f129ce3ea8bda247af3ab7ce809d71d73"
+    },
+    "eds-block-quality": {
+      "source": "Ogilvy-Worldwide/dev-agent-mcp-server",
+      "sourceType": "github",
+      "computedHash": "f6b998a9035e7f021c492b9956bf7701871f6a850f46d4eb29f7e695fca201bb"
+    },
+    "eds-planning-and-process": {
+      "source": "Ogilvy-Worldwide/dev-agent-mcp-server",
+      "sourceType": "github",
+      "computedHash": "bf2a135e4676fb238636ed3e0d249936e316e0510d8a79ea82df6f04cb3957a1"
+    },
+    "eds-xwalk-backend": {
+      "source": "Ogilvy-Worldwide/dev-agent-mcp-server",
+      "sourceType": "github",
+      "computedHash": "fd709fa5bdb5107cacd069a3167c7e0ac8aad40db7041817c3621964236581a1"
+    }
+  }
+}
