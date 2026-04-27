@@ -1,11 +1,37 @@
 /* stylelint-disable max-line-length */
-/* TCCC UnityHeadline (Figma: Medium 600) — add licensed tccc-unityheadline-medium.woff2 and update src, or point src at real files. */
+
+/* TCCC UnityHeadline — Figma: Medium 600; body/regular 400. Use format('truetype') for .ttf (not 'ttf', which is invalid in browsers). */
 @font-face {
-  font-family: 'TCCC-UnityHeadline';
+  font-family: TCCC-UnityHeadline;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/tccc-unity-head-regular.ttf') format('truetype');
+}
+
+/* Medium: headings (600) and any medium text (500). Split for browsers without font-weight range on @font-face. */
+@font-face {
+  font-family: TCCC-UnityHeadline;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/tccc-unity-head-medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: TCCC-UnityHeadline;
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('../fonts/tccc-unity-head-regular.ttf') format('ttf');
+  src: url('../fonts/tccc-unity-head-medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: TCCC-UnityHeadline;
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('../fonts/tccc-unity-head-light.ttf') format('truetype');
 }
 
 @font-face {

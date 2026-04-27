@@ -100,10 +100,8 @@ async function loadEager(doc) {
   }
 
   try {
-    /* if desktop (proxy for fast connection) or fonts already loaded, load fonts.css */
-    if (window.innerWidth >= 900 || sessionStorage.getItem('fonts-loaded')) {
-      loadFonts();
-    }
+    /* Load webfonts early on all viewports; @font-face in fonts.css (incl. TCCC-UnityHeadline) must be applied for first paint. */
+    loadFonts();
   } catch (e) {
     // do nothing
   }
