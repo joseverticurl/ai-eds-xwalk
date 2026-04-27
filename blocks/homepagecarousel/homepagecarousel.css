@@ -40,6 +40,7 @@
     align-items: center;
     gap: 40px;
     padding: 40px 80px 60px;
+    width: 100%;
   }
 
   .homepagecarousel-headline {
@@ -80,7 +81,6 @@
   flex-flow: row wrap;
   align-items: center;
   justify-content: center;
-  gap: 16px;
   z-index: 2;
   padding: 0 4px 8px;
 }
@@ -91,6 +91,8 @@
     justify-content: center;
     gap: 19px;
     position: absolute;
+    right: 15px;
+    bottom: 29px;
   }
 }
 
@@ -197,6 +199,7 @@
 
 @media (width >= 900px) {
   .homepagecarousel-body {
+    width: 30%;
     font-size: 38px;
     letter-spacing: -0.03em;
   }

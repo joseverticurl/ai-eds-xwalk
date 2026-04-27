@@ -347,7 +347,7 @@ main > .section {
 main > .section > div {
   max-width: var(--container-max-width);
   margin: auto;
-  padding: 0 var(--container-padding-x);
+  /* padding: 0 var(--container-padding-x); */
   box-sizing: border-box;
 }
 
