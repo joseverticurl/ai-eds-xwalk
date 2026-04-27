@@ -166,7 +166,7 @@
 
 @media (width >= 900px) {
   .homepagecarousel-slide-content {
-    min-height: 660px;
+    min-height: 560px;
     padding: 40px;
     gap: 50px;
   }
@@ -246,6 +246,7 @@
   border-radius: 999px;
   background: transparent;
   transition: background 0.2s ease, color 0.2s ease;
+  color: var(--color-neutral-white, #fff);
 }
 
 .homepagecarousel-cta:visited,
