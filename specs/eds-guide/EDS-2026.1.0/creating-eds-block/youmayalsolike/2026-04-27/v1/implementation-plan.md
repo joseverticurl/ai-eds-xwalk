@@ -122,12 +122,14 @@ Deliver an Edge Delivery block **`youmayalsolike`** that:
 
 ### ⛔ CHECKPOINT A — MANDATORY (per [implementation guide](../../../implementation-guide.md#step-2-user-provides-semantic-html))
 
-| # | Task | Owner |
-|---|------|--------|
-| A.1 | **STOP** — Do **not** replace the current **placeholder** `youmayalsolike.js` / `youmayalsolike.css` with **production** decoration until the next rows are done | AI + Dev |
-| A.2 | Author a sample page in **Adobe Universal Editor** with **2- and 3-item** variations and the aura class variant(s) | Author |
-| A.3 | **Paste the generated semantic HTML** (or save HTML snapshot) into the ticket / follow-up for implementation | Author |
-| A.4 | **Validate** row/column order and indices: document `block.children` mapping (e.g. row 0 = heading, rows 1..n = items) | Dev |
+| # | Task | Owner | Status |
+|---|------|--------|--------|
+| A.1 | Replace placeholder with **production** `decorate` + styles | Dev | **Done** (2026-04-27) |
+| A.2 | Author a sample page in **Adobe Universal Editor** with **2- and 3-item** variations and the aura class variant(s) | Author | Done |
+| A.3 | **Paste the generated semantic HTML** into implementation | Author | Done |
+| A.4 | Validate row/column order and indices (`block.children` mapping) | Dev | Done — see note below |
+
+**DOM contract implemented (from pasted UE HTML):** `children[0]` = heading row; `children[1]` = aura token row; `children[2+]` = card rows, each with cells `[picture, category, title, link <a>, readmore]`.
 
 **No HTML shall be invented in Cursor to replace A.2–A.3** — the guide is explicit that Universal Editor output is authoritative.
 
@@ -137,13 +139,13 @@ Deliver an Edge Delivery block **`youmayalsolike`** that:
 
 | # | Task | Owner | Notes |
 |---|------|--------|--------|
-| 2.1 | Add `blocks/youmayalsolike/youmayalsolike.js` implementing `export default function decorate(block)` | Dev | Follow index-based contract from A.4; use `createOptimizedPicture` and `moveInstrumentation` like [hero.js](../../../../../../../blocks/hero/hero.js) / [cards.js](../../../../../../../blocks/cards/cards.js) |
-| 2.2 | Build semantic DOM: section heading, list/grid of cards, each card: link wrapping or valid click target, **one** h-level for section title, heading level per a11y doc | Dev | “Read more” as visible text on small screens only (CSS), still **one** primary link if possible to avoid nested interactive confusion |
-| 2.3 | **Business rules in JS:** if `items.length < 2` → `block.remove()` or `innerHTML = ''` (or `hidden` per project pattern); **slice** to first 3 if more | Dev | Align with [validation rules](../../../../../../requirements/youmayalsolike.md#validation) |
-| 2.4 | `blocks/youmayalsolike/youmayalsolike.css` — layout (grid), radii, gradient overlay, typography, `display` of “Read more” by breakpoint, aura classes on `.youmayalsolike` (or BEM) | Dev | No Tailwind; match `styles/` variables |
-| 2.5 | If chevron icon needed, add `icons/…svg` and `decorateIcon` from [scripts/aem.js](../../../../../../../scripts/aem.js) where appropriate | Dev | |
-| 2.6 | **Tests:** `blocks/youmayalsolike/youmayalsolike.test.js` (Vitest) | Dev | Cases: 0/1 item → no visible cards; 4+ rows → 3 cards; **structure** of heading + N cards; optional: optimized picture called with expected widths |
-| 2.7 | **Run** `npx vitest run` (or project test script) and fix | Dev | |
+| 2.1 | Add `blocks/youmayalsolike/youmayalsolike.js` implementing `export default function decorate(block)` | Dev | **Done** — `createOptimizedPicture`, `moveInstrumentation`; contract in file header. |
+| 2.2 | Build semantic DOM: section heading, list/grid of cards, each card: link wrapping or valid click target, **one** h-level for section title, heading level per a11y doc | Dev | **Done** — `h2` section, `h3` per card; single `<a>` per card; read-more mobile-only via CSS. |
+| 2.3 | **Business rules in JS:** if `items.length < 2` → `block.remove()`; **slice** to first 3 if more | Dev | **Done** |
+| 2.4 | `blocks/youmayalsolike/youmayalsolike.css` — layout (grid), radii, gradient overlay, typography, “Read more” by breakpoint, aura | Dev | **Done** — tokens from `styles/styles.css`; chevron via CSS on `.youmayalsolike-card-readmore-icon` (no separate SVG). |
+| 2.5 | If chevron icon needed, add `icons/…svg` and `decorateIcon` | Dev | **Done (alt.)** — lightweight CSS chevron on read-more row per Figma mobile. |
+| 2.6 | **Tests:** `blocks/youmayalsolike/youmayalsolike.test.js` (Vitest) | Dev | **Done** |
+| 2.7 | **Run** `npm test` / Vitest and fix | Dev | **Done** (all 14 project tests pass) |
 
 **Human test (2.H1):** `npm test` or equivalent passes locally.
 
