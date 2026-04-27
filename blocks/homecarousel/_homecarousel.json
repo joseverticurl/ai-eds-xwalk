@@ -1,0 +1,205 @@
+{
+  "definitions": [
+    {
+      "title": "Home Carousel",
+      "id": "homecarousel",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "HomeCarousel",
+              "model": "homecarousel",
+              "filter": "homecarousel"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Home Carousel Item",
+      "id": "homecarouselitem",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "HomeCarouselItem",
+              "model": "homecarouselitem"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "homecarousel",
+      "fields": [
+        {
+          "component": "richtext",
+          "name": "sectionHeadline",
+          "label": "Section headline (desktop)",
+          "value": "",
+          "valueType": "string",
+          "description": "Shown in the left column on large viewports; hidden on small viewports"
+        },
+        {
+          "component": "number",
+          "valueType": "number",
+          "name": "transitionDuration",
+          "label": "Slide duration (sec)",
+          "value": 5,
+          "description": "Time each slide is shown before auto-advance (e.g. 3–10)"
+        },
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "autoplay",
+          "label": "Autoplay",
+          "value": "true",
+          "options": [
+            { "name": "On", "value": "true" },
+            { "name": "Off", "value": "false" }
+          ],
+          "description": "Whether slides advance automatically"
+        },
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "loopSlides",
+          "label": "Loop slides",
+          "value": "true",
+          "options": [
+            { "name": "On", "value": "true" },
+            { "name": "Off", "value": "false" }
+          ],
+          "description": "Return to the first slide after the last"
+        },
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "enableAuraEffect",
+          "label": "Background aura",
+          "value": "true",
+          "options": [
+            { "name": "On", "value": "true" },
+            { "name": "Off", "value": "false" }
+          ],
+          "description": "Soft gradient/aura effect behind the carousel area"
+        },
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "auraStyle",
+          "label": "Aura style",
+          "value": "",
+          "options": [
+            { "name": "Default", "value": "" },
+            { "name": "Creative", "value": "aura-creative" },
+            { "name": "Health", "value": "aura-health" },
+            { "name": "Sustainability", "value": "aura-sustainability" },
+            { "name": "Light", "value": "aura-light" },
+            { "name": "Dark", "value": "aura-dark" }
+          ],
+          "description": "Applies when Background aura is On"
+        }
+      ]
+    },
+    {
+      "id": "homecarouselitem",
+      "fields": [
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "mediaType",
+          "label": "Media type",
+          "value": "image",
+          "options": [
+            { "name": "Image", "value": "image" },
+            { "name": "Video", "value": "video" }
+          ]
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Background image",
+          "multi": false,
+          "description": "Used when media type is Image"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "imageAlt",
+          "label": "Image alt text",
+          "value": ""
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "video",
+          "label": "Background video",
+          "multi": false,
+          "description": "Used when media type is Video (DAM or external, per project)"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "categoryTag",
+          "label": "Category tag",
+          "value": "",
+          "description": "Optional label (e.g. News)"
+        },
+        {
+          "component": "richtext",
+          "name": "paragraphs",
+          "label": "Body copy",
+          "value": "",
+          "valueType": "string",
+          "description": "One or more paragraphs; alignment uses an automatic L/R/C pattern in the block"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "ctaLabel",
+          "label": "CTA label",
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "ctaLink",
+          "label": "CTA link"
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "brandIcon",
+          "label": "Brand icon",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "brandIconAlt",
+          "label": "Brand icon alt text",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "overlayGradient",
+          "label": "Text overlay (optional token)",
+          "value": "",
+          "description": "Optional class or design token to improve text contrast over the media"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "homecarousel",
+      "components": ["homecarouselitem"]
+    }
+  ]
+}
