@@ -18,7 +18,7 @@
       "fragment",
       "featurecardscarousel",
       "youmayalsolike",
-      "homecarousel",
+      "homepagecarousel",
       "socialpromo",
       "textwithimage",
       "textwithimagegif"
@@ -52,9 +52,9 @@
     ]
   },
   {
-    "id": "homecarousel",
+    "id": "homepagecarousel",
     "components": [
-      "homecarouselitem"
+      "homepagecarouselitem"
     ]
   },
   {

@@ -357,7 +357,7 @@
     ]
   },
   {
-    "id": "homecarousel",
+    "id": "homepagecarousel",
     "fields": [
       {
         "component": "richtext",
@@ -466,7 +466,7 @@
     ]
   },
   {
-    "id": "homecarouselitem",
+    "id": "homepagecarouselitem",
     "fields": [
       {
         "component": "select",

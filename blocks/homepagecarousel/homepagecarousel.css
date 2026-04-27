@@ -1,0 +1,340 @@
+/* Homepage hero carousel — layout matches desktop ≥900px, compact <900px */
+
+.homepagecarousel-wrapper {
+  position: relative;
+  max-width: 1440px;
+  margin-inline: auto;
+
+  --homepagecarousel-duration: 5s;
+}
+
+.homepagecarousel-wrapper-aura {
+  background-color: var(--background-color-off-white, #f2f2f2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.homepagecarousel-inner,
+.homepagecarousel-layout,
+.homepagecarousel-wrapper {
+  display: block;
+}
+
+.homepagecarousel-headline {
+  display: none;
+  flex: 0 0 40%;
+  max-width: 570px;
+  padding: 0;
+  font-family: var(--headline-font-family, 'TCCC-Unity-Head', 'TCCC-UnityHead', sans-serif);
+  font-size: 38px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  color: var(--text-color, #000);
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 40px;
+    padding: 40px 80px 60px;
+  }
+
+  .homepagecarousel-headline {
+    display: block;
+  }
+}
+
+.homepagecarousel-headline-inner p {
+  margin: 0 0 0.35em;
+  font-size: clamp(2.5rem, 4vw, 4.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+.homepagecarousel-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-stage {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+  }
+}
+
+/* Brand nav: top row on mobile, right column on desktop */
+.homepagecarousel-brands {
+  order: 0;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 2;
+  padding: 0 4px 8px;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-brands {
+    order: 2;
+    flex: 0 0 auto;
+    flex-direction: column;
+    justify-content: center;
+    gap: 19px;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0 8px 0 12px;
+  }
+}
+
+.homepagecarousel-swiper {
+  order: 1;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 400px;
+  width: 100%;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-swiper {
+    min-height: 520px;
+    max-width: 670px;
+  }
+}
+
+.homepagecarousel-slide {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 5%);
+  min-height: 360px;
+  background: #111;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-slide {
+    border-radius: 24px;
+    min-height: 660px;
+  }
+}
+
+.homepagecarousel-slide-media {
+  position: absolute;
+  inset: 0;
+}
+
+.homepagecarousel-slide-media .picture,
+.homepagecarousel-slide-media picture,
+.homepagecarousel-slide-media img,
+.homepagecarousel-bg-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.homepagecarousel-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 10%) 0%, rgb(0 0 0 / 50%) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.homepagecarousel-slide-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 360px;
+  padding: 24px 24px 32px;
+  max-width: 100%;
+  gap: 30px;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-slide-content {
+    min-height: 660px;
+    padding: 40px;
+    gap: 50px;
+  }
+}
+
+.homepagecarousel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin: 0;
+  padding: 8px 12px;
+  font-family: var(--headline-font-family, 'TCCC-Unity-Head', sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+  background: #000;
+  border-radius: 50px;
+}
+
+.homepagecarousel-body {
+  max-width: 100%;
+  font-family: var(--headline-font-family, 'TCCC-Unity-Head', sans-serif);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-body {
+    font-size: 38px;
+    letter-spacing: -0.03em;
+  }
+}
+
+.homepagecarousel-body p {
+  margin: 0 0 0.5em;
+}
+
+.homepagecarousel-body p:last-child {
+  margin-bottom: 0;
+}
+
+.homepagecarousel-body .align-left {
+  text-align: left;
+  align-self: flex-start;
+}
+
+.homepagecarousel-body .align-right {
+  text-align: right;
+  align-self: flex-end;
+  width: 100%;
+}
+
+.homepagecarousel-body .align-center {
+  text-align: center;
+  align-self: center;
+  width: 100%;
+}
+
+.homepagecarousel-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0 30px;
+  font-family: var(--headline-font-family, 'TCCC-Unity-Head', sans-serif);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  text-decoration: none;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+@media (width <= 899px) {
+  .homepagecarousel-cta {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.homepagecarousel-cta:hover,
+.homepagecarousel-cta:focus-visible {
+  background: rgb(255 255 255 / 12%);
+  outline: none;
+}
+
+/* Brand button + progress ring */
+.homepagecarousel-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (width <= 899px) {
+  .homepagecarousel-brand {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.homepagecarousel-brand:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.homepagecarousel-brand-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.homepagecarousel-brand-img .picture,
+.homepagecarousel-brand-img picture,
+.homepagecarousel-brand-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+.homepagecarousel-brand-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.homepagecarousel-brand-ring-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.homepagecarousel-brand-arc {
+  stroke-dashoffset: 169.65;
+}
+
+.homepagecarousel-brand-active .homepagecarousel-brand-arc {
+  animation: homepagecarousel-arc var(--homepagecarousel-duration, 5s) linear forwards;
+}
+
+.homepagecarousel-brand:not(.homepagecarousel-brand-active) .homepagecarousel-brand-arc {
+  animation: none;
+  stroke-dashoffset: 169.65;
+}
+
+@keyframes homepagecarousel-arc {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
