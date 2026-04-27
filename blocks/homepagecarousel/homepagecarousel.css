@@ -56,6 +56,17 @@
   font-weight: 600;
 }
 
+
+.homepagecarousel-headline-inner p:nth-child(2) {
+  text-align: right;
+}
+.homepagecarousel-headline-inner p:nth-child(3) {
+  text-align: center;
+}
+.homepagecarousel-headline-inner p:nth-child(4) {
+  text-align: left;
+}
+
 .homepagecarousel-stage {
   position: relative;
   flex: 1;
