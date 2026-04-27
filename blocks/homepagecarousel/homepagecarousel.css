@@ -35,22 +35,15 @@
 
 @media (width >= 900px) {
   .homepagecarousel-wrapper {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: 40px;
+    display: flex;
+    flex-direction: row;
     align-items: center;
+    gap: 40px;
     padding: 40px 80px 60px;
   }
 
   .homepagecarousel-headline {
     display: block;
-    grid-column: 1 / span 6;
-    flex: unset;
-    max-width: none;
-  }
-
-  .homepagecarousel-stage {
-    grid-column: 7 / span 6;
   }
 }
 
@@ -98,9 +91,6 @@
     justify-content: center;
     gap: 19px;
     position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
   }
 }
 
@@ -116,8 +106,7 @@
 @media (width >= 900px) {
   .homepagecarousel-swiper {
     min-height: 520px;
-    width: 100%;
-    max-width: 100%;
+    max-width: 670px;
   }
 }
 
@@ -258,9 +247,8 @@
 
 @media (width <= 899px) {
   .homepagecarousel-cta {
-    width: auto;
+    width: 90%;
     max-width: 100%;
-    align-self: flex-start;
   }
 }
 
