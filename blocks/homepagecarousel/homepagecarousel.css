@@ -76,13 +76,14 @@
 
 /* Brand nav: top row on mobile, right column on desktop */
 .homepagecarousel-brands {
-  order: 0;
+  transform: translate(-50%, -50%);  /* order: 0; */
   display: flex;
-  flex-flow: row wrap;
-  align-items: center;
-  justify-content: center;
   z-index: 2;
-  padding: 0 4px 8px;
+  position: absolute;
+  gap: 20px;
+  top: 36px;
+  left: 50%;
+  
 }
 
 @media (width >= 900px) {
@@ -258,8 +259,7 @@
 
 @media (width <= 899px) {
   .homepagecarousel-cta {
-    width: 90%;
-    max-width: 100%;
+    width: 85%;
   }
 }
 
