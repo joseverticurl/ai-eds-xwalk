@@ -1,4 +1,13 @@
 /* stylelint-disable max-line-length */
+/* TCCC UnityHeadline (Figma: Medium 600) — add licensed tccc-unityheadline-medium.woff2 and update src, or point src at real files. */
+@font-face {
+  font-family: 'TCCC-UnityHeadline';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/tccc-unityheadline-dummy.woff2') format('woff2');
+}
+
 @font-face {
   font-family: roboto-condensed;
   font-style: normal;
