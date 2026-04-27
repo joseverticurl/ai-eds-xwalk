@@ -357,90 +357,6 @@
     ]
   },
   {
-    "id": "textwithimagegif",
-    "fields": [
-      {
-        "component": "text",
-        "name": "sectionTitle",
-        "label": "Section Title",
-        "valueType": "string",
-        "description": "Max 42 characters (info only)"
-      },
-      {
-        "component": "richtext",
-        "name": "description",
-        "label": "Description/Text",
-        "value": "",
-        "valueType": "string",
-        "description": "Max 150 characters (info only)"
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "image",
-        "label": "Image/GIF",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "imageAlt",
-        "label": "Alt",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "imageBadge",
-        "label": "Image Badge",
-        "value": "",
-        "description": "e.g. Mmmm!, Dunked!"
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "backgroundVector",
-        "label": "Background Vector",
-        "multi": false,
-        "description": "Optional rotating shape"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "tag1",
-        "label": "Tag 1",
-        "value": "",
-        "description": "Emoji + text (e.g. 🥢 John Doe)"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "tag2",
-        "label": "Tag 2",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "tag3",
-        "label": "Tag 3",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "name": "ctaLink",
-        "label": "CTA Link"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "ctaText",
-        "label": "CTA Text",
-        "value": ""
-      }
-    ]
-  },
-  {
     "id": "socialpromo",
     "fields": [
       {
@@ -610,6 +526,176 @@
             "value": "video"
           }
         ]
+      }
+    ]
+  },
+  {
+    "id": "textwithimagegif",
+    "fields": [
+      {
+        "component": "text",
+        "name": "sectionTitle",
+        "label": "Section Title",
+        "valueType": "string",
+        "description": "Max 42 characters (info only)"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description/Text",
+        "value": "",
+        "valueType": "string",
+        "description": "Max 150 characters (info only)"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image/GIF",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageBadge",
+        "label": "Image Badge",
+        "value": "",
+        "description": "e.g. Mmmm!, Dunked!"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "backgroundVector",
+        "label": "Background Vector",
+        "multi": false,
+        "description": "Optional rotating shape"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag1",
+        "label": "Tag 1",
+        "value": "",
+        "description": "Emoji + text (e.g. 🥢 John Doe)"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag2",
+        "label": "Tag 2",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tag3",
+        "label": "Tag 3",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaText",
+        "label": "CTA Text",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "youmayalsolike",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "heading",
+        "label": "Section heading",
+        "value": "",
+        "description": "Leave empty to use the default: You may also like"
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "style",
+        "label": "Background aura",
+        "value": "",
+        "options": [
+          {
+            "name": "None",
+            "value": ""
+          },
+          {
+            "name": "Creative",
+            "value": "aura-creative"
+          },
+          {
+            "name": "Health",
+            "value": "aura-health"
+          },
+          {
+            "name": "Sustainability",
+            "value": "aura-sustainability"
+          },
+          {
+            "name": "Light",
+            "value": "aura-light"
+          },
+          {
+            "name": "Dark",
+            "value": "aura-dark"
+          }
+        ],
+        "description": "Optional gradient aura on the block container"
+      }
+    ]
+  },
+  {
+    "id": "youmayalsolikeitem",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Card image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Image alt text",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "category",
+        "label": "Category",
+        "value": "",
+        "description": "Shown as a tag on the card"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Article title",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Article link"
       }
     ]
   }

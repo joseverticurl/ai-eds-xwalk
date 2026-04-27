@@ -1,0 +1,111 @@
+{
+  "definitions": [
+    {
+      "title": "You May Also Like",
+      "id": "youmayalsolike",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "YouMayAlsoLike",
+              "model": "youmayalsolike",
+              "filter": "youmayalsolike"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "You May Also Like Item",
+      "id": "youmayalsolikeitem",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "YouMayAlsoLikeItem",
+              "model": "youmayalsolikeitem"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "youmayalsolike",
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "heading",
+          "label": "Section heading",
+          "value": "",
+          "description": "Leave empty to use the default: You may also like"
+        },
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "style",
+          "label": "Background aura",
+          "value": "",
+          "options": [
+            { "name": "None", "value": "" },
+            { "name": "Creative", "value": "aura-creative" },
+            { "name": "Health", "value": "aura-health" },
+            { "name": "Sustainability", "value": "aura-sustainability" },
+            { "name": "Light", "value": "aura-light" },
+            { "name": "Dark", "value": "aura-dark" }
+          ],
+          "description": "Optional gradient aura on the block container"
+        }
+      ]
+    },
+    {
+      "id": "youmayalsolikeitem",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Card image",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "imageAlt",
+          "label": "Image alt text",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "category",
+          "label": "Category",
+          "value": "",
+          "description": "Shown as a tag on the card"
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Article title",
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
+          "label": "Article link"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "youmayalsolike",
+      "components": ["youmayalsolikeitem"]
+    }
+  ]
+}
