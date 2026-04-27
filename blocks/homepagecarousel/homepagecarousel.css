@@ -76,15 +76,17 @@
 
 /* Brand nav: top row on mobile, right column on desktop */
 .homepagecarousel-brands {
-  transform: translate(-50%, -50%);  /* order: 0; */
   display: flex;
   z-index: 2;
-  position: absolute;
-  gap: 20px;
-  top: 36px;
-  left: 50%;
-  
+  @media screen and (width <= 767px) {
+    transform: translate(-50%, -50%);  /* order: 0; */
+    position: absolute;
+    gap: 20px;
+    top: 36px;
+    left: 50%;
+  }
 }
+
 
 @media (width >= 900px) {
   .homepagecarousel-brands {
