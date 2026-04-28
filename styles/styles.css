@@ -41,7 +41,10 @@
   --container-padding-x: 20px; /* 1:1703 frame offset; Frame 1:1716: x=20, width=335 (N=6 col-s) */
   --tccc-block-stack-gap-m: 20px; /* 1:1719 vertical gap between cards (separate from column gutter) */
   /* 03_M_Career (1:1703) — spacing for related-article / promo patterns */
-  --tccc-section-stack-gap-m: 30px; /* title block → card list (1:1717) */
+  --tccc-section-stack-gap-m: 30px; /* title block → card list (1:1717 mobile) */
+  --tccc-section-title-gap-d: 50px; /* 03_D_Career 1:1697 gap title → grid */
+  --tccc-container-padding-x-d: 40px; /* 03_D 12-column frame inset */
+  --tccc-inner-max-content-d: 1360px; /* Figma 1:1697 inner column stack width */
   --tccc-radius-card-m: 16px; /* Cards / Related Article mobile */
   --tccc-card-padding-m: 24px;
   --tccc-cta-icon-size-m: 24px; /* “Read more” row icon */
