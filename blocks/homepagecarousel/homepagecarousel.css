@@ -103,7 +103,6 @@
   .homepagecarousel-brands {
     flex-direction: column;
     justify-content: center;
-    gap: 19px;
     position: absolute;
     right: 15px;
     bottom: 42px;
