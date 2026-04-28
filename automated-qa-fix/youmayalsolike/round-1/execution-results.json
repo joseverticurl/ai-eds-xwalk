@@ -1,0 +1,33 @@
+{
+  "$schema_hint": "Manual handoff compatible with qa-orchestrator SKILL.md Step 3 (pending official playwright-qa-automation schema in repo).",
+  "round": 1,
+  "functionality_name": "youmayalsolike",
+  "started_at": "2026-04-28T13:50:00Z",
+  "tooling": {
+    "mcp_playwright": "user-playwright",
+    "preflight_base_url_ok": true
+  },
+  "tests": [
+    {
+      "id": "scenario-1-visual-desktop",
+      "viewport": { "width": 1440, "height": 900 },
+      "base_url": "https://youmaylike-comp--ai-eds-xwalk--joseverticurl.aem.live/index/ai-demo-components/you-may-also-like",
+      "status": "passed",
+      "evidence": "screenshots/round-1-journey-youmayalsolike-scenario-1-step-1-live.png",
+      "figma_reference": {
+        "url": "https://www.figma.com/design/1uWBLEcq2rARuQXFnsqdQD/Components---TCCC",
+        "node_id": "1:1691"
+      },
+      "notes": "Region snapshot: 3-column card grid, aura-creative radial background, centered H2, pill tags, image+gradient cards. Matches Figma Components—TCCC desktop frame."
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0
+  },
+  "condition_decision": {
+    "action": "stop",
+    "reason": "Stopping condition met: visual acceptance vs Figma desktop 1:1691; no defect-solver fixes required this round."
+  }
+}

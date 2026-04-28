@@ -1,0 +1,16 @@
+{
+  "version": "1.1.0",
+  "functionality_name": "youmayalsolike",
+  "codebase_path": "/Volumes/D Volume/ai-eds-xwalk",
+  "base_url": "https://youmaylike-comp--ai-eds-xwalk--joseverticurl.aem.live/index/ai-demo-components/you-may-also-like",
+  "stopping_condition": "all tests pass",
+  "max_rounds": 5,
+  "min_fix_confidence": 0.7,
+  "artifact_root": "/Volumes/D Volume/ai-eds-xwalk/automated-qa-fix",
+  "note": "Full qa-orchestrator loop needs Playwright MCP (browser_* tools), playwright-qa-automation + defect-solver skills, and a reachable base-url. Automated validation: npm test ; optional npx playwright test.",
+  "local_validation": {
+    "vitest": "npm test — 14 passing (blocks include youmayalsolike)",
+    "last_checked": "2026-04-27",
+    "live_smoke": "Page loads; 3 card links; h2 section title; no block JS errors in browser console (manual check)."
+  }
+}

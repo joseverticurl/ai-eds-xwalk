@@ -142,12 +142,11 @@
   inset: 0;
   z-index: 0;
 
-  /* Figma cards: mix of 0.6 and 0.8 bottom — readable blend for titles */
+  /* Figma Related Article cards 2–3 (nodes 1:1701, 1:1702): top → bottom transparent to rgba(0,0,0,0.6) */
   background: linear-gradient(
     180deg,
-    var(--color-overlay-black-0) 35%,
-    var(--color-overlay-black-60) 85%,
-    var(--color-overlay-black-80) 100%
+    var(--color-overlay-black-0) 0%,
+    var(--color-overlay-black-60) 100%
   );
   border-radius: inherit;
   pointer-events: none;
@@ -214,17 +213,29 @@
     letter-spacing: 0;
   }
 
-  /*
-   * Figma 1:1700 vs 1:1701+: first row uses heavier bottom fade for photo + copy.
-   */
-  .youmayalsolike-card:first-child .youmayalsolike-card-gradient {
-    background: linear-gradient(
-      180deg,
-      var(--color-overlay-black-0) 0%,
-      var(--color-overlay-black-60) 70%,
-      var(--color-overlay-black-80) 100%
-    );
-  }
+}
+
+/* Figma node 1:1700: first card uses stronger overlay (to rgba(0,0,0,0.8)), not 0.6 */
+.youmayalsolike-card:first-child .youmayalsolike-card-gradient {
+  background: linear-gradient(
+    180deg,
+    var(--color-overlay-black-0) 0%,
+    var(--color-overlay-black-80) 100%
+  );
+}
+
+/*
+ * Figma 1:1700: layer stacked above the gradient (mix-blend-lighten on full card media).
+ * Gives a subtle lift similar to the design file; blends image + dark overlay.
+ */
+.youmayalsolike-card:first-child .youmayalsolike-card-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  mix-blend-mode: lighten;
+  pointer-events: none;
 }
 
 /* "Read more" + chevron: visible on small viewports only (Figma mobile) */

@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]
+  - main [ref=e3]:
+    - region "You may also like" [ref=e7]:
+      - heading "You may also like" [level=2] [ref=e8]
+      - generic [ref=e9]:
+        - article [ref=e10]:
+          - link "Examining the Global Coca-Cola Network and Its Community Impact Globally" [ref=e11] [cursor=pointer]:
+            - /url: "#"
+            - img "Image text" [ref=e14]
+            - generic [ref=e15]:
+              - paragraph [ref=e16]: Sustainability
+              - heading "Examining the Global Coca-Cola Network and Its Community Impact Globally" [level=3] [ref=e18]
+        - article [ref=e19]:
+          - link "Coca-Cola Network and Its Community Impact Globally" [ref=e20] [cursor=pointer]:
+            - /url: "#"
+            - img "Image text" [ref=e23]
+            - generic [ref=e24]:
+              - paragraph [ref=e25]: Career1
+              - heading "Coca-Cola Network and Its Community Impact Globally" [level=3] [ref=e27]
+        - article [ref=e28]:
+          - link "Examining the Global Coca-Cola Network and Its Community Impact Globally" [ref=e29] [cursor=pointer]:
+            - /url: "#"
+            - img "Image text" [ref=e32]
+            - generic [ref=e33]:
+              - paragraph [ref=e34]: Sustainability
+              - heading "Examining the Global Coca-Cola Network and Its Community Impact Globally" [level=3] [ref=e36]
+  - contentinfo [ref=e37]
