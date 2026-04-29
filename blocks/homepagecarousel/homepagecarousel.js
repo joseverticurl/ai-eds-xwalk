@@ -10,16 +10,14 @@
  * - block.children[5] = aura style (optional class token)
  * - block.children[6+] = slide rows
  *
- * Each slide row:
- * - children[0] = mediaType (image | video)
- * - children[1] = background picture OR first video <a> (video slides)
- * - children[2] = video <a> (secondary) or video field when image slide
- * - children[3] = category tag
- * - children[4] = body (richtext or plain)
- * - children[5] = CTA link (anchor)
- * - children[6] = CTA label
- * - children[7] = brand icon picture
- * - children[8] = optional overlay / gradient token
+ * UE slide row — **full model** (10–11 cells; see `_homepagecarousel.json`):
+ * - [0] mediaType | [1] image | [2] imageAlt | [3] video | [4] categoryTag
+ * - [5] body (paragraphs) | [6] ctaLabel | [7] ctaLink | [8] brandIcon
+ * - [9] brandIconAlt | [10] overlayGradient (optional)
+ * - With overlay omitted, rows may have 10 cells (no column [10])
+ *
+ * **Legacy compressed row** (9 cells, tests / older pipelines):
+ * - [0–3] as above | [4] body | [5] CTA link | [6] CTA label | [7] brand | [8] overlay
  *
  * @param {Element} block
  */
@@ -36,6 +34,20 @@ const SWIPER_JS = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
 
 const CONFIG_ROW_COUNT = 6;
 const ALIGN = ['align-left', 'align-right', 'align-center'];
+
+/** Map common demo copy to Figma TCCC strings. */
+function normalizeCategoryTag(raw) {
+  const t = (raw || '').trim();
+  if (/^brands$/i.test(t)) return 'News';
+  return t;
+}
+
+/** Figma uses sentence case “Read article”. */
+function normalizeCtaLabel(raw) {
+  const t = (raw || '').trim();
+  if (/^read\s+articles$/i.test(t)) return 'Read article';
+  return t || 'Read article';
+}
 
 function getText(el) {
   return el?.textContent?.trim() ?? '';
@@ -87,10 +99,57 @@ function buildBodyWithAlignment(bodyCell) {
 }
 
 /**
+ * Full UE row: field order matches `homepagecarouselitem` in `_homepagecarousel.json`.
  * @param {Element} row
  * @returns {object}
  */
-function parseSlideRow(row) {
+function parseSlideRowFullModel(row) {
+  const c = (i) => row?.children?.[i];
+  const typeRaw = getText(c(0)).toLowerCase() || 'image';
+  const isVideo = typeRaw === 'video';
+
+  let imageSrc = '';
+  let imageAlt = '';
+  let videoUrl = '';
+
+  if (isVideo) {
+    videoUrl = getLink(c(3)) || '';
+  } else {
+    const pic1 = c(1)?.querySelector?.('picture, img');
+    if (pic1) {
+      const picEl = pic1?.closest?.('picture') || pic1;
+      imageSrc = getImageSrc(picEl);
+      imageAlt = getText(c(2)) || getImageAlt(picEl);
+    }
+  }
+
+  const brandPic = c(8)?.querySelector?.('picture, img');
+  const brandSrc = getImageSrc(brandPic);
+  const brandAlt = getText(c(9)) || getImageAlt(brandPic) || 'Brand';
+
+  return {
+    mediaType: isVideo ? 'video' : 'image',
+    imageSrc,
+    imageAlt,
+    videoUrl,
+    category: normalizeCategoryTag(getText(c(4))),
+    bodyCell: c(5),
+    ctaLink: getLink(c(7)),
+    ctaLabel: normalizeCtaLabel(getText(c(6))),
+    ctaLinkCell: c(7),
+    brandSrc,
+    brandAlt,
+    overlayToken: (row?.children?.length ?? 0) > 10 ? getText(c(10)) : '',
+    sourceRow: row,
+  };
+}
+
+/**
+ * Legacy 9-column slide row (compressed media fields).
+ * @param {Element} row
+ * @returns {object}
+ */
+function parseSlideRowLegacy(row) {
   const c = (i) => row?.children?.[i];
   const typeRaw = getText(c(0)).toLowerCase() || 'image';
   const isVideo = typeRaw === 'video';
@@ -119,16 +178,28 @@ function parseSlideRow(row) {
     imageSrc,
     imageAlt,
     videoUrl,
-    category: getText(c(3)),
+    category: normalizeCategoryTag(getText(c(3))),
     bodyCell: c(4),
-    ctaLink: getLink(c(6)),
-    ctaLabel: getText(c(5)) || 'Read more',
+    ctaLink: getLink(c(5)),
+    ctaLabel: normalizeCtaLabel(getText(c(6))),
     ctaLinkCell: c(5),
     brandSrc,
     brandAlt,
     overlayToken: getText(c(8)),
     sourceRow: row,
   };
+}
+
+/**
+ * @param {Element} row
+ * @returns {object}
+ */
+function parseSlideRow(row) {
+  const n = row?.children?.length ?? 0;
+  if (n >= 10) {
+    return parseSlideRowFullModel(row);
+  }
+  return parseSlideRowLegacy(row);
 }
 
 /**

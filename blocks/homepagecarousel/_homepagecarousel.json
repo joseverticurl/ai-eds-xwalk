@@ -148,7 +148,7 @@
           "valueType": "string",
           "name": "categoryTag",
           "label": "Category tag",
-          "value": "",
+          "value": "News",
           "description": "Optional label (e.g. News)"
         },
         {
@@ -164,7 +164,7 @@
           "valueType": "string",
           "name": "ctaLabel",
           "label": "CTA label",
-          "value": ""
+          "value": "Read article"
         },
         {
           "component": "aem-content",

@@ -9,3 +9,4 @@ helix-importer-ui
 .idea
 .cursor
 playwright-report/*
+automated-qa-fix/*
