@@ -177,4 +177,42 @@ describe('Homepage carousel block', () => {
     expect(ctas[0].textContent).toBe('Read article');
     expect(ctas[1].getAttribute('href')).toBe('/published/path-two');
   });
+
+  it('omits headline column when config headline row has no cell (no empty flex gutter)', async () => {
+    const rowsNoHeadline = [
+      [],
+      ['5'],
+      ['true'],
+      ['true'],
+      ['true'],
+      [''],
+    ];
+    const block = createBlockFromRows('homepagecarousel', [
+      ...rowsNoHeadline,
+      slideRow(
+        'image',
+        createPictureElement('/a.png', 'a'),
+        '<a href="/v.mp4">v</a>',
+        'brands',
+        'First body',
+        '<a href="/b">#</a>',
+        'Read',
+        createPictureElement('/i.png', ''),
+      ),
+      slideRow(
+        'image',
+        createPictureElement('/a2.png', 'a2'),
+        '<a href="/v.mp4">v</a>',
+        'brands',
+        'Second body',
+        '<a href="/b2">#</a>',
+        'Read',
+        createPictureElement('/i2.png', ''),
+      ),
+    ]);
+    document.body.appendChild(block);
+    await decorate(block);
+    expect(block.querySelector('.homepagecarousel-headline')).toBeFalsy();
+    expect(block.querySelector('.homepagecarousel-carousel-shell')).toBeTruthy();
+  });
 });
