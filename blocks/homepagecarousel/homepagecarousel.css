@@ -45,7 +45,7 @@
     gap: 40px;
     padding: 40px min(80px, 5vw) 60px;
     width: 100%;
-    max-width: min(1440px, 100%);
+    max-width: 1440px;
   }
 
   .homepagecarousel-headline {
