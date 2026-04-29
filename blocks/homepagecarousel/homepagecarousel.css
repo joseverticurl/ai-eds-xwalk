@@ -49,20 +49,40 @@
 }
 
 .homepagecarousel-headline-inner p {
-  margin: 0 0 0.35em;
-  font-size: clamp(2.5rem, 4vw, 4.5rem);
-  line-height: 1.2;
-  letter-spacing: -0.03em;
+  margin: 0;
+  font-family: var(--tccc-unityheadline);
   font-weight: 600;
 }
 
+/* Desktop/Headline 1 — 72px, tracking −2.16px (−0.03em); line gap 25px (Figma 241:1640) */
+@media (width >= 900px) {
+  .homepagecarousel-headline-inner p {
+    font-size: 4.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .homepagecarousel-headline-inner p + p {
+    margin-top: 25px;
+  }
+}
+
+.homepagecarousel-body p {
+  margin: 0 0 0.5em;
+}
+
+.homepagecarousel-body p:last-child {
+  margin-bottom: 0;
+}
 
 .homepagecarousel-headline-inner p:nth-child(2) {
   text-align: right;
 }
+
 .homepagecarousel-headline-inner p:nth-child(3) {
   text-align: center;
 }
+
 .homepagecarousel-headline-inner p:nth-child(4) {
   text-align: left;
 }
@@ -89,10 +109,11 @@
 .homepagecarousel-brands {
   display: flex;
   z-index: 2;
+
   @media screen and (width <= 767px) {
     transform: translate(-50%, -50%);  /* order: 0; */
     position: absolute;
-    gap: 20px;
+    gap: 16px;
     top: 36px;
     left: 50%;
   }
@@ -103,6 +124,7 @@
   .homepagecarousel-brands {
     flex-direction: column;
     justify-content: center;
+    gap: 19px;
     position: absolute;
     right: 15px;
     bottom: 42px;
@@ -191,7 +213,7 @@
   justify-content: center;
   min-height: 30px;
   margin: 0;
-  padding: 8px 12px;
+  padding: 11px 12px;
   font-family: var(--tccc-unityheadline);
   font-size: 12px;
   font-weight: 600;
@@ -216,14 +238,6 @@
     font-size: 38px;
     letter-spacing: -0.03em;
   }
-}
-
-.homepagecarousel-body p {
-  margin: 0 0 0.5em;
-}
-
-.homepagecarousel-body p:last-child {
-  margin-bottom: 0;
 }
 
 .homepagecarousel-body .align-left {
@@ -253,13 +267,11 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--color-neutral-white, #fff);
   text-decoration: none;
   border: 2px solid var(--color-neutral-white, #fff);
   border-radius: 999px;
   background: transparent;
   transition: background 0.2s ease, color 0.2s ease;
-  color: var(--color-neutral-white, #fff);
 }
 
 .homepagecarousel-cta:visited,
@@ -271,7 +283,10 @@
 
 @media (width <= 899px) {
   .homepagecarousel-cta {
-    width: 85%;
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 
