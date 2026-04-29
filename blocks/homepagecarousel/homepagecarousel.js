@@ -462,8 +462,8 @@ export default async function decorate(block) {
     });
   }
 
-  carouselShell.appendChild(brandNav);
   carouselShell.appendChild(swiperWrap);
+  carouselShell.appendChild(brandNav);
   stage.appendChild(carouselShell);
   wrapper.appendChild(headline);
   wrapper.appendChild(stage);

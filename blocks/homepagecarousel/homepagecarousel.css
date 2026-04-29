@@ -2,8 +2,10 @@
 
 .homepagecarousel-wrapper {
   position: relative;
-  max-width: 1440px;
+  box-sizing: border-box;
+  max-width: min(1440px, 100%);
   margin-inline: auto;
+  overflow-x: hidden;
 
   --homepagecarousel-duration: 5s;
 }
@@ -39,8 +41,9 @@
     flex-direction: row;
     align-items: center;
     gap: 40px;
-    padding: 40px 80px 60px;
+    padding: 40px min(80px, 5vw) 60px;
     width: 100%;
+    max-width: min(1440px, 100%);
   }
 
   .homepagecarousel-headline {
@@ -105,10 +108,12 @@
   }
 }
 
-/* Brand nav: top row on mobile, right column on desktop */
+/* Brand rail — mobile row above slide; desktop column inset in shell.
+ * DOM: appended after swiper so icons paint above slides (click/touch hits buttons). */
 .homepagecarousel-brands {
   display: flex;
-  z-index: 2;
+  z-index: 5;
+  pointer-events: auto;
 
   @media screen and (width <= 767px) {
     transform: translate(-50%, -50%);  /* order: 0; */
@@ -140,13 +145,14 @@
 
 @media (width >= 900px) {
   .homepagecarousel-carousel-shell {
-    max-width: 670px;
+    max-width: min(670px, 100%);
   }
 }
 
 .homepagecarousel-swiper {
-  order: 1;
   position: relative;
+  z-index: 0;
+  order: 1;
   flex: 1;
   min-width: 0;
   min-height: 400px;
@@ -269,6 +275,7 @@
   width: 100%;
 }
 
+/* Ghost CTA — white text overrides global blue link tokens (styles/styles.css) */
 .homepagecarousel-cta {
   display: inline-flex;
   align-items: center;
@@ -279,6 +286,7 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
+  color: var(--color-neutral-white, #fff);
   text-decoration: none;
   border: 2px solid var(--color-neutral-white, #fff);
   border-radius: 999px;
@@ -286,11 +294,22 @@
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.homepagecarousel-cta:visited,
-.homepagecarousel-cta:hover,
-.homepagecarousel-cta:active,
-.homepagecarousel-cta:focus-visible {
+.homepagecarousel-cta:link {
   color: var(--color-neutral-white, #fff);
+}
+
+.homepagecarousel-cta:visited,
+.homepagecarousel-cta:active {
+  color: var(--color-neutral-white, #fff);
+  text-decoration: none;
+}
+
+.homepagecarousel-cta:hover,
+.homepagecarousel-cta:focus-visible {
+  background: rgb(255 255 255 / 12%);
+  color: var(--color-neutral-white, #fff);
+  outline: none;
+  text-decoration: none;
 }
 
 @media (width <= 899px) {
@@ -300,13 +319,6 @@
     max-width: 100%;
     box-sizing: border-box;
   }
-}
-
-.homepagecarousel-cta:hover,
-.homepagecarousel-cta:focus-visible {
-  background: rgb(255 255 255 / 12%);
-  color: var(--color-neutral-white, #fff);
-  outline: none;
 }
 
 /* Brand button + progress ring */
