@@ -17,7 +17,8 @@
  * - With overlay omitted, rows may have 10 cells (no column [10])
  *
  * **Legacy compressed row** (9 cells, tests / older pipelines):
- * - [0–3] as above | [4] body | [5] CTA link | [6] CTA label | [7] brand | [8] overlay
+ * - [0–3] as above | [4] body | [5]–[6] CTA label + link (either order)
+ * - [7] brand | [8] overlay
  *
  * @param {Element} block
  */
@@ -99,6 +100,40 @@ function buildBodyWithAlignment(bodyCell) {
 }
 
 /**
+ * Legacy 9-cell rows often output **CTA label in [5]** and **anchor in [6]** (model order);
+ * tests use **link in [5], label in [6]**. Resolve both.
+ * @param {(i: number) => Element | undefined} c
+ * @returns {{ ctaLink: string, ctaLabel: string, ctaLinkCell: Element | null }}
+ */
+function resolveLegacyCta(c) {
+  const linkAt5 = getLink(c(5));
+  const linkAt6 = getLink(c(6));
+  const text5 = getText(c(5));
+  const text6 = getText(c(6));
+
+  if (linkAt6 && !linkAt5) {
+    return {
+      ctaLink: linkAt6,
+      ctaLabel: normalizeCtaLabel(text5),
+      ctaLinkCell: c(6),
+    };
+  }
+  if (linkAt5) {
+    return {
+      ctaLink: linkAt5,
+      ctaLabel: normalizeCtaLabel(text6 || text5),
+      ctaLinkCell: c(5),
+    };
+  }
+
+  return {
+    ctaLink: '',
+    ctaLabel: normalizeCtaLabel(''),
+    ctaLinkCell: null,
+  };
+}
+
+/**
  * Full UE row: field order matches `homepagecarouselitem` in `_homepagecarousel.json`.
  * @param {Element} row
  * @returns {object}
@@ -173,6 +208,8 @@ function parseSlideRowLegacy(row) {
   const brandSrc = getImageSrc(brandPic);
   const brandAlt = getImageAlt(brandPic) || 'Brand';
 
+  const cta = resolveLegacyCta(c);
+
   return {
     mediaType: isVideo ? 'video' : 'image',
     imageSrc,
@@ -180,9 +217,9 @@ function parseSlideRowLegacy(row) {
     videoUrl,
     category: normalizeCategoryTag(getText(c(3))),
     bodyCell: c(4),
-    ctaLink: getLink(c(5)),
-    ctaLabel: normalizeCtaLabel(getText(c(6))),
-    ctaLinkCell: c(5),
+    ctaLink: cta.ctaLink,
+    ctaLabel: cta.ctaLabel,
+    ctaLinkCell: cta.ctaLinkCell,
     brandSrc,
     brandAlt,
     overlayToken: getText(c(8)),
@@ -321,6 +358,9 @@ export default async function decorate(block) {
   const stage = document.createElement('div');
   stage.className = 'homepagecarousel-stage';
 
+  const carouselShell = document.createElement('div');
+  carouselShell.className = 'homepagecarousel-carousel-shell';
+
   const brandNav = document.createElement('nav');
   brandNav.className = 'homepagecarousel-brands';
   brandNav.setAttribute('aria-label', 'Carousel slides');
@@ -422,8 +462,9 @@ export default async function decorate(block) {
     });
   }
 
-  stage.appendChild(brandNav);
-  stage.appendChild(swiperWrap);
+  carouselShell.appendChild(brandNav);
+  carouselShell.appendChild(swiperWrap);
+  stage.appendChild(carouselShell);
   wrapper.appendChild(headline);
   wrapper.appendChild(stage);
 

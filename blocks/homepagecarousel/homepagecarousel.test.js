@@ -101,6 +101,7 @@ describe('Homepage carousel block', () => {
     const wrapper = block.querySelector('.homepagecarousel-wrapper');
     expect(wrapper).toBeTruthy();
     expect(block.querySelector('.homepagecarousel-headline')).toBeTruthy();
+    expect(block.querySelector('.homepagecarousel-carousel-shell')).toBeTruthy();
     expect(block.querySelector('.swiper.homepagecarousel-swiper')).toBeTruthy();
     expect(block.querySelectorAll('.homepagecarousel-brand').length).toBe(2);
     const cta = block.querySelector('.homepagecarousel-cta');
@@ -142,5 +143,38 @@ describe('Homepage carousel block', () => {
     expect(ctas[0].textContent).toBe('Read article');
     expect(ctas[0].getAttribute('href')).toBe('/article/first');
     expect(ctas[1].getAttribute('href')).toBe('/article/second');
+  });
+
+  it('resolves legacy CTA when label [5] precedes link [6] (common UE export)', async () => {
+    const slideLabelFirst = [
+      'image',
+      createPictureElement('/x.png', 'x'),
+      '<a href="/v.mp4">v</a>',
+      'News',
+      '<p>Paragraph</p>',
+      'Read Articles',
+      '<a href="/published/path">#</a>',
+      createPictureElement('/brand.png', ''),
+      '',
+    ];
+    const slideB = [
+      'image',
+      createPictureElement('/y.png', 'y'),
+      '<a href="/v.mp4">v</a>',
+      'News',
+      '<p>Second</p>',
+      'Read Articles',
+      '<a href="/published/path-two">#</a>',
+      createPictureElement('/brand.png', ''),
+      '',
+    ];
+    const block = createBlockFromRows('homepagecarousel', [...baseConfigRows(), slideLabelFirst, slideB]);
+    document.body.appendChild(block);
+    await decorate(block);
+    const ctas = block.querySelectorAll('.homepagecarousel-cta');
+    expect(ctas.length).toBe(2);
+    expect(ctas[0].getAttribute('href')).toBe('/published/path');
+    expect(ctas[0].textContent).toBe('Read article');
+    expect(ctas[1].getAttribute('href')).toBe('/published/path-two');
   });
 });

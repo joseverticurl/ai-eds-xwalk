@@ -126,8 +126,21 @@
     justify-content: center;
     gap: 19px;
     position: absolute;
-    right: 15px;
-    bottom: 42px;
+    right: 40px;
+    bottom: 40px;
+  }
+}
+
+.homepagecarousel-carousel-shell {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-carousel-shell {
+    max-width: 670px;
   }
 }
 
@@ -143,7 +156,6 @@
 @media (width >= 900px) {
   .homepagecarousel-swiper {
     min-height: 520px;
-    max-width: 670px;
   }
 }
 
