@@ -3,8 +3,12 @@
  *
  * Structure: rows 0-9 = metadata, rows 10+ = card items
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  describe, it, expect, vi, beforeEach,
+} from 'vitest';
 import { createBlockFromRows, createPictureElement } from '../../test/helpers.js';
+
+import decorate from './featurecardscarousel.js';
 
 // Mock Swiper constructor
 const mockSwiperInstance = {
@@ -31,8 +35,6 @@ vi.mock('../../scripts/scripts.js', () => ({
   moveInstrumentation: () => {},
 }));
 
-import decorate from './featurecardscarousel.js';
-
 describe('Feature Cards Carousel block', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,7 +43,7 @@ describe('Feature Cards Carousel block', () => {
     mockSwiperInstance.on.mockClear();
 
     // Inject mock Swiper
-    globalThis.Swiper = vi.fn().mockImplementation(() => mockSwiperInstance);
+    window.Swiper = vi.fn().mockImplementation(() => mockSwiperInstance);
   });
 
   it('returns early when fewer than 2 cards', () => {

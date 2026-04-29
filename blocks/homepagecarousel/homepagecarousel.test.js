@@ -1,8 +1,12 @@
 /**
  * Homepage carousel — structure: rows 0–5 = config, rows 6+ = slides
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  describe, it, expect, vi, beforeEach,
+} from 'vitest';
 import { createBlockFromRows, createPictureElement } from '../../test/helpers.js';
+
+import decorate from './homepagecarousel.js';
 
 const mockSwiperInstance = {
   activeIndex: 0,
@@ -28,8 +32,6 @@ vi.mock('../../scripts/scripts.js', () => ({
   moveInstrumentation: () => {},
 }));
 
-import decorate from './homepagecarousel.js';
-
 function baseConfigRows() {
   return [
     ['<p>We refresh</p><p>the world</p>'],
@@ -49,7 +51,7 @@ describe('Homepage carousel block', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSwiperInstance.activeIndex = 0;
-    globalThis.Swiper = vi.fn().mockImplementation(() => mockSwiperInstance);
+    window.Swiper = vi.fn().mockImplementation(() => mockSwiperInstance);
   });
 
   it('returns early when fewer than 2 slides', () => {

@@ -8,7 +8,7 @@
 /**
  * Creates a block element with the standard EDS row/column structure.
  * @param {string} blockName - Class name for the block (e.g. 'hero', 'cards')
- * @param {Array<Array<string|Element>>} rows - 2D array; each inner array is a row, each item a cell
+ * @param {Array<Array<string|Element>>} rows - Rows (cells) per block conventions
  * @returns {Element} The block element
  */
 export function createBlockFromRows(blockName, rows) {

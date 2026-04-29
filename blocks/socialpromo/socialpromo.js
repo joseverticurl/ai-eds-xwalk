@@ -47,7 +47,7 @@ export default function decorate(block) {
     cta.href = ctaLink;
     cta.target = '_blank';
     cta.rel = 'noopener noreferrer';
-    cta.innerHTML = INSTAGRAM_ICON_SVG + `<span>${ctaLabel}</span>`;
+    cta.innerHTML = `${INSTAGRAM_ICON_SVG}<span>${ctaLabel}</span>`;
     header.appendChild(cta);
   }
 

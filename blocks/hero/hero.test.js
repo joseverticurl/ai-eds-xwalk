@@ -3,8 +3,12 @@
  *
  * Hero structure: rows[0]=image, rows[1]=imageAlt, rows[2]=text
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  describe, it, expect, vi, beforeEach,
+} from 'vitest';
 import { createBlockFromRows, createPictureElement } from '../../test/helpers.js';
+
+import decorate from './hero.js';
 
 // Mock aem.js - createOptimizedPicture returns a simple picture element
 vi.mock('../../scripts/aem.js', () => ({
@@ -22,8 +26,6 @@ vi.mock('../../scripts/aem.js', () => ({
 vi.mock('../../scripts/scripts.js', () => ({
   moveInstrumentation: () => {},
 }));
-
-import decorate from './hero.js';
 
 describe('Hero block', () => {
   beforeEach(() => {

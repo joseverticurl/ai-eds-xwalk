@@ -14,14 +14,15 @@
   /* TCCC (Figma MCP — Components---TCCC; variables + layer fills) */
   --color-background-off-white: #f2f2f2; /* var Background/Off_White */
   --color-bg-elevated: #f0f0f0; /* layer: mobile Bg 1 (non-variable) */
-  --color-neutral-black: #000000; /* Netural/Black */
-  --color-neutral-white: #ffffff; /* Netural/White */
-  --color-neutral-white-10: rgba(255, 255, 255, 0.1); /* Netural/W_10 — mobile vars: #ffffff1a */
+  --color-neutral-black: #000; /* Netural/Black */
+  --color-neutral-white: #fff; /* Netural/White */
+  --color-neutral-white-10: rgb(255 255 255 / 10%); /* Netural/W_10 — mobile vars: #ffffff1a */
   --color-range-aura-aqua: #6cc9d0; /* Range of Aura/Aqua (mobile node variables) */
-  --color-overlay-black-0: rgba(0, 0, 0, 0);
-  --color-overlay-black-60: rgba(0, 0, 0, 0.6);
-  --color-overlay-black-80: rgba(0, 0, 0, 0.8);
-  --tccc-unityheadline: 'TCCC-UnityHeadline', TCCC-UnityHeadline, sans-serif;
+  --color-overlay-black-0: rgb(0 0 0 / 0%);
+  --color-overlay-black-60: rgb(0 0 0 / 60%);
+  --color-overlay-black-80: rgb(0 0 0 / 80%);
+  --tccc-unityheadline: 'TCCC-UnityHeadline', tccc-unityheadline, sans-serif;
+
   /* Figma type scale (Desktop + Mobile “You may also like” frames) */
   --tccc-font-label-xs: 12px;
   --tccc-line-label-xs: 1.4;
@@ -35,17 +36,20 @@
   --tccc-line-h2: 1.2;
   --tccc-tracking-h2-m: -0.02em;
   --tccc-tracking-h2-d: -0.03em;
+
   /* layout — Figma layout grids (file key 1uWBLEcq2rARuQXFnsqdQD): 03_M (1:1703) 6 col, gutter 19, offset 20; 03_D (1:1691) 12 col, gutter 20, offset 40 */
   --grid-gutter: 19px; /* mobile 03_M_Career artboard */
   --container-max-width: 1440px; /* artboard */
   --container-padding-x: 20px; /* 1:1703 frame offset; Frame 1:1716: x=20, width=335 (N=6 col-s) */
   --tccc-block-stack-gap-m: 20px; /* 1:1719 vertical gap between cards (separate from column gutter) */
+
   /* 03_M_Career (1:1703) — spacing for related-article / promo patterns */
   --tccc-section-stack-gap-m: 30px; /* title block → card list (1:1717) */
   --tccc-radius-card-m: 16px; /* Cards / Related Article mobile */
   --tccc-card-padding-m: 24px;
   --tccc-cta-icon-size-m: 24px; /* “Read more” row icon */
   --tccc-cta-inline-gap-m: 10px;
+
   /* colors */
   --background-color: var(--color-background-off-white);
   --light-color: #f8f8f8;
@@ -303,7 +307,7 @@ main img {
 .col-s-6 { max-width: 100%; flex: 0 0 100%; }
 
 /* tablet (col-m) — 8 columns; not from a Figma artboard; gutter matches desktop (20) */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   :root {
     --grid-gutter: 20px;
   }
@@ -319,7 +323,7 @@ main img {
 }
 
 /* desktop (col-xl) — 12 columns; gutter 20 from 03_D frame (already set at 768+) */
-@media (min-width: 1200px) {
+@media (width >= 1200px) {
   :root {
     --container-padding-x: 40px; /* 03_D offset */
   }
@@ -346,6 +350,7 @@ main > .section {
 main > .section > div {
   max-width: var(--container-max-width);
   margin: auto;
+
   /* padding: 0 var(--container-padding-x); */
   box-sizing: border-box;
 }

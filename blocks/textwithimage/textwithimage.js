@@ -5,7 +5,9 @@ function getTextContent(cell) {
   return cell?.textContent?.trim() || cell?.querySelector?.('p')?.textContent?.trim() || '';
 }
 
-function buildCopySection({ tag, title, descriptionHTML, tagCell, titleCell, descriptionCell }) {
+function buildCopySection({
+  tag, title, descriptionHTML, tagCell, titleCell, descriptionCell,
+}) {
   const copySection = document.createElement('div');
   copySection.classList.add('textwithimage-copy');
 

@@ -3,8 +3,12 @@
  *
  * Cards structure: each row is a card with cells for image, title, etc.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  describe, it, expect, vi, beforeEach,
+} from 'vitest';
 import { createBlockFromRows, createPictureElement } from '../../test/helpers.js';
+
+import decorate from './cards.js';
 
 vi.mock('../../scripts/aem.js', () => ({
   createOptimizedPicture: (src, alt = '') => {
@@ -20,8 +24,6 @@ vi.mock('../../scripts/aem.js', () => ({
 vi.mock('../../scripts/scripts.js', () => ({
   moveInstrumentation: () => {},
 }));
-
-import decorate from './cards.js';
 
 describe('Cards block', () => {
   beforeEach(() => {

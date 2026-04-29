@@ -100,7 +100,10 @@ async function loadEager(doc) {
   }
 
   try {
-    /* Load webfonts early on all viewports; @font-face in fonts.css (incl. TCCC-UnityHeadline) must be applied for first paint. */
+    /*
+     * Load webfonts early on all viewports; @font-face in fonts.css (incl.
+     * TCCC-UnityHeadline) must be applied for first paint.
+     */
     loadFonts();
   } catch (e) {
     // do nothing

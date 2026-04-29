@@ -1,7 +1,8 @@
 /*
  * Text with Image/GIF block - Structure contract from user-provided HTML:
  * Row 0: sectionTitle | Row 1: description | Row 2: image (picture) | Row 3: imageBadge
- * Row 4: backgroundVector (picture) | Row 5-7: tag1, tag2, tag3 | Row 8: ctaLink (a) | Row 9: ctaText
+ * Row 4: backgroundVector (picture) | Rows 5–7: tag1–tag3 | Row 8: ctaLink (a)
+ * Row 9: ctaText
  * Display: If ctaLink+ctaText present, show CTA; else show tags.
  */
 import { createOptimizedPicture } from '../../scripts/aem.js';

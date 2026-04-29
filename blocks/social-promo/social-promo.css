@@ -39,7 +39,7 @@
   height: 40px;
   padding: 8px 24px;
   background-color: #004122;
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgb(255 255 255 / 60%);
   border-radius: 16px;
   font-family: var(--font-family, inherit);
   font-size: 16px;
@@ -90,6 +90,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -174,7 +175,7 @@
 }
 
 .social-promo-card--white {
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .social-promo-card--white .social-promo-card-caption {
@@ -194,11 +195,11 @@
 }
 
 .social-promo-card--blue {
-  background-color: #0066cc;
+  background-color: #06c;
 }
 
 /* Tablet */
-@media (max-width: 1280px) {
+@media (width <= 1280px) {
   .social-promo-header {
     padding: 28px 44px 24px;
     gap: 48px;
@@ -234,12 +235,12 @@
 }
 
 /* Mobile */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .social-promo-header {
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    padding: 24px 20px 24px;
+    padding: 24px 20px;
   }
 
   .social-promo-title {

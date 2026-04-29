@@ -161,7 +161,7 @@
 }
 
 /* Tablet: 768px - 1279px */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .text-with-image-gif {
     padding: 32px 44px;
   }
@@ -196,7 +196,7 @@
 }
 
 /* Desktop: 1280px+ */
-@media (min-width: 1280px) {
+@media (width >= 1280px) {
   .text-with-image-gif {
     padding: 48px 24px;
   }

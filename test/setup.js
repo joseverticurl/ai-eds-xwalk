@@ -5,6 +5,8 @@
  * - Mocks external resources (loadCSS, loadScript) to avoid network calls
  */
 
+import { beforeEach } from 'vitest';
+
 // Ensure hlx is available for blocks that use window.hlx.codeBasePath
 beforeEach(() => {
   window.hlx = window.hlx || {};

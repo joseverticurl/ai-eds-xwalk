@@ -53,7 +53,9 @@ function getImageAlt(pictureEl) {
 }
 
 function buildTitleSection(data) {
-  const { tag, title, subheading, cta1, cta2 } = data;
+  const {
+    tag, title, subheading, cta1, cta2,
+  } = data;
   const section = document.createElement('div');
   section.className = 'featurecardscarousel-title-section';
   if (tag) {
@@ -252,7 +254,7 @@ export default async function decorate(block) {
     loadScript(SWIPER_JS),
   ]);
 
-  const Swiper = globalThis.Swiper;
+  const { Swiper } = window;
   if (!Swiper) return;
 
   const bulletHtml = (index, className) => `<span class="${className} featurecardscarousel-progress-bullet" data-index="${index}"><span class="featurecardscarousel-bullet-track"></span><span class="featurecardscarousel-bullet-fill"></span></span>`;
@@ -262,6 +264,7 @@ export default async function decorate(block) {
     fills.forEach((fill, i) => {
       fill.classList.remove('featurecardscarousel-bullet-fill--active');
       if (i === idx) {
+        // eslint-disable-next-line no-void -- intentional reflow before toggling active fill class
         void fill.offsetHeight;
         fill.classList.add('featurecardscarousel-bullet-fill--active');
       }

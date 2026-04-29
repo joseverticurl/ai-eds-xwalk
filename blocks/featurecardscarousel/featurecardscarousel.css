@@ -1,4 +1,5 @@
 /* Feature Cards Carousel - Base */
+
 /* Bibigo design tokens: ivory-500 #fffbe3, ivory-900 #734f2f, orange-400 #f97334, deep-green #004122 */
 .featurecardscarousel-wrapper {
   padding: 24px 20px;
@@ -71,7 +72,7 @@
 
 .featurecardscarousel-cta--primary {
   background-color: #004122;
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgb(255 255 255 / 60%);
   color: white;
 }
 
@@ -174,11 +175,8 @@
 .featurecardscarousel-center-image::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 46.13%, #000 100%);
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 46.13%, #000 100%);
   border-radius: 24px;
   pointer-events: none;
   z-index: 1;

@@ -3,8 +3,12 @@
  *
  * UE structure: [heading row], [style row], [card rows × 5 cells]
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  describe, it, expect, vi, beforeEach,
+} from 'vitest';
 import { createBlockFromRows, createPictureElement } from '../../test/helpers.js';
+
+import decorate from './youmayalsolike.js';
 
 vi.mock('../../scripts/aem.js', () => ({
   createOptimizedPicture: (src, alt = '') => {
@@ -20,8 +24,6 @@ vi.mock('../../scripts/aem.js', () => ({
 vi.mock('../../scripts/scripts.js', () => ({
   moveInstrumentation: () => {},
 }));
-
-import decorate from './youmayalsolike.js';
 
 function cardRow(imgSrc, category, title, href, readmore = 'Readmore') {
   const pic = createPictureElement(imgSrc, 'alt');

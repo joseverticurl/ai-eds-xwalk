@@ -1,7 +1,7 @@
 /* Text with Image/Video block - centre aligned */
 
 .textwithimage-container {
-  background: linear-gradient(180deg, #fffbe3 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #fffbe3 0%, #fff 100%);
   padding: 24px 20px;
   text-align: center;
 }
