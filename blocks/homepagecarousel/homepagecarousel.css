@@ -1,0 +1,404 @@
+/* Homepage hero carousel — layout matches desktop ≥900px, compact <900px */
+
+.homepagecarousel-wrapper {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 1440px;
+  margin-inline: auto;
+  overflow-x: hidden;
+
+  --homepagecarousel-duration: 5s;
+}
+
+.homepagecarousel-wrapper-aura {
+  background:
+    radial-gradient(ellipse 95% 75% at 78% 35%, rgb(255 210 210 / 35%) 0%, transparent 52%),
+    var(--background-color-off-white, #f2f2f2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.homepagecarousel-inner,
+.homepagecarousel-layout,
+.homepagecarousel-wrapper {
+  display: block;
+}
+
+.homepagecarousel-headline {
+  display: none;
+  flex: 0 0 40%;
+  max-width: 570px;
+  padding: 0;
+  font-family: var(--tccc-unityheadline);
+  font-size: 38px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  color: var(--text-color, #000);
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 40px;
+    padding: 40px min(80px, 5vw) 60px;
+    width: 100%;
+    max-width: 1440px;
+  }
+
+  .homepagecarousel-headline {
+    display: block;
+  }
+}
+
+.homepagecarousel-headline-inner p {
+  margin: 0;
+  font-family: var(--tccc-unityheadline);
+  font-weight: 600;
+}
+
+/* Desktop/Headline 1 — 72px, tracking −2.16px (−0.03em); line gap 25px (Figma 241:1640) */
+@media (width >= 900px) {
+  .homepagecarousel-headline-inner p {
+    font-size: 4.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .homepagecarousel-headline-inner p + p {
+    margin-top: 25px;
+  }
+}
+
+.homepagecarousel-body p {
+  margin: 0 0 0.5em;
+}
+
+.homepagecarousel-body p:last-child {
+  margin-bottom: 0;
+}
+
+.homepagecarousel-headline-inner p:nth-child(2) {
+  text-align: right;
+}
+
+.homepagecarousel-headline-inner p:nth-child(3) {
+  text-align: center;
+}
+
+.homepagecarousel-headline-inner p:nth-child(4) {
+  text-align: left;
+}
+
+.homepagecarousel-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-stage {
+    position: relative;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+  }
+}
+
+/* Brand rail — mobile row above slide; desktop column inset in shell.
+ * DOM: appended after swiper so icons paint above slides (click/touch hits buttons). */
+.homepagecarousel-brands {
+  display: flex;
+  z-index: 5;
+  pointer-events: auto;
+
+  @media screen and (width <= 767px) {
+    transform: translate(-50%, -50%);  /* order: 0; */
+    position: absolute;
+    gap: 16px;
+    top: 20px;
+    left: 50%;
+  }
+}
+
+
+@media (width >= 900px) {
+  .homepagecarousel-brands {
+    flex-direction: column;
+    justify-content: center;
+    gap: 19px;
+    position: absolute;
+    right: 40px;
+    bottom: 40px;
+  }
+}
+
+.homepagecarousel-carousel-shell {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-carousel-shell {
+    max-width: min(670px, 100%);
+  }
+}
+
+.homepagecarousel-swiper {
+  position: relative;
+  z-index: 0;
+  order: 1;
+  flex: 1;
+  min-width: 0;
+  min-height: 400px;
+  width: 100%;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-swiper {
+    min-height: 520px;
+  }
+}
+
+.homepagecarousel-slide {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 5%);
+  min-height: 360px;
+  background: #111;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-slide {
+    border-radius: 24px;
+    min-height: 660px;
+  }
+}
+
+.homepagecarousel-slide-media {
+  position: absolute;
+  inset: 0;
+}
+
+.homepagecarousel-slide-media .picture,
+.homepagecarousel-slide-media picture,
+.homepagecarousel-slide-media img,
+.homepagecarousel-bg-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.homepagecarousel-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 10%) 0%, rgb(0 0 0 / 50%) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.homepagecarousel-slide-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 714px;
+  padding: 24px 24px 32px;
+  max-width: 100%;
+  gap: 30px;
+}
+
+@media (width >= 900px) {
+  /* Inner row gap 80px + 50px rail + card pad — keeps copy off logos (Figma 241:1659) */
+  .homepagecarousel-slide-content {
+    min-height: 560px;
+    padding: 40px 170px 40px 40px;
+    gap: 50px;
+  }
+}
+
+.homepagecarousel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin: 0;
+  padding: 11px 12px;
+  font-family: var(--tccc-unityheadline);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+  background: #000;
+  border-radius: 50px;
+}
+
+.homepagecarousel-body {
+  max-width: 100%;
+  font-family: var(--tccc-unityheadline);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+@media (width >= 900px) {
+  .homepagecarousel-body {
+    width: 100%;
+    max-width: none;
+    font-size: 38px;
+    letter-spacing: -0.03em;
+  }
+}
+
+.homepagecarousel-body .align-left {
+  text-align: left;
+  align-self: flex-start;
+}
+
+.homepagecarousel-body .align-right {
+  text-align: right;
+  align-self: flex-end;
+  width: 100%;
+}
+
+.homepagecarousel-body .align-center {
+  text-align: center;
+  align-self: center;
+  width: 100%;
+}
+
+/* Ghost CTA — white text overrides global blue link tokens (styles/styles.css) */
+.homepagecarousel-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0 30px;
+  font-family: var(--tccc-unityheadline);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-neutral-white, #fff);
+  text-decoration: none;
+  border: 2px solid var(--color-neutral-white, #fff);
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.homepagecarousel-cta:link {
+  color: var(--color-neutral-white, #fff);
+}
+
+.homepagecarousel-cta:visited,
+.homepagecarousel-cta:active {
+  color: var(--color-neutral-white, #fff);
+  text-decoration: none;
+}
+
+.homepagecarousel-cta:hover,
+.homepagecarousel-cta:focus-visible {
+  background: rgb(255 255 255 / 12%);
+  color: var(--color-neutral-white, #fff);
+  outline: none;
+  text-decoration: none;
+}
+
+@media (width <= 899px) {
+  .homepagecarousel-cta {
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Brand button + progress ring */
+.homepagecarousel-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (width <= 899px) {
+  .homepagecarousel-brand {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.homepagecarousel-brand:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.homepagecarousel-brand-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.homepagecarousel-brand-img .picture,
+.homepagecarousel-brand-img picture,
+.homepagecarousel-brand-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+.homepagecarousel-brand-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.homepagecarousel-brand-ring-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.homepagecarousel-brand-arc {
+  stroke-dashoffset: 169.65;
+}
+
+.homepagecarousel-brand-active .homepagecarousel-brand-arc {
+  animation: homepagecarousel-arc var(--homepagecarousel-duration, 5s) linear forwards;
+}
+
+.homepagecarousel-brand:not(.homepagecarousel-brand-active) .homepagecarousel-brand-arc {
+  animation: none;
+  stroke-dashoffset: 169.65;
+}
+
+@keyframes homepagecarousel-arc {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
