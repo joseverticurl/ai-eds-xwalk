@@ -1,19 +1,11 @@
-/* Figma: 01_D_Homepage (241:1640) — frame 1440; Titles @80 570×283; Cards/Hero @730 670×660
-   Figma mobile 01_M_Home Intro 3 (241:2289) — 375×812; card 335×716 @20×76 */
+/* Homepage hero carousel — layout matches desktop ≥900px, compact <900px */
 
 .homepagecarousel-wrapper {
   position: relative;
   max-width: 1440px;
   margin-inline: auto;
-  box-sizing: border-box;
 
   --homepagecarousel-duration: 5s;
-}
-
-@media (width <= 899px) {
-  .homepagecarousel-wrapper {
-    padding-inline: 20px;
-  }
 }
 
 .homepagecarousel-wrapper-aura {
@@ -30,7 +22,7 @@
 
 .homepagecarousel-headline {
   display: none;
-  box-sizing: border-box;
+  flex: 0 0 40%;
   max-width: 570px;
   padding: 0;
   font-family: var(--tccc-unityheadline);
@@ -43,28 +35,36 @@
 
 @media (width >= 900px) {
   .homepagecarousel-wrapper {
-    display: grid;
-    grid-template-columns: minmax(0, 570px) minmax(0, 1fr);
-    column-gap: 80px;
+    display: flex;
+    flex-direction: row;
     align-items: center;
-    box-sizing: border-box;
-    padding: 40px 40px 60px 80px;
+    gap: 40px;
+    padding: 40px 80px 60px;
     width: 100%;
   }
 
   .homepagecarousel-headline {
     display: block;
-    grid-column: 1;
-    justify-self: start;
   }
+}
 
-  .homepagecarousel-stage {
-    grid-column: 2;
-    width: 670px;
-    max-width: 100%;
-    justify-self: end;
-    box-sizing: border-box;
-  }
+.homepagecarousel-headline-inner p {
+  margin: 0 0 0.35em;
+  font-size: clamp(2.5rem, 4vw, 4.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+
+.homepagecarousel-headline-inner p:nth-child(2) {
+  text-align: right;
+}
+.homepagecarousel-headline-inner p:nth-child(3) {
+  text-align: center;
+}
+.homepagecarousel-headline-inner p:nth-child(4) {
+  text-align: left;
 }
 
 .homepagecarousel-stage {
@@ -73,86 +73,64 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  box-sizing: border-box;
+  gap: 16px;
 }
 
 @media (width >= 900px) {
   .homepagecarousel-stage {
+    position: relative;
     flex-direction: row;
     align-items: stretch;
+    gap: 0;
   }
 }
 
-/* Brands: overlay top on mobile; bottom-right inside card on desktop */
+/* Brand nav: top row on mobile, right column on desktop */
 .homepagecarousel-brands {
-  order: 0;
   display: flex;
-  flex-flow: row wrap;
-  align-items: center;
-  justify-content: center;
-  z-index: 4;
-  box-sizing: border-box;
-  gap: 16px;
-  padding: 0;
-}
-
-@media (width <= 899px) {
-  .homepagecarousel-brands {
+  z-index: 2;
+  @media screen and (width <= 767px) {
+    transform: translate(-50%, -50%);  /* order: 0; */
     position: absolute;
-    top: 20px;
+    gap: 20px;
+    top: 36px;
     left: 50%;
-    transform: translateX(-50%);
-    width: max-content;
-    max-width: calc(100% - 32px);
   }
 }
+
 
 @media (width >= 900px) {
   .homepagecarousel-brands {
-    flex-flow: column nowrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 19px;
+    flex-direction: column;
+    justify-content: center;
     position: absolute;
-    inset: auto 40px 40px auto;
-    width: auto;
-    transform: none;
-    padding: 0;
+    right: 15px;
+    bottom: 42px;
   }
 }
 
-/* Card width: Figma 335 mobile / 670 desktop */
 .homepagecarousel-swiper {
   order: 1;
   position: relative;
   flex: 1;
   min-width: 0;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 335px;
-  margin-inline: auto;
   min-height: 400px;
+  width: 100%;
 }
 
 @media (width >= 900px) {
   .homepagecarousel-swiper {
-    margin-inline: 0;
+    min-height: 520px;
     max-width: 670px;
-    width: 670px;
-    min-height: 660px;
-    height: 660px;
   }
 }
 
 .homepagecarousel-slide {
   position: relative;
-  box-sizing: border-box;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 -6px 24px rgb(0 0 0 / 5%);
-  min-height: 716px;
+  min-height: 360px;
   background: #111;
 }
 
@@ -160,7 +138,6 @@
   .homepagecarousel-slide {
     border-radius: 24px;
     min-height: 660px;
-    height: 660px;
   }
 }
 
@@ -194,9 +171,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
-  box-sizing: border-box;
-  min-height: 716px;
-  height: 100%;
+  min-height: 714px;
   padding: 24px 24px 32px;
   max-width: 100%;
   gap: 30px;
@@ -204,8 +179,8 @@
 
 @media (width >= 900px) {
   .homepagecarousel-slide-content {
-    min-height: 660px;
-    padding: 40px 96px 40px 40px;
+    min-height: 560px;
+    padding: 40px;
     gap: 50px;
   }
 }
@@ -233,13 +208,11 @@
   font-weight: 600;
   line-height: 1.2;
   color: #fff;
-  box-sizing: border-box;
 }
 
 @media (width >= 900px) {
   .homepagecarousel-body {
-    width: 30%;
-    min-width: 0;
+    width: 70%;
     font-size: 38px;
     letter-spacing: -0.03em;
   }
@@ -270,29 +243,6 @@
   width: 100%;
 }
 
-/* Headline L / R / C / L — separate tree from .homepagecarousel-body; order satisfies stylelint */
-/* stylelint-disable-next-line no-descending-specificity */
-.homepagecarousel-headline-inner p {
-  margin: 0 0 0.25em;
-  text-align: left;
-  font-size: clamp(2.25rem, 4.2vw, 4.5rem);
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-  font-weight: 600;
-}
-
-.homepagecarousel-headline-inner p:nth-child(2) {
-  text-align: right;
-}
-
-.homepagecarousel-headline-inner p:nth-child(3) {
-  text-align: center;
-}
-
-.homepagecarousel-headline-inner p:nth-child(4) {
-  text-align: left;
-}
-
 .homepagecarousel-cta {
   display: inline-flex;
   align-items: center;
@@ -309,7 +259,7 @@
   border-radius: 999px;
   background: transparent;
   transition: background 0.2s ease, color 0.2s ease;
-  box-sizing: border-box;
+  color: var(--color-neutral-white, #fff);
 }
 
 .homepagecarousel-cta:visited,
@@ -321,18 +271,18 @@
 
 @media (width <= 899px) {
   .homepagecarousel-cta {
-    width: fit-content;
-    max-width: calc(100% - 8px);
-    align-self: flex-start;
+    width: 85%;
   }
 }
 
 .homepagecarousel-cta:hover,
 .homepagecarousel-cta:focus-visible {
   background: rgb(255 255 255 / 12%);
+  color: var(--color-neutral-white, #fff);
   outline: none;
 }
 
+/* Brand button + progress ring */
 .homepagecarousel-brand {
   position: relative;
   display: flex;
