@@ -345,7 +345,7 @@ export default async function decorate(block) {
   const headline = document.createElement('aside');
   headline.className = 'homepagecarousel-headline';
   const firstCell = headlineSource?.children?.[0];
-  if (firstCell?.textContent?.trim()) {
+  if (firstCell) {
     const headInner = firstCell.cloneNode(true);
     headInner.classList.add('homepagecarousel-headline-inner');
     headInner.querySelectorAll('p').forEach((p, i) => {
@@ -465,10 +465,7 @@ export default async function decorate(block) {
   carouselShell.appendChild(swiperWrap);
   carouselShell.appendChild(brandNav);
   stage.appendChild(carouselShell);
-  /* Omit empty headline column — fixed 40% flex was leaving half the viewport blank */
-  if (headline.firstElementChild) {
-    wrapper.appendChild(headline);
-  }
+  wrapper.appendChild(headline);
   wrapper.appendChild(stage);
 
   moveInstrumentation(block, wrapper);
