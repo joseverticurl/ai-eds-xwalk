@@ -369,10 +369,14 @@ export default async function decorate(block) {
     setActiveBrand(s.activeIndex);
   }
 
+  const canLoop = loopOn && slideRows.length >= 4;
+  const useRewind = loopOn && slideRows.length > 1 && slideRows.length < 4;
+
   const swiperConfig = {
     slidesPerView: 1,
     spaceBetween: 0,
-    loop: loopOn && slideRows.length > 1,
+    loop: canLoop,
+    rewind: useRewind,
     allowTouchMove: true,
     autoplay: autoplayOn
       ? { delay: transitionSec * 1000, disableOnInteraction: false }
